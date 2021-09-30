@@ -18,7 +18,7 @@ Once set run the following commands:
 ```shell
 npm install
 ```
-Then after the installation run:
+Then after the installation run the following from here on
 
 ```shell
 node httpserver.js
