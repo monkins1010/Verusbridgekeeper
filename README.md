@@ -15,9 +15,14 @@ Linux: ~/.verustest/pbaas/veth/veth.conf
 Windows: %appdata%/Verustest/pbaas/veth/veth.conf
 
 Once set run the following commands:
-
+```shell
 npm install
+```
+Then after the installation run:
+
+```shell
 node httpserver.js
+```
 
 This will result in the service running on port 8000 it can be queried using the following examples:
  curl  --data-binary '{"jsonrpc":"1.0","id":"curltext","method":"getinfo","params":[]}' -H 'content-type:text/plain;' http://127.0.0.1:8000
