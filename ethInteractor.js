@@ -29,7 +29,13 @@ const web3 = new Web3(new Web3.providers.WebsocketProvider(settings.ethnode, {
     clientConfig: {
     maxReceivedFrameSize: 100000000,
     maxReceivedMessageSize: 100000000,
-  }
+    },
+    reconnect: {
+        auto: true,
+        delay: 5000, // ms
+        maxAttempts: 5,
+        onTimeout: false,
+      }
 }));
 
 
@@ -303,13 +309,15 @@ serializeEthFullProof = (ethProof) => {
     
     //loop through storage proofs
     let key = removeHexLeader(ethProof.storageProof[0].key);
-    if(key.length % 2 != 0) key = '0'.concat(key);
+    key =  web3.utils.padLeft(key, 64);
+   // if(key.length % 2 != 0) key = '0'.concat(key);
     encodedOutput = Buffer.concat([encodedOutput,Buffer.from(key,'hex')]);
     encodedOutput = Buffer.concat([encodedOutput,serializeEthProof(ethProof.storageProof[0].proof)]);
 
     let proof = removeHexLeader(ethProof.storageProof[0].value);
 
-    if(proof.length % 2 != 0) proof = '0'.concat(proof);
+    //if(proof.length % 2 != 0) proof = '0'.concat(proof);
+    proof =  web3.utils.padLeft(proof, 64);
     let proofval = Buffer.alloc(32);
     Buffer.from(proof,'hex').copy(proofval);
     encodedOutput = Buffer.concat([encodedOutput,proofval]);
@@ -658,7 +666,7 @@ exports.getBestProofRoot = async (input) => {
             // console.log(proofroots[i]);
 
 
-                if(checkProofRoot(proofroots[i].height, proofroots[i].stateroot, proofroots[i].blockhash, BigInt(addBytesIndicator(proofroots[i].power))))
+                if(await checkProofRoot(proofroots[i].height, proofroots[i].stateroot, proofroots[i].blockhash, BigInt(addBytesIndicator(proofroots[i].power))))
                 {
                     validindexes.push(i);
                     if(proofroots[bestindex].height < proofroots[i].height) bestindex = i;
@@ -742,8 +750,10 @@ checkProofRoot = async (height, stateroot, blockhash, power) => {
     block.stateRoot = removeHexLeader(block.stateRoot).match(/[a-fA-F0-9]{2}/g).reverse().join('');
     block.hash = removeHexLeader(block.hash).match(/[a-fA-F0-9]{2}/g).reverse().join('');
   //  console.log(blockStateRoot, newBlockHash, BigInt(block.totalDifficulty).toString(16));
-    if (block.stateRoot == stateroot && blockhash == block.hash && BigInt(block.totalDifficulty).toString(16) == BigInt(power).toString(16)) return true;
-    else return false;
+    if (block.stateRoot == stateroot && blockhash == block.hash && BigInt(block.totalDifficulty).toString(16) == BigInt(power).toString(16)) {
+        return true;
+    } else{
+       return false;}
 }
 
 //return the data required for a notarisation to be made
