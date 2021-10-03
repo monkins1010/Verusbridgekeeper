@@ -29,6 +29,8 @@ const web3 = new Web3(new Web3.providers.WebsocketProvider(settings.ethnode, {
     clientConfig: {
     maxReceivedFrameSize: 100000000,
     maxReceivedMessageSize: 100000000,
+    keepalive: true,
+    keepaliveInterval: -1 // ms
     },
     reconnect: {
         auto: true,
