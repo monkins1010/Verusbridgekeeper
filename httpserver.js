@@ -46,6 +46,7 @@ http.createServer((request, response) => {
                     
                 let postData = JSON.parse(request.post);
                 let command = postData.method;
+                if(command != "getinfo" && command != "getcurrency")
                 console.log("Command: " + command);
 
            

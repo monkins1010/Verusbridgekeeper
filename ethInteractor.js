@@ -22,6 +22,14 @@ const proofAddress = settings.verusproofaddress;
 const infoAddress = settings.verusinfoaddress;
 const serializeraddressAddress = settings.verusserializeraddress;
 
+var d = new Date();
+let globalgetinfo = {};
+let globalgetcurrency = {};
+let globaltimedelta = 10000; //10s
+let globallastinfo = d.getTime();
+let globallastcurrency = d.getTime();
+
+
 const IAddress = 102;
 let maxGas = 6000000;
 
@@ -528,24 +536,33 @@ exports.getInfo = async (input) => {
     //getinfo is just tested to see that its not null therefore we can just return the version
     //check that we can connect to Ethereum if not return null to kill the connection
     try{
-        let info = await verusInfo.methods.getinfo().call();
-        // TODO:clear out the unnecessary array elements
-        //info = Object.fromEntries(info);
-        //complete tiptime with the time of a block
-       //let test = convertWeb3Response(info);
-        let returnObject = {
-            "version" : info.version,
-            "name" : info.name,
-            "VRSCversion" : info.VRSCversion,
-            "blocks" : info.blocks,
-            "tiptime" : info.tiptime,
-            "testnet" : info.testnet
+
+        var d = new Date();
+        var timenow = d.getTime();
+        if (globaltimedelta + globallastinfo < timenow){
+            globallastinfo = timenow;
+            let info = await verusInfo.methods.getinfo().call();
+            // TODO:clear out the unnecessary array elements
+            //info = Object.fromEntries(info);
+            //complete tiptime with the time of a block
+            //let test = convertWeb3Response(info);
+            globalgetinfo = {
+                "version" : info.version,
+                "name" : info.name,
+                "VRSCversion" : info.VRSCversion,
+                "blocks" : info.blocks,
+                "tiptime" : info.tiptime,
+                "testnet" : info.testnet
+            }
+           console.log("Command: getinfo");
         }
-        return {"result":returnObject};
+        return {"result":globalgetinfo};
     } catch(error){
         console.log("\x1b[41m%s\x1b[0m","Error getInfo:" + error);
         return {"result": {"error": true, "message" : error}};
     }
+
+
 }
 
 exports.getCurrency = async (input) => {
@@ -553,41 +570,46 @@ exports.getCurrency = async (input) => {
     try{
         let currency = input[0];
         //convert i address to an eth address
-        
-        let info = await verusInfo.methods.getcurrency(convertVerusAddressToEthAddress(currency)).call();
-        //complete tiptime with the time of a block
-        //convert the CTransferDestination
-        //convert notary adddresses
-        let notaries = [];
-        for(let i = 0; i < info.notaries.length; i++){
-            notaries[i] = ethAddressToVAddress(info.notaries[i],IAddress);
-        }
+        var d = new Date();
+        var timenow = d.getTime();
 
-        let nativecurrencyid = [];
-        let returnObject = {
-            "version" : info.version,
-            "name": info.name,
-            "options": (info.name === "VETH") ? 172 : 96,
-            //"name": "vETH",
-            "currencyid": uint160ToVAddress(info.currencyid,IAddress),
-            "parent": uint160ToVAddress(info.parent,IAddress),
-            "systemid": uint160ToVAddress(info.systemid,IAddress),
-            "notarizationprotocol": info.notarizationprotocol,
-            "proofprotocol": info.proofprotocol,
-            "nativecurrencyid" : {"address": '0x' + BigInt(info.nativecurrencyid.destinationaddress,IAddress).toString(16),"type": info.nativecurrencyid.destinationtype},
-            "launchsystemid": uint160ToVAddress(info.launchsystemid,IAddress),
-            "startblock": info.startblock,
-            "endblock": info.endblock,
-            "initialsupply": info.initialsupply,
-            "prelaunchcarveout": info.prelaunchcarveout,
-            "gatewayid": uint160ToVAddress(info.gatewayid,IAddress),
-            "notaries": notaries,
-            "minnotariesconfirm" : info.minnotariesconfirm,
-            "gatewayid": ETHSystemID,
-            "gatewayconvertername": (info.name === "VETH") ? "Bridge" : ""
-        };
-        //console.log("getCurrency Return", returnObject);
-        return {"result": returnObject};
+        if (globaltimedelta + globallastcurrency < timenow){
+            globallastcurrency = timenow;
+            let info = await verusInfo.methods.getcurrency(convertVerusAddressToEthAddress(currency)).call();
+            //complete tiptime with the time of a block
+            //convert the CTransferDestination
+            //convert notary adddresses
+            let notaries = [];
+            for(let i = 0; i < info.notaries.length; i++){
+                notaries[i] = ethAddressToVAddress(info.notaries[i],IAddress);
+            }
+
+            globalgetcurrency = {
+                "version" : info.version,
+                "name": info.name,
+                "options": (info.name === "VETH") ? 172 : 96,
+                //"name": "vETH",
+                "currencyid": uint160ToVAddress(info.currencyid,IAddress),
+                "parent": uint160ToVAddress(info.parent,IAddress),
+                "systemid": uint160ToVAddress(info.systemid,IAddress),
+                "notarizationprotocol": info.notarizationprotocol,
+                "proofprotocol": info.proofprotocol,
+                "nativecurrencyid" : {"address": '0x' + BigInt(info.nativecurrencyid.destinationaddress,IAddress).toString(16),"type": info.nativecurrencyid.destinationtype},
+                "launchsystemid": uint160ToVAddress(info.launchsystemid,IAddress),
+                "startblock": info.startblock,
+                "endblock": info.endblock,
+                "initialsupply": info.initialsupply,
+                "prelaunchcarveout": info.prelaunchcarveout,
+                "gatewayid": uint160ToVAddress(info.gatewayid,IAddress),
+                "notaries": notaries,
+                "minnotariesconfirm" : info.minnotariesconfirm,
+                "gatewayid": ETHSystemID,
+                "gatewayconvertername": (info.name === "VETH") ? "Bridge" : ""
+            };
+            console.log("Command: getcurrency");
+        }
+        
+        return {"result": globalgetcurrency};
     }
     catch(error){
         console.log("\x1b[41m%s\x1b[0m","getCurrency:" + error);
@@ -1036,7 +1058,7 @@ exports.submitAcceptedNotarization = async (params) => {
 
       let pBaasNotarization = params[0]; 
       let signatures = params[1].signatures; //signatures are in notary key pairs e.g. "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq" : ["1232"]
-      console.log(JSON.stringify(params));
+    //  console.log(JSON.stringify(params));
       try{
   
           let lastNotarizationHeight = await verusNotarizer.methods.lastBlockHeight().call();
@@ -1094,8 +1116,8 @@ exports.submitAcceptedNotarization = async (params) => {
       delete pBaasNotarization.launchcurrencies
       //build signature parameters
   
-      console.log("signatures:");
-      console.log(signatures);
+    //  console.log("signatures:");
+    //  console.log(signatures);
   
       let sigKeys = Object.keys(signatures);
   
@@ -1127,10 +1149,10 @@ exports.submitAcceptedNotarization = async (params) => {
             let txhash = {}
             let test4 =  await verusSerializer.methods.serializeCPBaaSNotarization(pBaasNotarization).call();
           
-             console.log("result from serializeCPBaaSNotarization:\n", (test4));
+           //  console.log("result from serializeCPBaaSNotarization:\n", (test4));
             var firstNonce = await web3.eth.getTransactionCount(account.address);
             txhash = await verusNotarizer.methods.setLatestData(pBaasNotarization,vsVals,rsVals,ssVals,blockheights,notaryAddresses).call();
-            console.log(JSON.stringify(txhash));
+           // console.log(JSON.stringify(txhash));
             if(transactioncount != firstNonce){
             txhash = await verusNotarizer.methods.setLatestData(pBaasNotarization,vsVals,rsVals,ssVals,blockheights,notaryAddresses).send({from: account.address,gas: maxGas});
             transactioncount = firstNonce;
