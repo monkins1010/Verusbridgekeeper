@@ -183,7 +183,7 @@ serializeCTransferDestination = (ctd) => {
 
     let destination = Buffer.from(removeHexLeader(ctd.destinationaddress),'hex');
 
-    encodedOutput = Buffer.concat([encodedOutput,writeCompactSize(destination.length),destination]);
+    encodedOutput = Buffer.concat([encodedOutput,writeCompactSize(20),destination]);  //TODO:hardcoded for address only for now
     return encodedOutput;
 }
 
@@ -251,8 +251,10 @@ serializeCReserveTransfers = (crts) => {
             encodedOutput = Buffer.concat([encodedOutput,Buffer.from(removeHexLeader(crts[i].destsystemid),'hex')]);
         else if((crts[i].flags & 0x40) == 0x40 && crts[i].exportto)
             encodedOutput = Buffer.concat([encodedOutput,Buffer.from(removeHexLeader(crts[i].exportto),'hex')]);
+        if(logging)
+            console.log("log of CReserve: ",JSON.stringify(crts[i]));
     }
-    //console.log("logg: ",encodedOutput.toString('hex'));
+   
     return encodedOutput;  //Buffer.from(removeHexLeader(
 }
 
@@ -386,10 +388,10 @@ createComponents = (transfers,blockHeight,previousExportHash) => {
 
     serialized = Buffer.concat([serialized,prevhash]);
 
-    let hashofcce_reserves = keccak256(Buffer.concat([serializeCrossChainExport(cce),prevhash]));
-    //let serialization = Buffer.concat([serializeCrossChainExport(cce),serializeCReserveTransfers(transfers).slice(1)]);
-    // console.log("Hash of cce+reservet: \n",hashofcce_reserves.toString('hex'));
-    // console.log("serialization of ccx + reserves: \n",serialization.toString('hex'));
+    let hashofcce_reserves = keccak256(serialized);
+   /* let serialization = Buffer.concat([serializeCrossChainExport(cce),serializeCReserveTransfers(transfers).slice(1)]);
+    console.log("Hash of cce+reservet: \n",hashofcce_reserves.toString('hex'));
+    console.log("serialization of ccx + prevhash: \n",serialized.toString('hex'));*/
     serialized = Buffer.concat([writeCompactSize(serialized.length),serialized]);
 
     serialized = Buffer.concat([serializedVDXF,serialized]);
@@ -416,11 +418,27 @@ createOutboundTransfers = (transfers) => {
         outTransfer.feecurrencyid = ethAddressToVAddress(transfer.feecurrencyid,IAddress);
         outTransfer.fees = uint64ToVerusFloat(transfer.fees);
         outTransfer.destinationcurrencyid = ethAddressToVAddress(transfer.destcurrencyid,IAddress);
+
+        let address = {};
+
+        if((parseInt(transfer.destination.destinationtype) & 127) == 2){
+
+            address = ethAddressToVAddress(transfer.destination.destinationaddress.slice(0,42),60);
+        }else if((parseInt(transfer.destination.destinationtype) & 127) == 4){
+
+            address = ethAddressToVAddress(transfer.destination.destinationaddress.slice(0,42),IAddress);
+        }else{
+            address = transfer.destination.destinationaddress.slice(0,42);
+
+        }
+
         outTransfer.destination = {
             "type" : transfer.destination.destinationtype,
-            "address" : ethAddressToVAddress(transfer.destination.destinationaddress,IAddress)
+            "address" : address,
+            "gateway" : transfer.destination.destinationaddress.length > 42 ? ethAddressToVAddress(transfer.destination.destinationaddress.slice(42,82),IAddress) : "",
+            "fees"    : transfer.destination.destinationaddress.length > 42 ? parseInt(transfer.destination.destinationaddress.slice(transfer.destination.destinationaddress.length - 16,transfer.destination.destinationaddress.length - 1).match(/[a-fA-F0-9]{2}/g).reverse().join(''),16)/100000000 : ""
         }
-        outTransfers.push(outTransfer);
+      outTransfers.push(outTransfer);
     }
     return outTransfers;
 }
@@ -428,7 +446,8 @@ createOutboundTransfers = (transfers) => {
 createCrossChainExport = (transfers,blockHeight,jsonready = false) => {
     let cce = {};
     let hash = keccak256(serializeCReserveTransfers(transfers).slice(1));
-    //console.log("hash of transfers: ",hash.toString('Hex'));
+   // console.log("hash of transfers: ",hash.toString('Hex'));
+   // console.log("Serialize: ",serializeCReserveTransfers(transfers).slice(1).toString('Hex'));
     cce.version = 1;
     cce.flags = 2;
     cce.sourceheightstart = blockHeight;
@@ -466,10 +485,11 @@ createCrossChainExport = (transfers,blockHeight,jsonready = false) => {
         cce.totalfees.push({"currency":key,"amount":(jsonready? uint64ToVerusFloat(totalfees[key]):totalfees[key])});
     }
     cce.hashtransfers = hash.toString('hex'); //hash the transfers
- //   console.log(JSON.stringify(cce.totalamounts));
+  //  console.log(JSON.stringify(cce.totalamounts));
     cce.totalburned = [{"currency":'0x0000000000000000000000000000000000000000',"amount":0}]; // TODO: serialiser doesnt like empty strings or non BIgints
     cce.rewardaddress = "iKjrTCwoPFRk44fAi2nYNbPG16ZUQjv1NB"; //  TODO: what should this be?
     cce.firstinput = 1;
+  //  console.log("cce",JSON.stringify(cce));
     return cce;
 }
 
@@ -639,7 +659,8 @@ exports.getExports = async (input) => {
         if(heightstart > 0 && heightend > 0 && heightend < heightstart) throw {message:"Start/End Height out of range: "};
        // heightstart = heightend -200;
         let exportSets = await verusBridge.methods.getReadyExportsByRange(heightstart,heightend).call();
-        exportSets = parseContractExports(exportSets);
+        
+      //  exportSets = parseContractExports(exportSets);
         console.log("Height end: ",heightend, "heightStart:", heightstart );
 
         for(let i = 0;i < exportSets.length; i++){
@@ -667,7 +688,7 @@ exports.getExports = async (input) => {
             output.push(outputSet);
         }
         
-      //  console.log(JSON.stringify(output));
+        console.log(JSON.stringify(output));
         return {"result":output};
     }catch(error){
         console.log("\x1b[41m%s\x1b[0m","GetExports error:" + error);
@@ -1006,21 +1027,24 @@ exports.submitImports = async (CTransferArray) => {
 
         let txidArray =[];
         let resultTxidArray =[];
-
+        if(logging){
         for (var i = 0, l = CTempArray.length; i < l; i++) {
             txidArray.push(CTempArray[i].txid)
-          
+                for(var j = 0; j < CTempArray[i].transfers.length; j++){
+            console.log("Exports from Verus : ",JSON.stringify(CTempArray[i].transfers[j]));
         } 
-        //  console.log("Submitimports conditioned :\n",JSON.stringify(CTempArray));
+            } 
+        }
+
         let result = {};
         try {
                 resultTxidArray =  await verusBridge.methods.checkImports(txidArray).call();
                 if(resultTxidArray[0] != "0x0000000000000000000000000000000000000000000000000000000000000000"){
                     result = await verusBridge.methods.submitImports(CTempArray).send({from: account.address,gas: maxGas});
                 return {result : result.transactionHash};
-                } else{
+                }else{
                 
-                return {result : "false"};
+                    return {result : "false"};
 
                 }
            
@@ -1115,9 +1139,8 @@ exports.submitAcceptedNotarization = async (params) => {
       }
       delete pBaasNotarization.launchcurrencies
       //build signature parameters
-  
-    //  console.log("signatures:");
-    //  console.log(signatures);
+      //console.log("signatures:");
+      //console.log(signatures);
   
       let sigKeys = Object.keys(signatures);
   
@@ -1329,9 +1352,5 @@ exports.invalid = async () => {
     console.log("\x1b[41m%s\x1b[0m","Invalid API call");
     return {"result": {"error": true, "message" : "Unrecognized API call"}}
 
-
 }
 
-//console.log(bitGoUTXO.address.fromBase58Check("i8SffSfrdZwcEfAHEqBf3vwX32btjNmPd4").hash.toString('hex'))
-
-//let sdfg =2;

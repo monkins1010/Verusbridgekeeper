@@ -344,7 +344,7 @@ this.writeVarInt = (newNumber) => {
                             {
                                 // hash with the one before us
                                 index |= 1 << bitPos;
-
+                                bitPos++;
                                 for (let i = 0; i < extraHashes; i++)
                                 {
                                     bitPos++;
