@@ -1,4 +1,4 @@
-# Alan
+# Verus Bridge
 
 Alan is a node js application passing transactions between Verus and Ethereum blockchains.
 
