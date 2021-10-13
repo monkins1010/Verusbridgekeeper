@@ -4,6 +4,7 @@ module.exports = Object.freeze({
                   VRSC:     "8cea50fa0fc6787f0ff3d68858b2fadd36e7a485"},
     VETHCURRENCYID: "iCtawpxUiCc2sEupt7Z4u8SDAncGZpgSKm",
     VERUSSYSTEMID:  "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq",
+    BRIDGEIDHEX: "0xffece948b8a38bbcc813411d2597f7f8485a0689",
 
     FLAG_DEFINITION_NOTARIZATION : 1,   // initial notarization on definition of currency/system/chain
     FLAG_PRE_LAUNCH : 2,                // pre-launch notarization

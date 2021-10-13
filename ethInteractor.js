@@ -15,6 +15,7 @@ const verusBridgeStartBlock = 	9303300;
 //Main coin ID's
 const ETHSystemID = constants.VETHCURRENCYID;
 const VerusSystemID = constants.VERUSSYSTEMID
+const BridgeIDHex = constants.BRIDGEIDHEX
 
 const bridgeAddress = settings.verusbridgeaddress;
 const notarizerAddress = settings.verusnotarizeraddress;
@@ -251,8 +252,8 @@ serializeCReserveTransfers = (crts) => {
             encodedOutput = Buffer.concat([encodedOutput,Buffer.from(removeHexLeader(crts[i].destsystemid),'hex')]);
         else if((crts[i].flags & 0x40) == 0x40 && crts[i].exportto)
             encodedOutput = Buffer.concat([encodedOutput,Buffer.from(removeHexLeader(crts[i].exportto),'hex')]);
-        if(logging)
-            console.log("log of CReserve: ",JSON.stringify(crts[i]));
+       // if(logging)
+          //  console.log("log of CReserve: ",JSON.stringify(crts[i]));
     }
    
     return encodedOutput;  //Buffer.from(removeHexLeader(
@@ -367,9 +368,9 @@ getProof = async (eIndex,blockHeight) => {
 
 // create the component parts for the proof
 
-createComponents = (transfers,blockHeight,previousExportHash) => {
+createComponents = (transfers,blockHeight,previousExportHash, poolavailable) => {
 
-    let cce = createCrossChainExport(transfers,blockHeight,false);
+    let cce = createCrossChainExport(transfers,blockHeight,false, poolavailable);
     //Var Int Components size as this can only 
     let encodedOutput = writeCompactSize(1);
     //eltype
@@ -417,7 +418,13 @@ createOutboundTransfers = (transfers) => {
         //outTransfer.convert = true;
         outTransfer.feecurrencyid = ethAddressToVAddress(transfer.feecurrencyid,IAddress);
         outTransfer.fees = uint64ToVerusFloat(transfer.fees);
-        outTransfer.destinationcurrencyid = ethAddressToVAddress(transfer.destcurrencyid,IAddress);
+        
+        if((parseInt(transfer.flags) & 1024) == 1024){ // RESERVETORESERVE FLAG
+            outTransfer.destinationcurrencyid = ethAddressToVAddress(transfer.secondreserveid,IAddress);
+            outTransfer.via = ethAddressToVAddress(transfer.destcurrencyid,IAddress);
+        }else{
+            outTransfer.destinationcurrencyid = ethAddressToVAddress(transfer.destcurrencyid,IAddress);
+        }
 
         let address = {};
 
@@ -443,7 +450,7 @@ createOutboundTransfers = (transfers) => {
     return outTransfers;
 }
 
-createCrossChainExport = (transfers,blockHeight,jsonready = false) => {
+createCrossChainExport =  (transfers,blockHeight,jsonready = false, poolavailable) => {
     let cce = {};
     let hash = keccak256(serializeCReserveTransfers(transfers).slice(1));
    // console.log("hash of transfers: ",hash.toString('Hex'));
@@ -454,7 +461,12 @@ createCrossChainExport = (transfers,blockHeight,jsonready = false) => {
     cce.sourceheightend = blockHeight;
     cce.sourcesystemid = ETHSystemID;
     cce.destinationsystemid = VerusSystemID;
-    cce.destinationcurrencyid = uint160ToVAddress(transfers[0].destcurrencyid,IAddress);
+
+    if(poolavailable != 0 && poolavailable < blockHeight){ // RESERVETORESERVE FLAG
+        cce.destinationcurrencyid = BridgeID;
+    }else{
+        cce.destinationcurrencyid = ETHSystemID;
+    }
     cce.numinputs = transfers.length;    
     cce.totalamounts = [];
     let totalamounts = [];
@@ -647,6 +659,8 @@ exports.getExports = async (input) => {
 
     try{
         //input chainname should always be VETH
+        let poolavailable = await verusNotarizer.methods.poolAvailable(BridgeIDHex).call();
+        poolavailable = parseInt(poolavailable);
         if(chainname != VerusSystemID) throw "i-Address not VRSCTEST";
         if(heightstart > 0 && heightstart < verusBridgeStartBlock ||heightstart == 1 ) 
             heightstart = 0;
@@ -657,10 +671,9 @@ exports.getExports = async (input) => {
         
         //end block is after startblock
         if(heightstart > 0 && heightend > 0 && heightend < heightstart) throw {message:"Start/End Height out of range: "};
-       // heightstart = heightend -200;
+        //heightstart = heightend -200;
         let exportSets = await verusBridge.methods.getReadyExportsByRange(heightstart,heightend).call();
-        
-      //  exportSets = parseContractExports(exportSets);
+        //exportSets = parseContractExports(exportSets);
         console.log("Height end: ",heightend, "heightStart:", heightstart );
 
         for(let i = 0;i < exportSets.length; i++){
@@ -670,13 +683,12 @@ exports.getExports = async (input) => {
             outputSet.height = exportSet.blockHeight;
             outputSet.txid = removeHexLeader(exportSet.exportHash).match(/[a-fA-F0-9]{2}/g).reverse().join('');   //export hash used for txid
             outputSet.txoutnum = 0; //exportSet.position;
-            outputSet.exportinfo = createCrossChainExport(exportSet.transfers,exportSet.blockHeight,true);
-            //get teh 
+            outputSet.exportinfo = createCrossChainExport(exportSet.transfers,exportSet.blockHeight,true, poolavailable);
             outputSet.partialtransactionproof = await getProof(exportSet.position,heightend);
             //serialize the prooflet index 
             let nullObj = "0x0000000000000000000000000000000000000000000000000000000000000000"
             let previousExportTxid = exportSet.position == '0' ? nullObj : await verusBridge.methods.readyExportHashes(exportSet.position - 1).call()
-            let components = createComponents(exportSet.transfers,parseInt(exportSet.blockHeight,10),previousExportTxid);
+            let components = createComponents(exportSet.transfers,parseInt(exportSet.blockHeight,10),previousExportTxid, poolavailable);
             outputSet.partialtransactionproof = serializeEthFullProof(outputSet.partialtransactionproof).toString('hex') + components.output;
            // outputSet.txid = components.txid;
             
@@ -688,7 +700,7 @@ exports.getExports = async (input) => {
             output.push(outputSet);
         }
         
-        console.log(JSON.stringify(output));
+       // console.log(JSON.stringify(output));
         return {"result":output};
     }catch(error){
         console.log("\x1b[41m%s\x1b[0m","GetExports error:" + error);
@@ -721,6 +733,7 @@ exports.getBestProofRoot = async (input) => {
         
         
         latestproofroot = await getProofRoot();
+        if(logging)
         console.log("getbestproofroot result:",{bestindex, validindexes, latestproofroot});
         return {"result": {bestindex, validindexes, latestproofroot}};
     }catch(error){
@@ -1031,7 +1044,7 @@ exports.submitImports = async (CTransferArray) => {
         for (var i = 0, l = CTempArray.length; i < l; i++) {
             txidArray.push(CTempArray[i].txid)
                 for(var j = 0; j < CTempArray[i].transfers.length; j++){
-            console.log("Exports from Verus : ",JSON.stringify(CTempArray[i].transfers[j]));
+           // console.log("Exports from Verus : ",JSON.stringify(CTempArray[i].transfers[j]));
         } 
             } 
         }
