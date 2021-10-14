@@ -15,6 +15,7 @@ const verusBridgeStartBlock = 	9303300;
 //Main coin ID's
 const ETHSystemID = constants.VETHCURRENCYID;
 const VerusSystemID = constants.VERUSSYSTEMID
+const BridgeID = constants.BRIDGEID
 const BridgeIDHex = constants.BRIDGEIDHEX
 
 const bridgeAddress = settings.verusbridgeaddress;
@@ -462,7 +463,7 @@ createCrossChainExport =  (transfers,blockHeight,jsonready = false, poolavailabl
     cce.sourcesystemid = ETHSystemID;
     cce.destinationsystemid = VerusSystemID;
 
-    if(poolavailable != 0 && poolavailable < blockHeight){ // RESERVETORESERVE FLAG
+    if(poolavailable != 0 && poolavailable < parseInt(blockHeight)){ // RESERVETORESERVE FLAG
         cce.destinationcurrencyid = BridgeID;
     }else{
         cce.destinationcurrencyid = ETHSystemID;
