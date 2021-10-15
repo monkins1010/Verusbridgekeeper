@@ -967,6 +967,10 @@ conditionSubmitImports = (CTransferArray) =>{
                 CTransferArray[i].exports[j].transfers[k].secondreserveid = CTransferArray[i].exports[j].transfers[k].secondreserveid ?
                     convertVerusAddressToEthAddress(CTransferArray[i].exports[j].transfers[k].secondreserveid): 
                     "0x67460c2f56774ed27eeb8685f29f6cec0b090b00"; //dummy value never read if not set as flags will not read.
+                if(CTransferArray[i].exports[j].transfers[k].via) {
+                    CTransferArray[i].exports[j].transfers[k].via = 
+                    convertVerusAddressToEthAddress(CTransferArray[i].exports[j].transfers[k].via); 
+                }
             }
         }
     }
@@ -990,8 +994,12 @@ fixETHObjects = (inputArray) =>{
 
         delete inputArray[i].destination.address;
         delete inputArray[i].destination.type;
-        
-        inputArray[i].destcurrencyid = inputArray[i].destinationcurrencyid;
+        if((parseInt(inputArray[i].flags) & 1024) == 1024){ // RESERVETORESERVE FLAG
+            inputArray[i].destcurrencyid = inputArray[i].via;
+            inputArray[i].secondreserveid = inputArray[i].destinationcurrencyid;
+        }else{
+            inputArray[i].destcurrencyid = inputArray[i].destinationcurrencyid;
+        }
         delete inputArray[i].destinationcurrencyid;
 
         inputArray[i].destsystemid = inputArray[i].exportto;
@@ -1029,7 +1037,7 @@ exports.submitImports = async (CTransferArray) => {
         //need to convert all the base64 encoded addresses back to uint160s to be correcly passed into solidity 
         //checks to 
         //    CTransferArray[0].height = 1;  // TODO: Remove Debug only
-        //  console.log("Submitimports in :\n",CTransferArray);
+        //  console.log("Submitimports in :\n", JSON.stringify(CTransferArray));
 
         CTransferArray = conditionSubmitImports(CTransferArray);
 
@@ -1045,11 +1053,11 @@ exports.submitImports = async (CTransferArray) => {
         for (var i = 0, l = CTempArray.length; i < l; i++) {
             txidArray.push(CTempArray[i].txid)
                 for(var j = 0; j < CTempArray[i].transfers.length; j++){
-           // console.log("Exports from Verus : ",JSON.stringify(CTempArray[i].transfers[j]));
+          //  console.log("Exports from Verus : ",JSON.stringify(CTempArray[i].transfers[j]));
         } 
             } 
         }
-
+      //  console.log(JSON.stringify(CTempArray))
         let result = {};
         try {
                 resultTxidArray =  await verusBridge.methods.checkImports(txidArray).call();
