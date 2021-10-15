@@ -51783,7 +51783,7 @@
                   "typeDescriptions": {
                     "typeIdentifier": "t_address",
                     "typeString": "address"
-                  },
+                  }, 
                   "typeName": {
                     "id": 2684,
                     "name": "address",
