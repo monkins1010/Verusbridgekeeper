@@ -310,9 +310,18 @@ serializeEthFullProof = (ethProof) => {
     //serialize address bytes 20
     encodedOutput = Buffer.concat([encodedOutput,Buffer.from(removeHexLeader(ethProof.address),'hex')]);
     let balanceBuffer = Buffer.alloc(8);
-    balanceBuffer.writeBigUInt64LE(BigInt(ethProof.balance));
-    
-    encodedOutput = Buffer.concat([encodedOutput,balanceBuffer]);
+    let balancehex = removeHexLeader(web3.utils.numberToHex(ethProof.balance));
+
+    if(balancehex.length > 16){
+        var minusone = Buffer.from("ffffffffffffffff",'hex');
+        var temphexreversed = web3.utils.padLeft(balancehex,64).match(/[a-fA-F0-9]{2}/g).reverse().join('');
+        var tempbuf = Buffer.from(temphexreversed,'hex');
+        encodedOutput = Buffer.concat([encodedOutput, minusone, tempbuf]);
+    }else{
+
+        balanceBuffer.writeBigUInt64LE(BigInt(ethProof.balance));
+        encodedOutput = Buffer.concat([encodedOutput,balanceBuffer]);
+    }
     //serialize codehash bytes 32
     encodedOutput = Buffer.concat([encodedOutput,Buffer.from(removeHexLeader(ethProof.codeHash),'hex')]);
     //serialize nonce as uint32
