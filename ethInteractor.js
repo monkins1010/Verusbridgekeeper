@@ -344,7 +344,7 @@ serializeEthFullProof = (ethProof) => {
     let proofval = Buffer.alloc(32);
     Buffer.from(proof,'hex').copy(proofval);
     encodedOutput = Buffer.concat([encodedOutput,proofval]);
-    if(isBigBalancer){
+    if(isBigBalance){
        let temphexreversed = web3.utils.padLeft(balancehex,64).match(/[a-fA-F0-9]{2}/g).reverse().join('');
        let tempbuf = Buffer.from(temphexreversed,'hex');
        encodedOutput = Buffer.concat([encodedOutput,tempbuf]);
