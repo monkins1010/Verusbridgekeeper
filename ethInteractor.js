@@ -311,17 +311,17 @@ serializeEthFullProof = (ethProof) => {
     encodedOutput = Buffer.concat([encodedOutput,Buffer.from(removeHexLeader(ethProof.address),'hex')]);
     let balanceBuffer = Buffer.alloc(8);
     let balancehex = removeHexLeader(web3.utils.numberToHex(ethProof.balance));
-
-    if(balancehex.length > 16){
-        var minusone = Buffer.from("ffffffffffffffff",'hex');
-        var temphexreversed = web3.utils.padLeft(balancehex,64).match(/[a-fA-F0-9]{2}/g).reverse().join('');
-        var tempbuf = Buffer.from(temphexreversed,'hex');
-        encodedOutput = Buffer.concat([encodedOutput, minusone, tempbuf]);
-    }else{
-
-        balanceBuffer.writeBigUInt64LE(BigInt(ethProof.balance));
-        encodedOutput = Buffer.concat([encodedOutput,balanceBuffer]);
+    let isBigBalance = balancehex.length > 16 || balancehex === "ffffffffffffffff";
+   
+    if(isBigBalance)
+    {
+        balanceBuffer = Buffer.from("ffffffffffffffff",'hex')
     }
+    else
+    {
+        balanceBuffer.writeBigUInt64LE(BigInt(ethProof.balance));
+    }
+    encodedOutput = Buffer.concat([encodedOutput,balanceBuffer]);
     //serialize codehash bytes 32
     encodedOutput = Buffer.concat([encodedOutput,Buffer.from(removeHexLeader(ethProof.codeHash),'hex')]);
     //serialize nonce as uint32
@@ -344,6 +344,11 @@ serializeEthFullProof = (ethProof) => {
     let proofval = Buffer.alloc(32);
     Buffer.from(proof,'hex').copy(proofval);
     encodedOutput = Buffer.concat([encodedOutput,proofval]);
+    if(isBigBalancer){
+       let temphexreversed = web3.utils.padLeft(balancehex,64).match(/[a-fA-F0-9]{2}/g).reverse().join('');
+       let tempbuf = Buffer.from(temphexreversed,'hex');
+       encodedOutput = Buffer.concat([encodedOutput,tempbuf]);
+    }
     //append 12 0s to the end of the buffer to override the component part of the Proof
     return encodedOutput;
 }
