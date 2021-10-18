@@ -66,9 +66,10 @@ this.convertToRAddress = (RAddress) => {
     return new BigNumber(inputNumber * 10e+18);
 }
 
-this.convertToInt64 = (inputNumber) => {
-    let coin = 100000000;
-    return inputNumber * coin;
+this.convertToInt64 = (inputNumber) => 
+{
+    let bigNum = BigNumber(inputNumber).multipliedBy(100000000);
+    return bigNum.toFixed(0);
 }
 
 this.addBytesIndicator = (input) => {
