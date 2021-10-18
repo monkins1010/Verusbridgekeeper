@@ -532,10 +532,12 @@ createCrossChainExportToETH = (transfers,blockHeight,jsonready = false) => {  //
     cce.sourceheightend = 2;
     cce.sourcesystemid = convertVerusAddressToEthAddress(ETHSystemID);
     cce.destinationsystemid = convertVerusAddressToEthAddress(VerusSystemID);
-    if(transfers[0].destcurrencyid.slice(0,2) == "0x" && transfers[0].destcurrencyid.length == 42){
-
+    if(transfers[0].destcurrencyid.slice(0,2) == "0x" && transfers[0].destcurrencyid.length == 42)
+    {
         cce.destinationcurrencyid = transfers[0].destcurrencyid;  //TODO:VERIFY
-    }else{
+    }
+    else
+    {
         cce.destinationcurrencyid = convertVerusAddressToEthAddress(transfers[0].destcurrencyid);  //TODO:VERIFY
     }
     cce.numinputs = transfers.length;    
@@ -683,7 +685,7 @@ exports.getExports = async (input) => {
         //if undefined default to the last block available - 20 and last block available (this might break the node as too many queries)
         if(heightend == undefined) heightend = await web3.eth.getBlockNumber();
         if(heightstart == undefined) heightstart = heightend;
-        
+
         //end block is after startblock
         if(heightstart > 0 && heightend > 0 && heightend < heightstart) throw {message:"Start/End Height out of range: "};
         //heightstart = heightend -200;
