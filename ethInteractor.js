@@ -971,7 +971,12 @@ conditionSubmitImports = (CTransferArray) =>{
                         parseInt(convertToInt64(CTransferArray[i].exports[j].transfers[k].currencyvalues[vals]));
                     delete CTransferArray[i].exports[j].transfers[k].currencyvalues[vals];
                 } 
-                
+                if(CTransferArray[i].exports[j].transfers[k].destination.type == 4 || 
+                    CTransferArray[i].exports[j].transfers[k].destination.type == 2) //type PKH or ID
+                    {
+                        CTransferArray[i].exports[j].transfers[k].destination.address = 
+                        convertVerusAddressToEthAddress(CTransferArray[i].exports[j].transfers[k].destination.address);
+                    }
                 CTransferArray[i].exports[j].transfers[k].destinationcurrencyid = 
                     convertVerusAddressToEthAddress(CTransferArray[i].exports[j].transfers[k].destinationcurrencyid);
                 CTransferArray[i].exports[j].transfers[k].exportto = 
