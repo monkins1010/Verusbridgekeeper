@@ -6,14 +6,11 @@ extractPartial = (proof) => {
 
     let proofBuffer = [];
 
-     for(let i = 0; i< proof.length; i++){  // std::vector<uint256> branch;
-
-    let hashtransfers = proof[i].exportinfo.hashtransfers;
+    for(let i = 0; i< proof.length; i++) {  // std::vector<uint256> branch;
+        let hashtransfers = proof[i].exportinfo.hashtransfers;
         proofBuffer.push({hashtransfers, stream: Buffer.from(removeHexLeader(proof[i].partialtransactionproof[0]),'hex'), output: {}});
-     }
+    }
     return proofBuffer;
-
-    
 }
 
 readVarIntPos = (memory) => {
@@ -187,7 +184,7 @@ readComponents = (memory) => {
 
     let retval = [];
 
-    for(let i = 0; i< compsize; i++){  //std::vector<CMMRNodeBranch> proofSequence;
+    for(let i = 0; i< compsize; i++) {  //std::vector<CMMRNodeBranch> proofSequence;
 
         temp =  readtype(memory,'uint',16);
         memory = temp.memory;
@@ -201,39 +198,31 @@ readComponents = (memory) => {
         temp =  readCompactInt(memory);
         memory = temp.memory;
         let compactint = temp.retval 
-        
-        let elVchObj = {};
-        if(elType == 2){
 
-            temp =  readtype(memory,'array',36);
+        // TODO: make sense of the hard coded numbers and why there is munging below. rmove the munging or fully understand
+        // why it is critical
+        let elVchObj = {};
+        if(elType == 2) {
+            temp =  readtype(memory, 'array', 36);
             memory = temp.memory;
 
-           let end =  compactint - 40;
-            elVchObj = temp.retval + memory.stream.slice(end,end + 4).toString('hex') ; 
+            let end = compactint - 40;
+            elVchObj = temp.retval + memory.stream.slice(end, end + 4).toString('hex') ; 
 
             memory.stream = memory.stream.slice(compactint - 36);
         }
         else
         {
-            elVchObj = "0x" + memory.stream.slice(0,compactint).toString('hex') ; 
+            elVchObj = "0x" + memory.stream.slice(0, compactint).toString('hex') ; 
             memory.stream = memory.stream.slice(compactint);
-
         }
 
-
+        // TODO: HARDENING - is this the addition of an extra object on the proof? If so, remove.
         temp =  txProof(memory);
         memory = temp.memory;
         let elProof = temp.retval
-        let VchObjIndex = 0;
-        if(elType == 4){
 
-            VchObjIndex = (elVchObj.indexOf(memory.hashtransfers.slice(2)) / 2) - 1; 
-
-
-
-        }
-
-        retval.push({elType,elIdx,elVchObj,VchObjIndex, elProof})
+        retval.push({elType, elIdx, elVchObj, elProof})
     }
     return {retval, memory}
 }
@@ -242,7 +231,6 @@ readComponents = (memory) => {
 partialTransactionProof = (memory) => {
 
     //PartialTransactionProof
-
     let temp = null;
     
     temp =  readtype(memory,'uint',8);
@@ -263,13 +251,14 @@ partialTransactionProof = (memory) => {
 
 
     let retval =
-    {version: version,
-     typeC: typeC,
-     txproof: txproof,
-     components: components
-     }
+    {
+        version: version,
+        typeC: typeC,
+        txproof: txproof,
+        components: components
+    }
  
-  //   console.log(JSON.stringify(retval));
+    //   console.log(JSON.stringify(retval));
      return retval;
 }
 

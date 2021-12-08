@@ -6,6 +6,7 @@ const { keccak256, addHexPrefix } = require('ethereumjs-util');
 
 require('./utils.js')();
 require('./deserializer.js')();
+const util = require('util');
 
 const ticker = process.argv.indexOf('-production') > -1 ? "VRSC" : "VRSCTEST" ;
 const logging = (process.argv.indexOf('-log') > -1);
@@ -465,16 +466,15 @@ createOutboundTransfers = (transfers) => {
     return outTransfers;
 }
 
-createCrossChainExport =  (transfers,blockHeight,jsonready = false, poolavailable) => {
+createCrossChainExport =  (transfers,blockHeight, jsonready = false, poolavailable) => {
     let cce = {};
     let hash = keccak256(serializeCReserveTransfers(transfers).slice(1));
-   // console.log("hash of transfers: ",hash.toString('Hex'));
-   // console.log("Serialize: ",serializeCReserveTransfers(transfers).slice(1).toString('Hex'));
+    // console.log("hash of transfers: ",hash.toString('Hex'));
+    // console.log("Serialize: ",serializeCReserveTransfers(transfers).slice(1).toString('Hex'));
     cce.version = 1;
     cce.flags = 2;
-    cce.sourceheightstart = blockHeight;
-    cce.sourceheightend = blockHeight;
     cce.sourcesystemid = ETHSystemID;
+    cce.hashtransfers = hash.toString('hex'); //hash the transfers
     cce.destinationsystemid = VerusSystemID;
 
     if(poolavailable != 0 && poolavailable < parseInt(blockHeight)){ // RESERVETORESERVE FLAG
@@ -482,6 +482,9 @@ createCrossChainExport =  (transfers,blockHeight,jsonready = false, poolavailabl
     }else{
         cce.destinationcurrencyid = ETHSystemID;
     }
+
+    cce.sourceheightstart = blockHeight;
+    cce.sourceheightend = blockHeight;
     cce.numinputs = transfers.length;    
     cce.totalamounts = [];
     let totalamounts = [];
@@ -511,12 +514,12 @@ createCrossChainExport =  (transfers,blockHeight,jsonready = false, poolavailabl
     for (var key in totalfees) {
         cce.totalfees.push({"currency":key,"amount":(jsonready? uint64ToVerusFloat(totalfees[key]):totalfees[key])});
     }
-    cce.hashtransfers = hash.toString('hex'); //hash the transfers
-  //  console.log(JSON.stringify(cce.totalamounts));
+
+    //  console.log(JSON.stringify(cce.totalamounts));
     cce.totalburned = [{"currency":'0x0000000000000000000000000000000000000000',"amount":0}]; // TODO: serialiser doesnt like empty strings or non BIgints
     cce.rewardaddress = "iKjrTCwoPFRk44fAi2nYNbPG16ZUQjv1NB"; //  TODO: what should this be?
     cce.firstinput = 1;
-  //  console.log("cce",JSON.stringify(cce));
+    //  console.log("cce",JSON.stringify(cce));
     return cce;
 }
 
@@ -528,10 +531,13 @@ createCrossChainExportToETH = (transfers,blockHeight,jsonready = false) => {  //
     //console.log("Serialize: ",serializeCReserveTransfers(transfers).slice(1).toString('Hex'));
     cce.version = 1;
     cce.flags = 2;
-    cce.sourceheightstart = 1; 
-    cce.sourceheightend = 2;
     cce.sourcesystemid = convertVerusAddressToEthAddress(ETHSystemID);
     cce.destinationsystemid = convertVerusAddressToEthAddress(VerusSystemID);
+    cce.hashtransfers = "0x" +  hash.toString('hex'); //hash the transfers
+
+    cce.sourceheightstart = 1; 
+    cce.sourceheightend = 2;
+
     if(transfers[0].destcurrencyid.slice(0,2) == "0x" && transfers[0].destcurrencyid.length == 42)
     {
         cce.destinationcurrencyid = transfers[0].destcurrencyid;  //TODO:VERIFY
@@ -548,8 +554,6 @@ createCrossChainExportToETH = (transfers,blockHeight,jsonready = false) => {  //
 
     for(let i = 0; i < transfers.length; i++){
         //sum up all the currencies
-        
-          
         if(transfers[i].currencyvalue.currency in totalamounts) 
             totalamounts[transfers[i].currencyvalue.currency] += transfers[i].currencyvalue.amount;
         else
@@ -571,8 +575,7 @@ createCrossChainExportToETH = (transfers,blockHeight,jsonready = false) => {  //
     for (var key in totalfees) {
         cce.totalfees.push({"currency":key,"amount":(jsonready? uint64ToVerusFloat(totalfees[key]):totalfees[key])});
     }
-  //  console.log(JSON.stringify(cce.totalamounts));
-    cce.hashtransfers = "0x" +  hash.toString('hex'); //hash the transfers
+    //  console.log(JSON.stringify(cce.totalamounts));
     cce.totalburned = [{"currency":'0x0000000000000000000000000000000000000000',"amount":0}]; // TODO: serialiser doesnt like empty strings or non BIgints
     cce.rewardaddress = {destinationtype: 09,destinationaddress: convertVerusAddressToEthAddress("iKjrTCwoPFRk44fAi2nYNbPG16ZUQjv1NB")}; //  TODO: what should this be
     cce.firstinput = 1;
@@ -702,12 +705,13 @@ exports.getExports = async (input) => {
             outputSet.txoutnum = 0; //exportSet.position;
             outputSet.exportinfo = createCrossChainExport(exportSet.transfers,exportSet.blockHeight,true, poolavailable);
             outputSet.partialtransactionproof = await getProof(exportSet.position,heightend);
+
             //serialize the prooflet index 
             let nullObj = "0x0000000000000000000000000000000000000000000000000000000000000000"
             let previousExportTxid = exportSet.position == '0' ? nullObj : await verusBridge.methods.readyExportHashes(exportSet.position - 1).call()
             let components = createComponents(exportSet.transfers,parseInt(exportSet.blockHeight,10),previousExportTxid, poolavailable);
             outputSet.partialtransactionproof = serializeEthFullProof(outputSet.partialtransactionproof).toString('hex') + components.output;
-           // outputSet.txid = components.txid;
+            // outputSet.txid = components.txid;
             
             //build transfer list
             //get the transactions at the index
@@ -717,13 +721,12 @@ exports.getExports = async (input) => {
             output.push(outputSet);
         }
         
-       // console.log(JSON.stringify(output));
+        // console.log(JSON.stringify(output));
         return {"result":output};
     }catch(error){
         console.log("\x1b[41m%s\x1b[0m","GetExports error:" + error);
         return {"result": {"error": true, "message" : error}};
     }
-
 }
 
 exports.getBestProofRoot = async (input) => {
@@ -993,9 +996,8 @@ conditionSubmitImports = (CTransferArray) =>{
     return CTransferArray;
 }
 
-fixETHObjects = (inputArray) =>{
+fixETHObjects = (inputArray) => {
 
-       
     for(let i = 0; i < inputArray.length; i++){
        
         let keys = Object.keys(inputArray[i].currencyvalues);
@@ -1010,10 +1012,10 @@ fixETHObjects = (inputArray) =>{
 
         delete inputArray[i].destination.address;
         delete inputArray[i].destination.type;
-        if((parseInt(inputArray[i].flags) & 1024) == 1024){ // RESERVETORESERVE FLAG
+        if ((parseInt(inputArray[i].flags) & 1024) == 1024){ // RESERVETORESERVE FLAG
             inputArray[i].destcurrencyid = inputArray[i].via;
             inputArray[i].secondreserveid = inputArray[i].destinationcurrencyid;
-        }else{
+        } else {
             inputArray[i].destcurrencyid = inputArray[i].destinationcurrencyid;
         }
         delete inputArray[i].destinationcurrencyid;
@@ -1032,7 +1034,6 @@ reshapeTransfers = (CTransferArray) =>{
         for(let j = 0; j < CTransferArray[i].exports.length; j++){
 
         let exportinfo = createCrossChainExportToETH(fixETHObjects(CTransferArray[i].exports[j].transfers));
-     
 
         let subarray = {height: 1,
                         txid: CTransferArray[i].exports[j].txid,
@@ -1050,58 +1051,58 @@ reshapeTransfers = (CTransferArray) =>{
 }
 
 exports.submitImports = async (CTransferArray) => {
-        //need to convert all the base64 encoded addresses back to uint160s to be correcly passed into solidity 
-        //checks to 
-        //    CTransferArray[0].height = 1;  // TODO: Remove Debug only
-        //  console.log("Submitimports in :\n", JSON.stringify(CTransferArray));
+    //need to convert all the base64 encoded addresses back to uint160s to be correcly passed into solidity 
+    //checks to 
+    //    CTransferArray[0].height = 1;  // TODO: Remove Debug only
+    //  console.log("Submitimports in :\n", JSON.stringify(CTransferArray));
 
-        CTransferArray = conditionSubmitImports(CTransferArray);
+    CTransferArray = conditionSubmitImports(CTransferArray);
 
-        let CTempArray = reshapeTransfers(CTransferArray);
-      
-        CTempArray =  deSerializeMMR(CTempArray);
+    let CTempArray = reshapeTransfers(CTransferArray);
 
-        CTempArray =  insertHeights(CTempArray);
+    CTempArray =  deSerializeMMR(CTempArray);
 
-        let txidArray =[];
-        let resultTxidArray =[];
-        if(logging){
+    CTempArray =  insertHeights(CTempArray);
+
+    let txidArray =[];
+    let resultTxidArray =[];
+    if (logging) {
         for (var i = 0, l = CTempArray.length; i < l; i++) {
             txidArray.push(CTempArray[i].txid)
-                for(var j = 0; j < CTempArray[i].transfers.length; j++){
-          //  console.log("Exports from Verus : ",JSON.stringify(CTempArray[i].transfers[j]));
-        } 
+            for(var j = 0; j < CTempArray[i].transfers.length; j++){
+                //  console.log("Exports from Verus : ",JSON.stringify(CTempArray[i].transfers[j]));
             } 
-        }
-      //  console.log(JSON.stringify(CTempArray))
-        let result = {};
-        try {
-                resultTxidArray =  await verusBridge.methods.checkImports(txidArray).call();
-                if(resultTxidArray[0] != "0x0000000000000000000000000000000000000000000000000000000000000000"){
-                    result = await verusBridge.methods.submitImports(CTempArray).send({from: account.address,gas: maxGas});
-                return {result : result.transactionHash};
-                }else{
-                
-                    return {result : "false"};
-
-                }
-           
-            
-        } catch(error){
-            //console.log("Error in\n",JSON.stringify(CTempArray));
-            lockexports = false;
-            if(error.reason)
-                console.log("\x1b[41m%s\x1b[0m","submitImports:" + error.reason);
-            else{    
-            if(error.receipt)
-                console.log("\x1b[41m%s\x1b[0m","submitImports:" + error.reason);
-            console.log("\x1b[41m%s\x1b[0m","submitImports:" + error);}
-            return {result: {result: error.message}};
-        }
-        
-
+        } 
     }
-    
+    //  console.log(JSON.stringify(CTempArray))
+    let result = {};
+    try {
+        for (let i = 0; i < CTempArray.length; i++)
+        {
+            console.dir(util.inspect(CTempArray[i], { depth: 6 }));
+        }
+        resultTxidArray =  await verusBridge.methods.checkImports(txidArray).call();
+        if(resultTxidArray[0] != "0x0000000000000000000000000000000000000000000000000000000000000000"){
+            result = await verusBridge.methods.submitImports(CTempArray).send({from: account.address,gas: maxGas});
+        return {result : result.transactionHash};
+        }else{
+        
+            return {result : "false"};
+
+        }
+    } catch(error){
+        //console.log("Error in\n",JSON.stringify(CTempArray));
+        lockexports = false;
+        if(error.reason)
+            console.log("\x1b[41m%s\x1b[0m","submitImports:" + error.reason);
+        else{    
+        if(error.receipt)
+            console.log("\x1b[41m%s\x1b[0m","submitImports:" + error.reason);
+        console.log("\x1b[41m%s\x1b[0m","submitImports:" + error);}
+        return {result: {result: error.message}};
+    }
+}
+
 IsLaunchCleared = (pBaasNotarization) =>{
     return pBaasNotarization.launchcleared == true ? constants.FLAG_START_NOTARIZATION : 0;
 }
@@ -1113,8 +1114,6 @@ IsLaunchConfirmed = (pBaasNotarization) =>{
 IsLaunchComplete = (pBaasNotarization) =>{
     return pBaasNotarization.launchcomplete == true ? constants.FLAG_LAUNCH_COMPLETE : 0;
 }
-
-
 
 exports.submitAcceptedNotarization = async (params) => {
 
