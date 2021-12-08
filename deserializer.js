@@ -199,8 +199,6 @@ readComponents = (memory) => {
         memory = temp.memory;
         let compactint = temp.retval 
 
-        // TODO: make sense of the hard coded numbers and why there is munging below. rmove the munging or fully understand
-        // why it is critical
         let elVchObj = {};
         if(elType == 2) {
             temp =  readtype(memory, 'array', 36);
@@ -217,7 +215,6 @@ readComponents = (memory) => {
             memory.stream = memory.stream.slice(compactint);
         }
 
-        // TODO: HARDENING - is this the addition of an extra object on the proof? If so, remove.
         temp =  txProof(memory);
         memory = temp.memory;
         let elProof = temp.retval
