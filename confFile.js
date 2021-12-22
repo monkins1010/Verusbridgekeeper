@@ -9,7 +9,7 @@ exports.loadConfFile = (chainName) => {
     let chaintc = chainName.toUpperCase();
     //const coinDir = settings.coin[chaintc]; // NOT USED
     let Config = settings.INIKeys;
-    const pbaasFolder = settings.pbaas["VETH"];  //TODO: Make modular
+    const pbaasFolder = settings.pbaas["000b090bec6c9ff28586eb7ed24e77562f0c4667"];  //TODO: Make modular
     const pbaasRoot = settings.pbaasRoot[chaintc];
     let rpcconf = {}; 
 
@@ -36,7 +36,7 @@ exports.loadConfFile = (chainName) => {
 
     let _data = {};
     try{
-        _data = fs.readFileSync(confPath + '/veth.conf' , 'utf8');
+        _data = fs.readFileSync(confPath + '/000b090bec6c9ff28586eb7ed24e77562f0c4667.conf' , 'utf8');
     }catch(error){
         if(error.code != 'ENOENT'){
         console.log("Quitting....\n\nError reading file at: ",confPath + "\nError: " + error.message );
