@@ -197,17 +197,17 @@ serializeCrossChainExport = (cce) => {
     let encodedOutput = writeUInt(cce.version,16);
     encodedOutput = Buffer.concat([encodedOutput,writeUInt(cce.flags,16)]);
     encodedOutput = Buffer.concat([encodedOutput,bitGoUTXO.address.fromBase58Check(cce.sourcesystemid,160).hash]);
-    encodedOutput = Buffer.concat([encodedOutput,writeVarInt(cce.sourceheightstart)]);
-    encodedOutput = Buffer.concat([encodedOutput,writeVarInt(cce.sourceheightend)]);
+    //hashtransfers uint256
+    encodedOutput = Buffer.concat([encodedOutput,Buffer.from( removeHexLeader(cce.hashtransfers),'hex')]);
     encodedOutput = Buffer.concat([encodedOutput,bitGoUTXO.address.fromBase58Check(cce.destinationsystemid,160).hash]);
     encodedOutput = Buffer.concat([encodedOutput,bitGoUTXO.address.fromBase58Check(cce.destinationcurrencyid,160).hash]);
+    encodedOutput = Buffer.concat([encodedOutput,writeVarInt(cce.sourceheightstart)]);
+    encodedOutput = Buffer.concat([encodedOutput,writeVarInt(cce.sourceheightend)]);
     encodedOutput = Buffer.concat([encodedOutput,writeUInt(cce.numinputs,32)]);
     //totalamounts CCurrencyValueMap
     encodedOutput = Buffer.concat([encodedOutput,serializeCCurrencyValueMapArray(cce.totalamounts)]);
     //totalfees CCurrencyValueMap
     encodedOutput = Buffer.concat([encodedOutput,serializeCCurrencyValueMapArray(cce.totalfees)]);
-    //hashtransfers uint256
-    encodedOutput = Buffer.concat([encodedOutput,Buffer.from( removeHexLeader(cce.hashtransfers),'hex')]);
     //totalburned CCurrencyValueMap
     encodedOutput = Buffer.concat([encodedOutput,writeCompactSize(1),serializeCCurrencyValueMap(cce.totalburned[0])]);  //fees always blank value map 0
     //CTransfer DEstionation for Reward Address
@@ -532,11 +532,8 @@ createCrossChainExportToETH = (transfers,blockHeight,jsonready = false) => {  //
     cce.version = 1;
     cce.flags = 2;
     cce.sourcesystemid = convertVerusAddressToEthAddress(ETHSystemID);
-    cce.destinationsystemid = convertVerusAddressToEthAddress(VerusSystemID);
     cce.hashtransfers = "0x" +  hash.toString('hex'); //hash the transfers
-
-    cce.sourceheightstart = 1; 
-    cce.sourceheightend = 2;
+    cce.destinationsystemid = convertVerusAddressToEthAddress(VerusSystemID);
 
     if(transfers[0].destcurrencyid.slice(0,2) == "0x" && transfers[0].destcurrencyid.length == 42)
     {
@@ -546,6 +543,10 @@ createCrossChainExportToETH = (transfers,blockHeight,jsonready = false) => {  //
     {
         cce.destinationcurrencyid = convertVerusAddressToEthAddress(transfers[0].destcurrencyid);  //TODO:VERIFY
     }
+
+    cce.sourceheightstart = 1; 
+    cce.sourceheightend = 2;
+
     cce.numinputs = transfers.length;    
     cce.totalamounts = [];
     let totalamounts = [];
@@ -1032,7 +1033,7 @@ fixETHObjects = (inputArray) => {
     return inputArray;
 }
 
-reshapeTransfers = (CTransferArray) =>{
+reshapeTransfers = (CTransferArray) => {
     let CTempArray = [];
     
     for(let i = 0; i < CTransferArray.length; i++){
