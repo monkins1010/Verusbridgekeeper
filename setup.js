@@ -12,10 +12,10 @@ exports.coin = {
   };
 
 exports.pbaas = {
-    VETH: {
-        darwin: "/pbaas/veth",
-        linux: "/pbaas/veth",
-        win32: "/pbaas/veth"
+  "000b090bec6c9ff28586eb7ed24e77562f0c4667": {
+        darwin: "/pbaas/000b090bec6c9ff28586eb7ed24e77562f0c4667",
+        linux: "/pbaas/000b090bec6c9ff28586eb7ed24e77562f0c4667",
+        win32: "/pbaas/000b090bec6c9ff28586eb7ed24e77562f0c4667"
     },
 };
 

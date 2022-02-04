@@ -44,7 +44,7 @@ exports.loadConfFile = (chainName) => {
         }
     }
 
-    if (_data.length && fs.existsSync(confPath + '/veth.conf') ) {
+    if (_data.length && fs.existsSync(confPath + '/000b090bec6c9ff28586eb7ed24e77562f0c4667.conf') ) {
         let _match;
      
         console.log("(veth.conf) file found at: ",confPath);
@@ -64,7 +64,7 @@ exports.loadConfFile = (chainName) => {
         rpcconf = Config;
     } else {
 
-        let err = fs.writeFileSync(confPath+ '/veth.conf',"", 'utf8');
+        let err = fs.writeFileSync(confPath+ '/000b090bec6c9ff28586eb7ed24e77562f0c4667.conf',"", 'utf8');
 
         if (err){
             console.log(err, 'Errror writing veth.conf', err.message);
@@ -72,11 +72,11 @@ exports.loadConfFile = (chainName) => {
         }
 
         for(const [key, value] of Object.entries(settings.RPCDefault[chaintc])){
-            fs.appendFileSync(confPath + '/veth.conf', `${key}=${value}`+ "\n");
+            fs.appendFileSync(confPath + '/000b090bec6c9ff28586eb7ed24e77562f0c4667.conf', `${key}=${value}`+ "\n");
             }
 
-        let tempvalues = fs.readFileSync(confPath + '/veth.conf' , 'utf8');
-        console.log("Quitting....\n\nPlease check veth.conf file located at: ",path.normalize(confPath + '/veth.conf') );
+        let tempvalues = fs.readFileSync(confPath + '/000b090bec6c9ff28586eb7ed24e77562f0c4667.conf' , 'utf8');
+        console.log("Quitting....\n\nPlease check veth.conf file located at: ",path.normalize(confPath + '/000b090bec6c9ff28586eb7ed24e77562f0c4667.conf') );
         console.log("Default Values:\n",ini.parse(tempvalues,'utf-8') )
         process.exit();
     }

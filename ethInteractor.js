@@ -1371,10 +1371,16 @@ exports.getLastImportFrom = async () => {
 
     let lastProof = await  getLastProofRoot();
 
+    
     if(logging)
-        console.log("latestProofRoot / lastProof:\n",latestProofRoot, lastProof);
+    console.log("latestProofRoot / lastProof:\n",latestProofRoot, lastProof);
+    
+    lastconfirmednotarization.proofroots = [];
+    lastconfirmednotarization.proofroots.push(latestProofRoot);
+    
+    if(lastProof.version != 0)
+        lastconfirmednotarization.proofroots.push(lastProof);
 
-    lastconfirmednotarization.proofroots = [latestProofRoot, lastProof];
     lastconfirmednotarization.lastconfirmedheight = 0;
     lastconfirmednotarization.lastconfirmed = 0;
 
