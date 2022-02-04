@@ -480,7 +480,7 @@ createCrossChainExport =  (transfers,blockHeight, jsonready = false, poolavailab
     if(poolavailable != 0 && poolavailable < parseInt(blockHeight)){ // RESERVETORESERVE FLAG
         cce.destinationcurrencyid = BridgeID;
     }else{
-        cce.destinationcurrencyid = ETHSystemID;
+        cce.destinationcurrencyid = VerusSystemID;
     }
 
     cce.sourceheightstart = blockHeight;
@@ -1076,7 +1076,7 @@ exports.submitImports = async (CTransferArray) => {
         for (var i = 0, l = CTempArray.length; i < l; i++) {
             txidArray.push(CTempArray[i].txid)
             for(var j = 0; j < CTempArray[i].transfers.length; j++){
-                //  console.log("Exports from Verus : ",JSON.stringify(CTempArray[i].transfers[j]));
+                  console.log("Exports from Verus : ",JSON.stringify(CTempArray[i]));
             } 
         } 
     }
@@ -1085,7 +1085,7 @@ exports.submitImports = async (CTransferArray) => {
     try {
         for (let i = 0; i < CTempArray.length; i++)
         {
-            console.dir(util.inspect(CTempArray[i], { depth: 6 }));
+         //   console.dir(util.inspect(CTempArray[i], { depth: 10 }));
         }
         resultTxidArray =  await verusBridge.methods.checkImports(txidArray).call();
         if(resultTxidArray[0] != "0x0000000000000000000000000000000000000000000000000000000000000000"){
