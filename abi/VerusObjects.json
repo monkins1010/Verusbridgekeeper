@@ -1,32 +1,32 @@
 {
   "contractName": "VerusObjects",
   "abi": [],
-  "metadata": "{\"compiler\":{\"version\":\"0.7.6+commit.7338295f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/Libraries/VerusObjects.sol\":\"VerusObjects\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"project:/contracts/Libraries/VerusObjects.sol\":{\"keccak256\":\"0xd0274346cdb551966e295f2718e45998ec5aaaa1376966f21520ecf89c53fc0c\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://8ea3a4d2dc51ba51aed7dbd427fecc3ef5c1b1e06758afbc47ade97b987c468f\",\"dweb:/ipfs/QmRVSscm5FLC16CjWaxCgBh2ESqtEPa4F9ZvYidkan4Pks\"]},\"project:/contracts/Libraries/VerusObjectsCommon.sol\":{\"keccak256\":\"0x4e6bfde84f497680dc572431076744accb0ac602cac88cd6b076faa9e2b7a597\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://60b9a4f1742aecb94f8151e3b8fc5e0aec3a2354f61f1a2fd26393568736cf05\",\"dweb:/ipfs/QmbZz4heNyScUEBrk1uFawzbbCPVeMsjrLyDJJuDE1W535\"]}},\"version\":1}",
-  "bytecode": "0x60566023600b82828239805160001a607314601657fe5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea2646970667358221220b4cb3e2612fd73d77ca521307ff39512fda2b097d393dd343b901a547c9059d364736f6c63430007060033",
-  "deployedBytecode": "0x73000000000000000000000000000000000000000030146080604052600080fdfea2646970667358221220b4cb3e2612fd73d77ca521307ff39512fda2b097d393dd343b901a547c9059d364736f6c63430007060033",
+  "metadata": "{\"compiler\":{\"version\":\"0.7.6+commit.7338295f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/Libraries/VerusObjects.sol\":\"VerusObjects\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"project:/contracts/Libraries/VerusObjects.sol\":{\"keccak256\":\"0x1ff8dba383329c4eb567023607d8d5ed91e39811500742c61b9f547a94412505\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://5861d3c29102fc160e635bf401e2f7afc70ae774232aa85e8ff2cb27c2dcebd3\",\"dweb:/ipfs/QmV75juzUhaS59mVE5NreoUtUwRmETzXCfbrP5hrJ8Kk8z\"]},\"project:/contracts/Libraries/VerusObjectsCommon.sol\":{\"keccak256\":\"0xa72ab21f4e7cb254c2747a73f914eccc0f92f612109f4432504b916e60e43934\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://424142b8d99557d9212431e989c33b1c5ebd877d0528c32e33c36d5ba04f9699\",\"dweb:/ipfs/QmeE9w2jA4g5Nnc28o4QEAtz7jmQUKeNX8nhHFULNCmmxb\"]}},\"version\":1}",
+  "bytecode": "0x60566023600b82828239805160001a607314601657fe5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea2646970667358221220cbd6db9e4d24f0a3ad12f362bf5080e0a3e0eaafe2ab6dc1b634f8ccfdb592f664736f6c63430007060033",
+  "deployedBytecode": "0x73000000000000000000000000000000000000000030146080604052600080fdfea2646970667358221220cbd6db9e4d24f0a3ad12f362bf5080e0a3e0eaafe2ab6dc1b634f8ccfdb592f664736f6c63430007060033",
   "immutableReferences": {},
   "generatedSources": [],
   "deployedGeneratedSources": [],
-  "sourceMap": "182:3248:2:-:0;;;;;;;;;;;;;;;;;;;;;;;;;",
-  "deployedSourceMap": "182:3248:2:-:0;;;;;;;;",
-  "source": "// SPDX-License-Identifier: MIT\r\n// Bridge between ethereum and verus\r\n\r\npragma solidity >=0.6.0 < 0.9.0;\r\npragma experimental ABIEncoderV2;\r\n\r\nimport \"./VerusObjectsCommon.sol\";\r\n\r\nlibrary VerusObjects {\r\n    \r\n    struct blockCreated {\r\n        uint index;\r\n        bool created;\r\n    }\r\n    struct infoDetails {\r\n        uint version;\r\n        string VRSCversion;\r\n        uint blocks;\r\n        uint tiptime;\r\n        string name;\r\n        bool testnet;\r\n    }\r\n    \r\n    struct currencyDetail {\r\n        uint version;\r\n        string name;\r\n        address currencyid;\r\n        address parent;\r\n        address systemid;\r\n        uint8 notarizationprotocol;\r\n        uint8 proofprotocol;\r\n        VerusObjectsCommon.CTransferDestination nativecurrencyid;\r\n        address launchsystemid;\r\n        uint startblock;\r\n        uint endblock;\r\n        uint256 initialsupply;\r\n        uint256 prelaunchcarveout;\r\n        address gatewayid;\r\n        address[] notaries;\r\n        uint minnotariesconfirm;\r\n    }\r\n    \r\n    struct CCurrencyValueMap {\r\n        address currency;\r\n        uint64 amount;\r\n    }\r\n\r\n    struct CReserveTransfer {\r\n        uint32 version;\r\n        CCurrencyValueMap currencyvalue;\r\n        uint32 flags;\r\n        address feecurrencyid;\r\n        uint256 fees;\r\n        VerusObjectsCommon.CTransferDestination destination;\r\n        address destcurrencyid;\r\n        address destsystemid;\r\n        address secondreserveid;\r\n    }\r\n\r\n\r\n    //CReserve Transfer Set is a simplified version of a crosschain export returning only the required info\r\n    \r\n    struct CReserveTransferSet {\r\n        uint position;\r\n        uint blockHeight;\r\n        bytes32 exportHash;\r\n        CReserveTransfer[] transfers;\r\n    }\r\n\r\n    struct LastImport {\r\n        uint height;\r\n        bytes32 txid; //this is actually the hash of the transfers that can be used for proof\r\n    }\r\n\r\n    struct CReserveTransferImport {\r\n        uint height;\r\n        bytes32 txid; //this is actually the hash of the transfers that can be used for proof\r\n        uint txoutnum; //index of the transfers in the exports array\r\n        CCrossChainExport exportinfo;\r\n        CPtransactionproof partialtransactionproof;  //partial transaction proof is for the \r\n        CReserveTransfer[] transfers ;\r\n    }\r\n\r\n    struct CCrossChainExport {\r\n        uint16 version;\r\n        uint16 flags;\r\n        address sourcesystemid;\r\n        uint32 sourceheightstart;\r\n        uint32 sourceheightend;\r\n        address destinationsystemid;\r\n        address destinationcurrencyid;\r\n        uint32 numinputs;\r\n        CCurrencyValueMap[] totalamounts;\r\n        CCurrencyValueMap[] totalfees;\r\n        bytes32 hashtransfers; // hashtransfers\r\n        CCurrencyValueMap[] totalburned;\r\n        VerusObjectsCommon.CTransferDestination rewardaddress; //reward address\r\n        int32 firstinput;\r\n    }\r\n\r\n    struct CMerkleBranch {\r\n\r\n        uint8  CMerkleBranchBase;\r\n        uint32 nIndex;\r\n        uint32 nSize;\r\n        bytes32[] branch;\r\n    }\r\n\r\n    struct CTXProof {\r\n        uint8 branchType;\r\n        CMerkleBranch proofSequence;\r\n    }\r\n\r\n    struct CComponents {\r\n        uint8 elType;\r\n        uint8 elIdx;\r\n        bytes elVchObj;\r\n        CTXProof[] elProof;\r\n        uint32 VchObjIndex;\r\n\r\n    }\r\n    \r\n    struct CPtransactionproof {\r\n        uint8 version;\r\n        uint8 typeC;\r\n        CTXProof[] txproof;\r\n        CComponents[] components;\r\n    }\r\n}",
-  "sourcePath": "D:\\dev\\Ethereum-verus-notarisation\\contracts\\Libraries\\VerusObjects.sol",
+  "sourceMap": "174:3128:2:-:0;;;;;;;;;;;;;;;;;;;;;;;;;",
+  "deployedSourceMap": "174:3128:2:-:0;;;;;;;;",
+  "source": "// SPDX-License-Identifier: MIT\n// Bridge between ethereum and verus\n\npragma solidity >=0.6.0 < 0.9.0;\npragma experimental ABIEncoderV2;\n\nimport \"./VerusObjectsCommon.sol\";\n\nlibrary VerusObjects {\n    \n    struct blockCreated {\n        uint index;\n        bool created;\n    }\n    struct infoDetails {\n        uint version;\n        string VRSCversion;\n        uint blocks;\n        uint tiptime;\n        string name;\n        bool testnet;\n    }\n    \n    struct currencyDetail {\n        uint version;\n        string name;\n        address currencyid;\n        address parent;\n        address systemid;\n        uint8 notarizationprotocol;\n        uint8 proofprotocol;\n        VerusObjectsCommon.CTransferDestination nativecurrencyid;\n        address launchsystemid;\n        uint startblock;\n        uint endblock;\n        uint256 initialsupply;\n        uint256 prelaunchcarveout;\n        address gatewayid;\n        address[] notaries;\n        uint minnotariesconfirm;\n    }\n    \n    struct CCurrencyValueMap {\n        address currency;\n        uint64 amount;\n    }\n\n    struct CReserveTransfer {\n        uint32 version;\n        CCurrencyValueMap currencyvalue;\n        uint32 flags;\n        address feecurrencyid;\n        uint256 fees;\n        VerusObjectsCommon.CTransferDestination destination;\n        address destcurrencyid;\n        address destsystemid;\n        address secondreserveid;\n    }\n\n\n    //CReserve Transfer Set is a simplified version of a crosschain export returning only the required info\n    \n    struct CReserveTransferSet {\n        uint position;\n        uint blockHeight;\n        bytes32 exportHash;\n        CReserveTransfer[] transfers;\n    }\n\n    struct LastImport {\n        uint height;\n        bytes32 txid; //this is actually the hash of the transfers that can be used for proof\n    }\n\n    struct CReserveTransferImport {\n        uint height;\n        bytes32 txid; //this is actually the hash of the transfers that can be used for proof\n        uint txoutnum; //index of the transfers in the exports array\n        CCrossChainExport exportinfo;\n        CPtransactionproof partialtransactionproof;  //partial transaction proof is for the \n        CReserveTransfer[] transfers ;\n    }\n\n    struct CCrossChainExport {\n        uint16 version;\n        uint16 flags;\n        address sourcesystemid;\n        uint32 sourceheightstart;\n        uint32 sourceheightend;\n        address destinationsystemid;\n        address destinationcurrencyid;\n        uint32 numinputs;\n        CCurrencyValueMap[] totalamounts;\n        CCurrencyValueMap[] totalfees;\n        bytes32 hashtransfers; // hashtransfers\n        CCurrencyValueMap[] totalburned;\n        VerusObjectsCommon.CTransferDestination rewardaddress; //reward address\n        int32 firstinput;\n    }\n\n    struct CMerkleBranch {\n\n        uint8  CMerkleBranchBase;\n        uint32 nIndex;\n        uint32 nSize;\n        bytes32[] branch;\n    }\n\n    struct CTXProof {\n        uint8 branchType;\n        CMerkleBranch proofSequence;\n    }\n\n    struct CComponents {\n        uint8 elType;\n        uint8 elIdx;\n        bytes elVchObj;\n        CTXProof[] elProof;\n        uint32 VchObjIndex;\n\n    }\n    \n    struct CPtransactionproof {\n        uint8 version;\n        uint8 typeC;\n        CTXProof[] txproof;\n        CComponents[] components;\n    }\n}",
+  "sourcePath": "/home/chris/Verus-Ethereum-contracts/contracts/Libraries/VerusObjects.sol",
   "ast": {
     "absolutePath": "project:/contracts/Libraries/VerusObjects.sol",
     "exportedSymbols": {
       "VerusObjects": [
-        253
+        256
       ],
       "VerusObjectsCommon": [
-        271
+        274
       ]
     },
-    "id": 254,
+    "id": 257,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 75,
+        "id": 78,
         "literals": [
           "solidity",
           ">=",
@@ -37,25 +37,25 @@
           ".0"
         ],
         "nodeType": "PragmaDirective",
-        "src": "73:32:2"
+        "src": "70:32:2"
       },
       {
-        "id": 76,
+        "id": 79,
         "literals": [
           "experimental",
           "ABIEncoderV2"
         ],
         "nodeType": "PragmaDirective",
-        "src": "107:33:2"
+        "src": "103:33:2"
       },
       {
         "absolutePath": "project:/contracts/Libraries/VerusObjectsCommon.sol",
         "file": "./VerusObjectsCommon.sol",
-        "id": 77,
+        "id": 80,
         "nodeType": "ImportDirective",
-        "scope": 254,
-        "sourceUnit": 272,
-        "src": "144:34:2",
+        "scope": 257,
+        "sourceUnit": 275,
+        "src": "138:34:2",
         "symbolAliases": [],
         "unitAlias": ""
       },
@@ -65,25 +65,25 @@
         "contractDependencies": [],
         "contractKind": "library",
         "fullyImplemented": true,
-        "id": 253,
+        "id": 256,
         "linearizedBaseContracts": [
-          253
+          256
         ],
         "name": "VerusObjects",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "canonicalName": "VerusObjects.blockCreated",
-            "id": 82,
+            "id": 85,
             "members": [
               {
                 "constant": false,
-                "id": 79,
+                "id": 82,
                 "mutability": "mutable",
                 "name": "index",
                 "nodeType": "VariableDeclaration",
-                "scope": 82,
-                "src": "247:10:2",
+                "scope": 85,
+                "src": "236:10:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -91,10 +91,10 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 78,
+                  "id": 81,
                   "name": "uint",
                   "nodeType": "ElementaryTypeName",
-                  "src": "247:4:2",
+                  "src": "236:4:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
@@ -104,12 +104,12 @@
               },
               {
                 "constant": false,
-                "id": 81,
+                "id": 84,
                 "mutability": "mutable",
                 "name": "created",
                 "nodeType": "VariableDeclaration",
-                "scope": 82,
-                "src": "268:12:2",
+                "scope": 85,
+                "src": "256:12:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -117,10 +117,10 @@
                   "typeString": "bool"
                 },
                 "typeName": {
-                  "id": 80,
+                  "id": 83,
                   "name": "bool",
                   "nodeType": "ElementaryTypeName",
-                  "src": "268:4:2",
+                  "src": "256:4:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_bool",
                     "typeString": "bool"
@@ -131,22 +131,22 @@
             ],
             "name": "blockCreated",
             "nodeType": "StructDefinition",
-            "scope": 253,
-            "src": "216:72:2",
+            "scope": 256,
+            "src": "206:69:2",
             "visibility": "public"
           },
           {
             "canonicalName": "VerusObjects.infoDetails",
-            "id": 95,
+            "id": 98,
             "members": [
               {
                 "constant": false,
-                "id": 84,
+                "id": 87,
                 "mutability": "mutable",
                 "name": "version",
                 "nodeType": "VariableDeclaration",
-                "scope": 95,
-                "src": "324:12:2",
+                "scope": 98,
+                "src": "309:12:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -154,10 +154,10 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 83,
+                  "id": 86,
                   "name": "uint",
                   "nodeType": "ElementaryTypeName",
-                  "src": "324:4:2",
+                  "src": "309:4:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
@@ -167,12 +167,12 @@
               },
               {
                 "constant": false,
-                "id": 86,
+                "id": 89,
                 "mutability": "mutable",
                 "name": "VRSCversion",
                 "nodeType": "VariableDeclaration",
-                "scope": 95,
-                "src": "347:18:2",
+                "scope": 98,
+                "src": "331:18:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -180,10 +180,10 @@
                   "typeString": "string"
                 },
                 "typeName": {
-                  "id": 85,
+                  "id": 88,
                   "name": "string",
                   "nodeType": "ElementaryTypeName",
-                  "src": "347:6:2",
+                  "src": "331:6:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_string_storage_ptr",
                     "typeString": "string"
@@ -193,12 +193,12 @@
               },
               {
                 "constant": false,
-                "id": 88,
+                "id": 91,
                 "mutability": "mutable",
                 "name": "blocks",
                 "nodeType": "VariableDeclaration",
-                "scope": 95,
-                "src": "376:11:2",
+                "scope": 98,
+                "src": "359:11:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -206,10 +206,10 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 87,
+                  "id": 90,
                   "name": "uint",
                   "nodeType": "ElementaryTypeName",
-                  "src": "376:4:2",
+                  "src": "359:4:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
@@ -219,12 +219,12 @@
               },
               {
                 "constant": false,
-                "id": 90,
+                "id": 93,
                 "mutability": "mutable",
                 "name": "tiptime",
                 "nodeType": "VariableDeclaration",
-                "scope": 95,
-                "src": "398:12:2",
+                "scope": 98,
+                "src": "380:12:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -232,10 +232,10 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 89,
+                  "id": 92,
                   "name": "uint",
                   "nodeType": "ElementaryTypeName",
-                  "src": "398:4:2",
+                  "src": "380:4:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
@@ -245,12 +245,12 @@
               },
               {
                 "constant": false,
-                "id": 92,
+                "id": 95,
                 "mutability": "mutable",
                 "name": "name",
                 "nodeType": "VariableDeclaration",
-                "scope": 95,
-                "src": "421:11:2",
+                "scope": 98,
+                "src": "402:11:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -258,10 +258,10 @@
                   "typeString": "string"
                 },
                 "typeName": {
-                  "id": 91,
+                  "id": 94,
                   "name": "string",
                   "nodeType": "ElementaryTypeName",
-                  "src": "421:6:2",
+                  "src": "402:6:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_string_storage_ptr",
                     "typeString": "string"
@@ -271,12 +271,12 @@
               },
               {
                 "constant": false,
-                "id": 94,
+                "id": 97,
                 "mutability": "mutable",
                 "name": "testnet",
                 "nodeType": "VariableDeclaration",
-                "scope": 95,
-                "src": "443:12:2",
+                "scope": 98,
+                "src": "423:12:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -284,10 +284,10 @@
                   "typeString": "bool"
                 },
                 "typeName": {
-                  "id": 93,
+                  "id": 96,
                   "name": "bool",
                   "nodeType": "ElementaryTypeName",
-                  "src": "443:4:2",
+                  "src": "423:4:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_bool",
                     "typeString": "bool"
@@ -298,22 +298,22 @@
             ],
             "name": "infoDetails",
             "nodeType": "StructDefinition",
-            "scope": 253,
-            "src": "294:169:2",
+            "scope": 256,
+            "src": "280:162:2",
             "visibility": "public"
           },
           {
             "canonicalName": "VerusObjects.currencyDetail",
-            "id": 129,
+            "id": 132,
             "members": [
               {
                 "constant": false,
-                "id": 97,
+                "id": 100,
                 "mutability": "mutable",
                 "name": "version",
                 "nodeType": "VariableDeclaration",
-                "scope": 129,
-                "src": "508:12:2",
+                "scope": 132,
+                "src": "484:12:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -321,10 +321,10 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 96,
+                  "id": 99,
                   "name": "uint",
                   "nodeType": "ElementaryTypeName",
-                  "src": "508:4:2",
+                  "src": "484:4:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
@@ -334,12 +334,12 @@
               },
               {
                 "constant": false,
-                "id": 99,
+                "id": 102,
                 "mutability": "mutable",
                 "name": "name",
                 "nodeType": "VariableDeclaration",
-                "scope": 129,
-                "src": "531:11:2",
+                "scope": 132,
+                "src": "506:11:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -347,10 +347,10 @@
                   "typeString": "string"
                 },
                 "typeName": {
-                  "id": 98,
+                  "id": 101,
                   "name": "string",
                   "nodeType": "ElementaryTypeName",
-                  "src": "531:6:2",
+                  "src": "506:6:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_string_storage_ptr",
                     "typeString": "string"
@@ -360,12 +360,12 @@
               },
               {
                 "constant": false,
-                "id": 101,
+                "id": 104,
                 "mutability": "mutable",
                 "name": "currencyid",
                 "nodeType": "VariableDeclaration",
-                "scope": 129,
-                "src": "553:18:2",
+                "scope": 132,
+                "src": "527:18:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -373,10 +373,10 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 100,
+                  "id": 103,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
-                  "src": "553:7:2",
+                  "src": "527:7:2",
                   "stateMutability": "nonpayable",
                   "typeDescriptions": {
                     "typeIdentifier": "t_address",
@@ -387,12 +387,12 @@
               },
               {
                 "constant": false,
-                "id": 103,
+                "id": 106,
                 "mutability": "mutable",
                 "name": "parent",
                 "nodeType": "VariableDeclaration",
-                "scope": 129,
-                "src": "582:14:2",
+                "scope": 132,
+                "src": "555:14:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -400,10 +400,10 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 102,
+                  "id": 105,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
-                  "src": "582:7:2",
+                  "src": "555:7:2",
                   "stateMutability": "nonpayable",
                   "typeDescriptions": {
                     "typeIdentifier": "t_address",
@@ -414,12 +414,12 @@
               },
               {
                 "constant": false,
-                "id": 105,
+                "id": 108,
                 "mutability": "mutable",
                 "name": "systemid",
                 "nodeType": "VariableDeclaration",
-                "scope": 129,
-                "src": "607:16:2",
+                "scope": 132,
+                "src": "579:16:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -427,10 +427,10 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 104,
+                  "id": 107,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
-                  "src": "607:7:2",
+                  "src": "579:7:2",
                   "stateMutability": "nonpayable",
                   "typeDescriptions": {
                     "typeIdentifier": "t_address",
@@ -441,12 +441,12 @@
               },
               {
                 "constant": false,
-                "id": 107,
+                "id": 110,
                 "mutability": "mutable",
                 "name": "notarizationprotocol",
                 "nodeType": "VariableDeclaration",
-                "scope": 129,
-                "src": "634:26:2",
+                "scope": 132,
+                "src": "605:26:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -454,10 +454,10 @@
                   "typeString": "uint8"
                 },
                 "typeName": {
-                  "id": 106,
+                  "id": 109,
                   "name": "uint8",
                   "nodeType": "ElementaryTypeName",
-                  "src": "634:5:2",
+                  "src": "605:5:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint8",
                     "typeString": "uint8"
@@ -467,12 +467,12 @@
               },
               {
                 "constant": false,
-                "id": 109,
+                "id": 112,
                 "mutability": "mutable",
                 "name": "proofprotocol",
                 "nodeType": "VariableDeclaration",
-                "scope": 129,
-                "src": "671:19:2",
+                "scope": 132,
+                "src": "641:19:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -480,10 +480,10 @@
                   "typeString": "uint8"
                 },
                 "typeName": {
-                  "id": 108,
+                  "id": 111,
                   "name": "uint8",
                   "nodeType": "ElementaryTypeName",
-                  "src": "671:5:2",
+                  "src": "641:5:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint8",
                     "typeString": "uint8"
@@ -493,26 +493,26 @@
               },
               {
                 "constant": false,
-                "id": 111,
+                "id": 114,
                 "mutability": "mutable",
                 "name": "nativecurrencyid",
                 "nodeType": "VariableDeclaration",
-                "scope": 129,
-                "src": "701:56:2",
+                "scope": 132,
+                "src": "670:56:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_struct$_CTransferDestination_$270_storage_ptr",
+                  "typeIdentifier": "t_struct$_CTransferDestination_$273_storage_ptr",
                   "typeString": "struct VerusObjectsCommon.CTransferDestination"
                 },
                 "typeName": {
-                  "id": 110,
+                  "id": 113,
                   "name": "VerusObjectsCommon.CTransferDestination",
                   "nodeType": "UserDefinedTypeName",
-                  "referencedDeclaration": 270,
-                  "src": "701:39:2",
+                  "referencedDeclaration": 273,
+                  "src": "670:39:2",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_CTransferDestination_$270_storage_ptr",
+                    "typeIdentifier": "t_struct$_CTransferDestination_$273_storage_ptr",
                     "typeString": "struct VerusObjectsCommon.CTransferDestination"
                   }
                 },
@@ -520,12 +520,12 @@
               },
               {
                 "constant": false,
-                "id": 113,
+                "id": 116,
                 "mutability": "mutable",
                 "name": "launchsystemid",
                 "nodeType": "VariableDeclaration",
-                "scope": 129,
-                "src": "768:22:2",
+                "scope": 132,
+                "src": "736:22:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -533,10 +533,10 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 112,
+                  "id": 115,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
-                  "src": "768:7:2",
+                  "src": "736:7:2",
                   "stateMutability": "nonpayable",
                   "typeDescriptions": {
                     "typeIdentifier": "t_address",
@@ -547,12 +547,12 @@
               },
               {
                 "constant": false,
-                "id": 115,
+                "id": 118,
                 "mutability": "mutable",
                 "name": "startblock",
                 "nodeType": "VariableDeclaration",
-                "scope": 129,
-                "src": "801:15:2",
+                "scope": 132,
+                "src": "768:15:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -560,10 +560,10 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 114,
+                  "id": 117,
                   "name": "uint",
                   "nodeType": "ElementaryTypeName",
-                  "src": "801:4:2",
+                  "src": "768:4:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
@@ -573,12 +573,12 @@
               },
               {
                 "constant": false,
-                "id": 117,
+                "id": 120,
                 "mutability": "mutable",
                 "name": "endblock",
                 "nodeType": "VariableDeclaration",
-                "scope": 129,
-                "src": "827:13:2",
+                "scope": 132,
+                "src": "793:13:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -586,10 +586,10 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 116,
+                  "id": 119,
                   "name": "uint",
                   "nodeType": "ElementaryTypeName",
-                  "src": "827:4:2",
+                  "src": "793:4:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
@@ -599,12 +599,12 @@
               },
               {
                 "constant": false,
-                "id": 119,
+                "id": 122,
                 "mutability": "mutable",
                 "name": "initialsupply",
                 "nodeType": "VariableDeclaration",
-                "scope": 129,
-                "src": "851:21:2",
+                "scope": 132,
+                "src": "816:21:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -612,10 +612,10 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 118,
+                  "id": 121,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
-                  "src": "851:7:2",
+                  "src": "816:7:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
@@ -625,12 +625,12 @@
               },
               {
                 "constant": false,
-                "id": 121,
+                "id": 124,
                 "mutability": "mutable",
                 "name": "prelaunchcarveout",
                 "nodeType": "VariableDeclaration",
-                "scope": 129,
-                "src": "883:25:2",
+                "scope": 132,
+                "src": "847:25:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -638,40 +638,13 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 120,
+                  "id": 123,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
-                  "src": "883:7:2",
+                  "src": "847:7:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
-                  }
-                },
-                "visibility": "internal"
-              },
-              {
-                "constant": false,
-                "id": 123,
-                "mutability": "mutable",
-                "name": "gatewayid",
-                "nodeType": "VariableDeclaration",
-                "scope": 129,
-                "src": "919:17:2",
-                "stateVariable": false,
-                "storageLocation": "default",
-                "typeDescriptions": {
-                  "typeIdentifier": "t_address",
-                  "typeString": "address"
-                },
-                "typeName": {
-                  "id": 122,
-                  "name": "address",
-                  "nodeType": "ElementaryTypeName",
-                  "src": "919:7:2",
-                  "stateMutability": "nonpayable",
-                  "typeDescriptions": {
-                    "typeIdentifier": "t_address",
-                    "typeString": "address"
                   }
                 },
                 "visibility": "internal"
@@ -680,10 +653,37 @@
                 "constant": false,
                 "id": 126,
                 "mutability": "mutable",
+                "name": "gatewayid",
+                "nodeType": "VariableDeclaration",
+                "scope": 132,
+                "src": "882:17:2",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_address",
+                  "typeString": "address"
+                },
+                "typeName": {
+                  "id": 125,
+                  "name": "address",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "882:7:2",
+                  "stateMutability": "nonpayable",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 129,
+                "mutability": "mutable",
                 "name": "notaries",
                 "nodeType": "VariableDeclaration",
-                "scope": 129,
-                "src": "947:18:2",
+                "scope": 132,
+                "src": "909:18:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -692,19 +692,19 @@
                 },
                 "typeName": {
                   "baseType": {
-                    "id": 124,
+                    "id": 127,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
-                    "src": "947:7:2",
+                    "src": "909:7:2",
                     "stateMutability": "nonpayable",
                     "typeDescriptions": {
                       "typeIdentifier": "t_address",
                       "typeString": "address"
                     }
                   },
-                  "id": 125,
+                  "id": 128,
                   "nodeType": "ArrayTypeName",
-                  "src": "947:9:2",
+                  "src": "909:9:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_array$_t_address_$dyn_storage_ptr",
                     "typeString": "address[]"
@@ -714,12 +714,12 @@
               },
               {
                 "constant": false,
-                "id": 128,
+                "id": 131,
                 "mutability": "mutable",
                 "name": "minnotariesconfirm",
                 "nodeType": "VariableDeclaration",
-                "scope": 129,
-                "src": "976:23:2",
+                "scope": 132,
+                "src": "937:23:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -727,10 +727,10 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 127,
+                  "id": 130,
                   "name": "uint",
                   "nodeType": "ElementaryTypeName",
-                  "src": "976:4:2",
+                  "src": "937:4:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
@@ -741,22 +741,22 @@
             ],
             "name": "currencyDetail",
             "nodeType": "StructDefinition",
-            "scope": 253,
-            "src": "475:532:2",
+            "scope": 256,
+            "src": "452:515:2",
             "visibility": "public"
           },
           {
             "canonicalName": "VerusObjects.CCurrencyValueMap",
-            "id": 134,
+            "id": 137,
             "members": [
               {
                 "constant": false,
-                "id": 131,
+                "id": 134,
                 "mutability": "mutable",
                 "name": "currency",
                 "nodeType": "VariableDeclaration",
-                "scope": 134,
-                "src": "1055:16:2",
+                "scope": 137,
+                "src": "1012:16:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -764,10 +764,10 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 130,
+                  "id": 133,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
-                  "src": "1055:7:2",
+                  "src": "1012:7:2",
                   "stateMutability": "nonpayable",
                   "typeDescriptions": {
                     "typeIdentifier": "t_address",
@@ -778,12 +778,12 @@
               },
               {
                 "constant": false,
-                "id": 133,
+                "id": 136,
                 "mutability": "mutable",
                 "name": "amount",
                 "nodeType": "VariableDeclaration",
-                "scope": 134,
-                "src": "1082:13:2",
+                "scope": 137,
+                "src": "1038:13:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -791,10 +791,10 @@
                   "typeString": "uint64"
                 },
                 "typeName": {
-                  "id": 132,
+                  "id": 135,
                   "name": "uint64",
                   "nodeType": "ElementaryTypeName",
-                  "src": "1082:6:2",
+                  "src": "1038:6:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint64",
                     "typeString": "uint64"
@@ -805,22 +805,22 @@
             ],
             "name": "CCurrencyValueMap",
             "nodeType": "StructDefinition",
-            "scope": 253,
-            "src": "1019:84:2",
+            "scope": 256,
+            "src": "977:81:2",
             "visibility": "public"
           },
           {
             "canonicalName": "VerusObjects.CReserveTransfer",
-            "id": 153,
+            "id": 156,
             "members": [
               {
                 "constant": false,
-                "id": 136,
+                "id": 139,
                 "mutability": "mutable",
                 "name": "version",
                 "nodeType": "VariableDeclaration",
-                "scope": 153,
-                "src": "1146:14:2",
+                "scope": 156,
+                "src": "1098:14:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -828,10 +828,10 @@
                   "typeString": "uint32"
                 },
                 "typeName": {
-                  "id": 135,
+                  "id": 138,
                   "name": "uint32",
                   "nodeType": "ElementaryTypeName",
-                  "src": "1146:6:2",
+                  "src": "1098:6:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint32",
                     "typeString": "uint32"
@@ -841,26 +841,26 @@
               },
               {
                 "constant": false,
-                "id": 138,
+                "id": 141,
                 "mutability": "mutable",
                 "name": "currencyvalue",
                 "nodeType": "VariableDeclaration",
-                "scope": 153,
-                "src": "1171:31:2",
+                "scope": 156,
+                "src": "1122:31:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_struct$_CCurrencyValueMap_$134_storage_ptr",
+                  "typeIdentifier": "t_struct$_CCurrencyValueMap_$137_storage_ptr",
                   "typeString": "struct VerusObjects.CCurrencyValueMap"
                 },
                 "typeName": {
-                  "id": 137,
+                  "id": 140,
                   "name": "CCurrencyValueMap",
                   "nodeType": "UserDefinedTypeName",
-                  "referencedDeclaration": 134,
-                  "src": "1171:17:2",
+                  "referencedDeclaration": 137,
+                  "src": "1122:17:2",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_CCurrencyValueMap_$134_storage_ptr",
+                    "typeIdentifier": "t_struct$_CCurrencyValueMap_$137_storage_ptr",
                     "typeString": "struct VerusObjects.CCurrencyValueMap"
                   }
                 },
@@ -868,12 +868,12 @@
               },
               {
                 "constant": false,
-                "id": 140,
+                "id": 143,
                 "mutability": "mutable",
                 "name": "flags",
                 "nodeType": "VariableDeclaration",
-                "scope": 153,
-                "src": "1213:12:2",
+                "scope": 156,
+                "src": "1163:12:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -881,10 +881,10 @@
                   "typeString": "uint32"
                 },
                 "typeName": {
-                  "id": 139,
+                  "id": 142,
                   "name": "uint32",
                   "nodeType": "ElementaryTypeName",
-                  "src": "1213:6:2",
+                  "src": "1163:6:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint32",
                     "typeString": "uint32"
@@ -894,12 +894,12 @@
               },
               {
                 "constant": false,
-                "id": 142,
+                "id": 145,
                 "mutability": "mutable",
                 "name": "feecurrencyid",
                 "nodeType": "VariableDeclaration",
-                "scope": 153,
-                "src": "1236:21:2",
+                "scope": 156,
+                "src": "1185:21:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -907,10 +907,10 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 141,
+                  "id": 144,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
-                  "src": "1236:7:2",
+                  "src": "1185:7:2",
                   "stateMutability": "nonpayable",
                   "typeDescriptions": {
                     "typeIdentifier": "t_address",
@@ -921,12 +921,12 @@
               },
               {
                 "constant": false,
-                "id": 144,
+                "id": 147,
                 "mutability": "mutable",
                 "name": "fees",
                 "nodeType": "VariableDeclaration",
-                "scope": 153,
-                "src": "1268:12:2",
+                "scope": 156,
+                "src": "1216:12:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -934,10 +934,10 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 143,
+                  "id": 146,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
-                  "src": "1268:7:2",
+                  "src": "1216:7:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
@@ -947,26 +947,26 @@
               },
               {
                 "constant": false,
-                "id": 146,
+                "id": 149,
                 "mutability": "mutable",
                 "name": "destination",
                 "nodeType": "VariableDeclaration",
-                "scope": 153,
-                "src": "1291:51:2",
+                "scope": 156,
+                "src": "1238:51:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_struct$_CTransferDestination_$270_storage_ptr",
+                  "typeIdentifier": "t_struct$_CTransferDestination_$273_storage_ptr",
                   "typeString": "struct VerusObjectsCommon.CTransferDestination"
                 },
                 "typeName": {
-                  "id": 145,
+                  "id": 148,
                   "name": "VerusObjectsCommon.CTransferDestination",
                   "nodeType": "UserDefinedTypeName",
-                  "referencedDeclaration": 270,
-                  "src": "1291:39:2",
+                  "referencedDeclaration": 273,
+                  "src": "1238:39:2",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_CTransferDestination_$270_storage_ptr",
+                    "typeIdentifier": "t_struct$_CTransferDestination_$273_storage_ptr",
                     "typeString": "struct VerusObjectsCommon.CTransferDestination"
                   }
                 },
@@ -974,12 +974,12 @@
               },
               {
                 "constant": false,
-                "id": 148,
+                "id": 151,
                 "mutability": "mutable",
                 "name": "destcurrencyid",
                 "nodeType": "VariableDeclaration",
-                "scope": 153,
-                "src": "1353:22:2",
+                "scope": 156,
+                "src": "1299:22:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -987,10 +987,10 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 147,
+                  "id": 150,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
-                  "src": "1353:7:2",
+                  "src": "1299:7:2",
                   "stateMutability": "nonpayable",
                   "typeDescriptions": {
                     "typeIdentifier": "t_address",
@@ -1001,12 +1001,12 @@
               },
               {
                 "constant": false,
-                "id": 150,
+                "id": 153,
                 "mutability": "mutable",
                 "name": "destsystemid",
                 "nodeType": "VariableDeclaration",
-                "scope": 153,
-                "src": "1386:20:2",
+                "scope": 156,
+                "src": "1331:20:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -1014,10 +1014,10 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 149,
+                  "id": 152,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
-                  "src": "1386:7:2",
+                  "src": "1331:7:2",
                   "stateMutability": "nonpayable",
                   "typeDescriptions": {
                     "typeIdentifier": "t_address",
@@ -1028,12 +1028,12 @@
               },
               {
                 "constant": false,
-                "id": 152,
+                "id": 155,
                 "mutability": "mutable",
                 "name": "secondreserveid",
                 "nodeType": "VariableDeclaration",
-                "scope": 153,
-                "src": "1417:23:2",
+                "scope": 156,
+                "src": "1361:23:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -1041,10 +1041,10 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 151,
+                  "id": 154,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
-                  "src": "1417:7:2",
+                  "src": "1361:7:2",
                   "stateMutability": "nonpayable",
                   "typeDescriptions": {
                     "typeIdentifier": "t_address",
@@ -1056,22 +1056,22 @@
             ],
             "name": "CReserveTransfer",
             "nodeType": "StructDefinition",
-            "scope": 253,
-            "src": "1111:337:2",
+            "scope": 256,
+            "src": "1064:327:2",
             "visibility": "public"
           },
           {
             "canonicalName": "VerusObjects.CReserveTransferSet",
-            "id": 163,
+            "id": 166,
             "members": [
               {
                 "constant": false,
-                "id": 155,
+                "id": 158,
                 "mutability": "mutable",
                 "name": "position",
                 "nodeType": "VariableDeclaration",
-                "scope": 163,
-                "src": "1611:13:2",
+                "scope": 166,
+                "src": "1548:13:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -1079,10 +1079,10 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 154,
+                  "id": 157,
                   "name": "uint",
                   "nodeType": "ElementaryTypeName",
-                  "src": "1611:4:2",
+                  "src": "1548:4:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
@@ -1092,12 +1092,12 @@
               },
               {
                 "constant": false,
-                "id": 157,
+                "id": 160,
                 "mutability": "mutable",
                 "name": "blockHeight",
                 "nodeType": "VariableDeclaration",
-                "scope": 163,
-                "src": "1635:16:2",
+                "scope": 166,
+                "src": "1571:16:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -1105,10 +1105,10 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 156,
+                  "id": 159,
                   "name": "uint",
                   "nodeType": "ElementaryTypeName",
-                  "src": "1635:4:2",
+                  "src": "1571:4:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
@@ -1118,12 +1118,12 @@
               },
               {
                 "constant": false,
-                "id": 159,
+                "id": 162,
                 "mutability": "mutable",
                 "name": "exportHash",
                 "nodeType": "VariableDeclaration",
-                "scope": 163,
-                "src": "1662:18:2",
+                "scope": 166,
+                "src": "1597:18:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -1131,10 +1131,10 @@
                   "typeString": "bytes32"
                 },
                 "typeName": {
-                  "id": 158,
+                  "id": 161,
                   "name": "bytes32",
                   "nodeType": "ElementaryTypeName",
-                  "src": "1662:7:2",
+                  "src": "1597:7:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_bytes32",
                     "typeString": "bytes32"
@@ -1144,35 +1144,35 @@
               },
               {
                 "constant": false,
-                "id": 162,
+                "id": 165,
                 "mutability": "mutable",
                 "name": "transfers",
                 "nodeType": "VariableDeclaration",
-                "scope": 163,
-                "src": "1691:28:2",
+                "scope": 166,
+                "src": "1625:28:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_array$_t_struct$_CReserveTransfer_$153_storage_$dyn_storage_ptr",
+                  "typeIdentifier": "t_array$_t_struct$_CReserveTransfer_$156_storage_$dyn_storage_ptr",
                   "typeString": "struct VerusObjects.CReserveTransfer[]"
                 },
                 "typeName": {
                   "baseType": {
-                    "id": 160,
+                    "id": 163,
                     "name": "CReserveTransfer",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 153,
-                    "src": "1691:16:2",
+                    "referencedDeclaration": 156,
+                    "src": "1625:16:2",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_CReserveTransfer_$153_storage_ptr",
+                      "typeIdentifier": "t_struct$_CReserveTransfer_$156_storage_ptr",
                       "typeString": "struct VerusObjects.CReserveTransfer"
                     }
                   },
-                  "id": 161,
+                  "id": 164,
                   "nodeType": "ArrayTypeName",
-                  "src": "1691:18:2",
+                  "src": "1625:18:2",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_struct$_CReserveTransfer_$153_storage_$dyn_storage_ptr",
+                    "typeIdentifier": "t_array$_t_struct$_CReserveTransfer_$156_storage_$dyn_storage_ptr",
                     "typeString": "struct VerusObjects.CReserveTransfer[]"
                   }
                 },
@@ -1181,22 +1181,22 @@
             ],
             "name": "CReserveTransferSet",
             "nodeType": "StructDefinition",
-            "scope": 253,
-            "src": "1573:154:2",
+            "scope": 256,
+            "src": "1511:149:2",
             "visibility": "public"
           },
           {
             "canonicalName": "VerusObjects.LastImport",
-            "id": 168,
+            "id": 171,
             "members": [
               {
                 "constant": false,
-                "id": 165,
+                "id": 168,
                 "mutability": "mutable",
                 "name": "height",
                 "nodeType": "VariableDeclaration",
-                "scope": 168,
-                "src": "1764:11:2",
+                "scope": 171,
+                "src": "1694:11:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -1204,10 +1204,10 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 164,
+                  "id": 167,
                   "name": "uint",
                   "nodeType": "ElementaryTypeName",
-                  "src": "1764:4:2",
+                  "src": "1694:4:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
@@ -1217,12 +1217,12 @@
               },
               {
                 "constant": false,
-                "id": 167,
+                "id": 170,
                 "mutability": "mutable",
                 "name": "txid",
                 "nodeType": "VariableDeclaration",
-                "scope": 168,
-                "src": "1786:12:2",
+                "scope": 171,
+                "src": "1715:12:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -1230,10 +1230,10 @@
                   "typeString": "bytes32"
                 },
                 "typeName": {
-                  "id": 166,
+                  "id": 169,
                   "name": "bytes32",
                   "nodeType": "ElementaryTypeName",
-                  "src": "1786:7:2",
+                  "src": "1715:7:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_bytes32",
                     "typeString": "bytes32"
@@ -1244,22 +1244,22 @@
             ],
             "name": "LastImport",
             "nodeType": "StructDefinition",
-            "scope": 253,
-            "src": "1735:143:2",
+            "scope": 256,
+            "src": "1666:140:2",
             "visibility": "public"
           },
           {
             "canonicalName": "VerusObjects.CReserveTransferImport",
-            "id": 182,
+            "id": 185,
             "members": [
               {
                 "constant": false,
-                "id": 170,
+                "id": 173,
                 "mutability": "mutable",
                 "name": "height",
                 "nodeType": "VariableDeclaration",
-                "scope": 182,
-                "src": "1927:11:2",
+                "scope": 185,
+                "src": "1852:11:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -1267,10 +1267,10 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 169,
+                  "id": 172,
                   "name": "uint",
                   "nodeType": "ElementaryTypeName",
-                  "src": "1927:4:2",
+                  "src": "1852:4:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
@@ -1280,12 +1280,12 @@
               },
               {
                 "constant": false,
-                "id": 172,
+                "id": 175,
                 "mutability": "mutable",
                 "name": "txid",
                 "nodeType": "VariableDeclaration",
-                "scope": 182,
-                "src": "1949:12:2",
+                "scope": 185,
+                "src": "1873:12:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -1293,10 +1293,10 @@
                   "typeString": "bytes32"
                 },
                 "typeName": {
-                  "id": 171,
+                  "id": 174,
                   "name": "bytes32",
                   "nodeType": "ElementaryTypeName",
-                  "src": "1949:7:2",
+                  "src": "1873:7:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_bytes32",
                     "typeString": "bytes32"
@@ -1306,12 +1306,12 @@
               },
               {
                 "constant": false,
-                "id": 174,
+                "id": 177,
                 "mutability": "mutable",
                 "name": "txoutnum",
                 "nodeType": "VariableDeclaration",
-                "scope": 182,
-                "src": "2044:13:2",
+                "scope": 185,
+                "src": "1967:13:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -1319,10 +1319,10 @@
                   "typeString": "uint256"
                 },
                 "typeName": {
-                  "id": 173,
+                  "id": 176,
                   "name": "uint",
                   "nodeType": "ElementaryTypeName",
-                  "src": "2044:4:2",
+                  "src": "1967:4:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
@@ -1332,54 +1332,27 @@
               },
               {
                 "constant": false,
-                "id": 176,
+                "id": 179,
                 "mutability": "mutable",
                 "name": "exportinfo",
                 "nodeType": "VariableDeclaration",
-                "scope": 182,
-                "src": "2114:28:2",
+                "scope": 185,
+                "src": "2036:28:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_struct$_CCrossChainExport_$214_storage_ptr",
+                  "typeIdentifier": "t_struct$_CCrossChainExport_$217_storage_ptr",
                   "typeString": "struct VerusObjects.CCrossChainExport"
                 },
                 "typeName": {
-                  "id": 175,
+                  "id": 178,
                   "name": "CCrossChainExport",
                   "nodeType": "UserDefinedTypeName",
-                  "referencedDeclaration": 214,
-                  "src": "2114:17:2",
+                  "referencedDeclaration": 217,
+                  "src": "2036:17:2",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_CCrossChainExport_$214_storage_ptr",
+                    "typeIdentifier": "t_struct$_CCrossChainExport_$217_storage_ptr",
                     "typeString": "struct VerusObjects.CCrossChainExport"
-                  }
-                },
-                "visibility": "internal"
-              },
-              {
-                "constant": false,
-                "id": 178,
-                "mutability": "mutable",
-                "name": "partialtransactionproof",
-                "nodeType": "VariableDeclaration",
-                "scope": 182,
-                "src": "2153:42:2",
-                "stateVariable": false,
-                "storageLocation": "default",
-                "typeDescriptions": {
-                  "typeIdentifier": "t_struct$_CPtransactionproof_$252_storage_ptr",
-                  "typeString": "struct VerusObjects.CPtransactionproof"
-                },
-                "typeName": {
-                  "id": 177,
-                  "name": "CPtransactionproof",
-                  "nodeType": "UserDefinedTypeName",
-                  "referencedDeclaration": 252,
-                  "src": "2153:18:2",
-                  "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_CPtransactionproof_$252_storage_ptr",
-                    "typeString": "struct VerusObjects.CPtransactionproof"
                   }
                 },
                 "visibility": "internal"
@@ -1388,33 +1361,60 @@
                 "constant": false,
                 "id": 181,
                 "mutability": "mutable",
-                "name": "transfers",
+                "name": "partialtransactionproof",
                 "nodeType": "VariableDeclaration",
-                "scope": 182,
-                "src": "2247:28:2",
+                "scope": 185,
+                "src": "2074:42:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_array$_t_struct$_CReserveTransfer_$153_storage_$dyn_storage_ptr",
+                  "typeIdentifier": "t_struct$_CPtransactionproof_$255_storage_ptr",
+                  "typeString": "struct VerusObjects.CPtransactionproof"
+                },
+                "typeName": {
+                  "id": 180,
+                  "name": "CPtransactionproof",
+                  "nodeType": "UserDefinedTypeName",
+                  "referencedDeclaration": 255,
+                  "src": "2074:18:2",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_CPtransactionproof_$255_storage_ptr",
+                    "typeString": "struct VerusObjects.CPtransactionproof"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 184,
+                "mutability": "mutable",
+                "name": "transfers",
+                "nodeType": "VariableDeclaration",
+                "scope": 185,
+                "src": "2167:28:2",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_array$_t_struct$_CReserveTransfer_$156_storage_$dyn_storage_ptr",
                   "typeString": "struct VerusObjects.CReserveTransfer[]"
                 },
                 "typeName": {
                   "baseType": {
-                    "id": 179,
+                    "id": 182,
                     "name": "CReserveTransfer",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 153,
-                    "src": "2247:16:2",
+                    "referencedDeclaration": 156,
+                    "src": "2167:16:2",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_CReserveTransfer_$153_storage_ptr",
+                      "typeIdentifier": "t_struct$_CReserveTransfer_$156_storage_ptr",
                       "typeString": "struct VerusObjects.CReserveTransfer"
                     }
                   },
-                  "id": 180,
+                  "id": 183,
                   "nodeType": "ArrayTypeName",
-                  "src": "2247:18:2",
+                  "src": "2167:18:2",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_struct$_CReserveTransfer_$153_storage_$dyn_storage_ptr",
+                    "typeIdentifier": "t_array$_t_struct$_CReserveTransfer_$156_storage_$dyn_storage_ptr",
                     "typeString": "struct VerusObjects.CReserveTransfer[]"
                   }
                 },
@@ -1423,22 +1423,22 @@
             ],
             "name": "CReserveTransferImport",
             "nodeType": "StructDefinition",
-            "scope": 253,
-            "src": "1886:398:2",
+            "scope": 256,
+            "src": "1812:391:2",
             "visibility": "public"
           },
           {
             "canonicalName": "VerusObjects.CCrossChainExport",
-            "id": 214,
+            "id": 217,
             "members": [
               {
                 "constant": false,
-                "id": 184,
+                "id": 187,
                 "mutability": "mutable",
                 "name": "version",
                 "nodeType": "VariableDeclaration",
-                "scope": 214,
-                "src": "2328:14:2",
+                "scope": 217,
+                "src": "2244:14:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -1446,10 +1446,10 @@
                   "typeString": "uint16"
                 },
                 "typeName": {
-                  "id": 183,
+                  "id": 186,
                   "name": "uint16",
                   "nodeType": "ElementaryTypeName",
-                  "src": "2328:6:2",
+                  "src": "2244:6:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint16",
                     "typeString": "uint16"
@@ -1459,12 +1459,12 @@
               },
               {
                 "constant": false,
-                "id": 186,
+                "id": 189,
                 "mutability": "mutable",
                 "name": "flags",
                 "nodeType": "VariableDeclaration",
-                "scope": 214,
-                "src": "2353:12:2",
+                "scope": 217,
+                "src": "2268:12:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -1472,10 +1472,10 @@
                   "typeString": "uint16"
                 },
                 "typeName": {
-                  "id": 185,
+                  "id": 188,
                   "name": "uint16",
                   "nodeType": "ElementaryTypeName",
-                  "src": "2353:6:2",
+                  "src": "2268:6:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint16",
                     "typeString": "uint16"
@@ -1485,12 +1485,12 @@
               },
               {
                 "constant": false,
-                "id": 188,
+                "id": 191,
                 "mutability": "mutable",
                 "name": "sourcesystemid",
                 "nodeType": "VariableDeclaration",
-                "scope": 214,
-                "src": "2376:22:2",
+                "scope": 217,
+                "src": "2290:22:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -1498,10 +1498,10 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 187,
+                  "id": 190,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
-                  "src": "2376:7:2",
+                  "src": "2290:7:2",
                   "stateMutability": "nonpayable",
                   "typeDescriptions": {
                     "typeIdentifier": "t_address",
@@ -1512,12 +1512,12 @@
               },
               {
                 "constant": false,
-                "id": 190,
+                "id": 193,
                 "mutability": "mutable",
                 "name": "sourceheightstart",
                 "nodeType": "VariableDeclaration",
-                "scope": 214,
-                "src": "2409:24:2",
+                "scope": 217,
+                "src": "2322:24:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -1525,10 +1525,10 @@
                   "typeString": "uint32"
                 },
                 "typeName": {
-                  "id": 189,
+                  "id": 192,
                   "name": "uint32",
                   "nodeType": "ElementaryTypeName",
-                  "src": "2409:6:2",
+                  "src": "2322:6:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint32",
                     "typeString": "uint32"
@@ -1538,12 +1538,12 @@
               },
               {
                 "constant": false,
-                "id": 192,
+                "id": 195,
                 "mutability": "mutable",
                 "name": "sourceheightend",
                 "nodeType": "VariableDeclaration",
-                "scope": 214,
-                "src": "2444:22:2",
+                "scope": 217,
+                "src": "2356:22:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -1551,10 +1551,10 @@
                   "typeString": "uint32"
                 },
                 "typeName": {
-                  "id": 191,
+                  "id": 194,
                   "name": "uint32",
                   "nodeType": "ElementaryTypeName",
-                  "src": "2444:6:2",
+                  "src": "2356:6:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint32",
                     "typeString": "uint32"
@@ -1564,12 +1564,12 @@
               },
               {
                 "constant": false,
-                "id": 194,
+                "id": 197,
                 "mutability": "mutable",
                 "name": "destinationsystemid",
                 "nodeType": "VariableDeclaration",
-                "scope": 214,
-                "src": "2477:27:2",
+                "scope": 217,
+                "src": "2388:27:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -1577,10 +1577,10 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 193,
+                  "id": 196,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
-                  "src": "2477:7:2",
+                  "src": "2388:7:2",
                   "stateMutability": "nonpayable",
                   "typeDescriptions": {
                     "typeIdentifier": "t_address",
@@ -1591,12 +1591,12 @@
               },
               {
                 "constant": false,
-                "id": 196,
+                "id": 199,
                 "mutability": "mutable",
                 "name": "destinationcurrencyid",
                 "nodeType": "VariableDeclaration",
-                "scope": 214,
-                "src": "2515:29:2",
+                "scope": 217,
+                "src": "2425:29:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -1604,40 +1604,14 @@
                   "typeString": "address"
                 },
                 "typeName": {
-                  "id": 195,
+                  "id": 198,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
-                  "src": "2515:7:2",
+                  "src": "2425:7:2",
                   "stateMutability": "nonpayable",
                   "typeDescriptions": {
                     "typeIdentifier": "t_address",
                     "typeString": "address"
-                  }
-                },
-                "visibility": "internal"
-              },
-              {
-                "constant": false,
-                "id": 198,
-                "mutability": "mutable",
-                "name": "numinputs",
-                "nodeType": "VariableDeclaration",
-                "scope": 214,
-                "src": "2555:16:2",
-                "stateVariable": false,
-                "storageLocation": "default",
-                "typeDescriptions": {
-                  "typeIdentifier": "t_uint32",
-                  "typeString": "uint32"
-                },
-                "typeName": {
-                  "id": 197,
-                  "name": "uint32",
-                  "nodeType": "ElementaryTypeName",
-                  "src": "2555:6:2",
-                  "typeDescriptions": {
-                    "typeIdentifier": "t_uint32",
-                    "typeString": "uint32"
                   }
                 },
                 "visibility": "internal"
@@ -1646,34 +1620,24 @@
                 "constant": false,
                 "id": 201,
                 "mutability": "mutable",
-                "name": "totalamounts",
+                "name": "numinputs",
                 "nodeType": "VariableDeclaration",
-                "scope": 214,
-                "src": "2582:32:2",
+                "scope": 217,
+                "src": "2464:16:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_array$_t_struct$_CCurrencyValueMap_$134_storage_$dyn_storage_ptr",
-                  "typeString": "struct VerusObjects.CCurrencyValueMap[]"
+                  "typeIdentifier": "t_uint32",
+                  "typeString": "uint32"
                 },
                 "typeName": {
-                  "baseType": {
-                    "id": 199,
-                    "name": "CCurrencyValueMap",
-                    "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 134,
-                    "src": "2582:17:2",
-                    "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_CCurrencyValueMap_$134_storage_ptr",
-                      "typeString": "struct VerusObjects.CCurrencyValueMap"
-                    }
-                  },
                   "id": 200,
-                  "nodeType": "ArrayTypeName",
-                  "src": "2582:19:2",
+                  "name": "uint32",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "2464:6:2",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_struct$_CCurrencyValueMap_$134_storage_$dyn_storage_ptr",
-                    "typeString": "struct VerusObjects.CCurrencyValueMap[]"
+                    "typeIdentifier": "t_uint32",
+                    "typeString": "uint32"
                   }
                 },
                 "visibility": "internal"
@@ -1682,14 +1646,14 @@
                 "constant": false,
                 "id": 204,
                 "mutability": "mutable",
-                "name": "totalfees",
+                "name": "totalamounts",
                 "nodeType": "VariableDeclaration",
-                "scope": 214,
-                "src": "2625:29:2",
+                "scope": 217,
+                "src": "2490:32:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_array$_t_struct$_CCurrencyValueMap_$134_storage_$dyn_storage_ptr",
+                  "typeIdentifier": "t_array$_t_struct$_CCurrencyValueMap_$137_storage_$dyn_storage_ptr",
                   "typeString": "struct VerusObjects.CCurrencyValueMap[]"
                 },
                 "typeName": {
@@ -1697,18 +1661,18 @@
                     "id": 202,
                     "name": "CCurrencyValueMap",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 134,
-                    "src": "2625:17:2",
+                    "referencedDeclaration": 137,
+                    "src": "2490:17:2",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_CCurrencyValueMap_$134_storage_ptr",
+                      "typeIdentifier": "t_struct$_CCurrencyValueMap_$137_storage_ptr",
                       "typeString": "struct VerusObjects.CCurrencyValueMap"
                     }
                   },
                   "id": 203,
                   "nodeType": "ArrayTypeName",
-                  "src": "2625:19:2",
+                  "src": "2490:19:2",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_struct$_CCurrencyValueMap_$134_storage_$dyn_storage_ptr",
+                    "typeIdentifier": "t_array$_t_struct$_CCurrencyValueMap_$137_storage_$dyn_storage_ptr",
                     "typeString": "struct VerusObjects.CCurrencyValueMap[]"
                   }
                 },
@@ -1716,12 +1680,48 @@
               },
               {
                 "constant": false,
-                "id": 206,
+                "id": 207,
+                "mutability": "mutable",
+                "name": "totalfees",
+                "nodeType": "VariableDeclaration",
+                "scope": 217,
+                "src": "2532:29:2",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_array$_t_struct$_CCurrencyValueMap_$137_storage_$dyn_storage_ptr",
+                  "typeString": "struct VerusObjects.CCurrencyValueMap[]"
+                },
+                "typeName": {
+                  "baseType": {
+                    "id": 205,
+                    "name": "CCurrencyValueMap",
+                    "nodeType": "UserDefinedTypeName",
+                    "referencedDeclaration": 137,
+                    "src": "2532:17:2",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_CCurrencyValueMap_$137_storage_ptr",
+                      "typeString": "struct VerusObjects.CCurrencyValueMap"
+                    }
+                  },
+                  "id": 206,
+                  "nodeType": "ArrayTypeName",
+                  "src": "2532:19:2",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_struct$_CCurrencyValueMap_$137_storage_$dyn_storage_ptr",
+                    "typeString": "struct VerusObjects.CCurrencyValueMap[]"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 209,
                 "mutability": "mutable",
                 "name": "hashtransfers",
                 "nodeType": "VariableDeclaration",
-                "scope": 214,
-                "src": "2665:21:2",
+                "scope": 217,
+                "src": "2571:21:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -1729,10 +1729,10 @@
                   "typeString": "bytes32"
                 },
                 "typeName": {
-                  "id": 205,
+                  "id": 208,
                   "name": "bytes32",
                   "nodeType": "ElementaryTypeName",
-                  "src": "2665:7:2",
+                  "src": "2571:7:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_bytes32",
                     "typeString": "bytes32"
@@ -1742,35 +1742,35 @@
               },
               {
                 "constant": false,
-                "id": 209,
+                "id": 212,
                 "mutability": "mutable",
                 "name": "totalburned",
                 "nodeType": "VariableDeclaration",
-                "scope": 214,
-                "src": "2714:31:2",
+                "scope": 217,
+                "src": "2619:31:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_array$_t_struct$_CCurrencyValueMap_$134_storage_$dyn_storage_ptr",
+                  "typeIdentifier": "t_array$_t_struct$_CCurrencyValueMap_$137_storage_$dyn_storage_ptr",
                   "typeString": "struct VerusObjects.CCurrencyValueMap[]"
                 },
                 "typeName": {
                   "baseType": {
-                    "id": 207,
+                    "id": 210,
                     "name": "CCurrencyValueMap",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 134,
-                    "src": "2714:17:2",
+                    "referencedDeclaration": 137,
+                    "src": "2619:17:2",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_CCurrencyValueMap_$134_storage_ptr",
+                      "typeIdentifier": "t_struct$_CCurrencyValueMap_$137_storage_ptr",
                       "typeString": "struct VerusObjects.CCurrencyValueMap"
                     }
                   },
-                  "id": 208,
+                  "id": 211,
                   "nodeType": "ArrayTypeName",
-                  "src": "2714:19:2",
+                  "src": "2619:19:2",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_struct$_CCurrencyValueMap_$134_storage_$dyn_storage_ptr",
+                    "typeIdentifier": "t_array$_t_struct$_CCurrencyValueMap_$137_storage_$dyn_storage_ptr",
                     "typeString": "struct VerusObjects.CCurrencyValueMap[]"
                   }
                 },
@@ -1778,26 +1778,26 @@
               },
               {
                 "constant": false,
-                "id": 211,
+                "id": 214,
                 "mutability": "mutable",
                 "name": "rewardaddress",
                 "nodeType": "VariableDeclaration",
-                "scope": 214,
-                "src": "2756:53:2",
+                "scope": 217,
+                "src": "2660:53:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_struct$_CTransferDestination_$270_storage_ptr",
+                  "typeIdentifier": "t_struct$_CTransferDestination_$273_storage_ptr",
                   "typeString": "struct VerusObjectsCommon.CTransferDestination"
                 },
                 "typeName": {
-                  "id": 210,
+                  "id": 213,
                   "name": "VerusObjectsCommon.CTransferDestination",
                   "nodeType": "UserDefinedTypeName",
-                  "referencedDeclaration": 270,
-                  "src": "2756:39:2",
+                  "referencedDeclaration": 273,
+                  "src": "2660:39:2",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_CTransferDestination_$270_storage_ptr",
+                    "typeIdentifier": "t_struct$_CTransferDestination_$273_storage_ptr",
                     "typeString": "struct VerusObjectsCommon.CTransferDestination"
                   }
                 },
@@ -1805,12 +1805,12 @@
               },
               {
                 "constant": false,
-                "id": 213,
+                "id": 216,
                 "mutability": "mutable",
                 "name": "firstinput",
                 "nodeType": "VariableDeclaration",
-                "scope": 214,
-                "src": "2837:16:2",
+                "scope": 217,
+                "src": "2740:16:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -1818,10 +1818,10 @@
                   "typeString": "int32"
                 },
                 "typeName": {
-                  "id": 212,
+                  "id": 215,
                   "name": "int32",
                   "nodeType": "ElementaryTypeName",
-                  "src": "2837:5:2",
+                  "src": "2740:5:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_int32",
                     "typeString": "int32"
@@ -1832,22 +1832,22 @@
             ],
             "name": "CCrossChainExport",
             "nodeType": "StructDefinition",
-            "scope": 253,
-            "src": "2292:569:2",
+            "scope": 256,
+            "src": "2209:554:2",
             "visibility": "public"
           },
           {
             "canonicalName": "VerusObjects.CMerkleBranch",
-            "id": 224,
+            "id": 227,
             "members": [
               {
                 "constant": false,
-                "id": 216,
+                "id": 219,
                 "mutability": "mutable",
                 "name": "CMerkleBranchBase",
                 "nodeType": "VariableDeclaration",
-                "scope": 224,
-                "src": "2903:24:2",
+                "scope": 227,
+                "src": "2801:24:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -1855,10 +1855,10 @@
                   "typeString": "uint8"
                 },
                 "typeName": {
-                  "id": 215,
+                  "id": 218,
                   "name": "uint8",
                   "nodeType": "ElementaryTypeName",
-                  "src": "2903:5:2",
+                  "src": "2801:5:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint8",
                     "typeString": "uint8"
@@ -1868,12 +1868,12 @@
               },
               {
                 "constant": false,
-                "id": 218,
+                "id": 221,
                 "mutability": "mutable",
                 "name": "nIndex",
                 "nodeType": "VariableDeclaration",
-                "scope": 224,
-                "src": "2938:13:2",
+                "scope": 227,
+                "src": "2835:13:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -1881,36 +1881,10 @@
                   "typeString": "uint32"
                 },
                 "typeName": {
-                  "id": 217,
+                  "id": 220,
                   "name": "uint32",
                   "nodeType": "ElementaryTypeName",
-                  "src": "2938:6:2",
-                  "typeDescriptions": {
-                    "typeIdentifier": "t_uint32",
-                    "typeString": "uint32"
-                  }
-                },
-                "visibility": "internal"
-              },
-              {
-                "constant": false,
-                "id": 220,
-                "mutability": "mutable",
-                "name": "nSize",
-                "nodeType": "VariableDeclaration",
-                "scope": 224,
-                "src": "2962:12:2",
-                "stateVariable": false,
-                "storageLocation": "default",
-                "typeDescriptions": {
-                  "typeIdentifier": "t_uint32",
-                  "typeString": "uint32"
-                },
-                "typeName": {
-                  "id": 219,
-                  "name": "uint32",
-                  "nodeType": "ElementaryTypeName",
-                  "src": "2962:6:2",
+                  "src": "2835:6:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint32",
                     "typeString": "uint32"
@@ -1922,10 +1896,36 @@
                 "constant": false,
                 "id": 223,
                 "mutability": "mutable",
+                "name": "nSize",
+                "nodeType": "VariableDeclaration",
+                "scope": 227,
+                "src": "2858:12:2",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint32",
+                  "typeString": "uint32"
+                },
+                "typeName": {
+                  "id": 222,
+                  "name": "uint32",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "2858:6:2",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint32",
+                    "typeString": "uint32"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 226,
+                "mutability": "mutable",
                 "name": "branch",
                 "nodeType": "VariableDeclaration",
-                "scope": 224,
-                "src": "2985:16:2",
+                "scope": 227,
+                "src": "2880:16:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -1934,18 +1934,18 @@
                 },
                 "typeName": {
                   "baseType": {
-                    "id": 221,
+                    "id": 224,
                     "name": "bytes32",
                     "nodeType": "ElementaryTypeName",
-                    "src": "2985:7:2",
+                    "src": "2880:7:2",
                     "typeDescriptions": {
                       "typeIdentifier": "t_bytes32",
                       "typeString": "bytes32"
                     }
                   },
-                  "id": 222,
+                  "id": 225,
                   "nodeType": "ArrayTypeName",
-                  "src": "2985:9:2",
+                  "src": "2880:9:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_array$_t_bytes32_$dyn_storage_ptr",
                     "typeString": "bytes32[]"
@@ -1956,22 +1956,22 @@
             ],
             "name": "CMerkleBranch",
             "nodeType": "StructDefinition",
-            "scope": 253,
-            "src": "2869:140:2",
+            "scope": 256,
+            "src": "2769:134:2",
             "visibility": "public"
           },
           {
             "canonicalName": "VerusObjects.CTXProof",
-            "id": 229,
+            "id": 232,
             "members": [
               {
                 "constant": false,
-                "id": 226,
+                "id": 229,
                 "mutability": "mutable",
                 "name": "branchType",
                 "nodeType": "VariableDeclaration",
-                "scope": 229,
-                "src": "3044:16:2",
+                "scope": 232,
+                "src": "2935:16:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -1979,10 +1979,10 @@
                   "typeString": "uint8"
                 },
                 "typeName": {
-                  "id": 225,
+                  "id": 228,
                   "name": "uint8",
                   "nodeType": "ElementaryTypeName",
-                  "src": "3044:5:2",
+                  "src": "2935:5:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint8",
                     "typeString": "uint8"
@@ -1992,26 +1992,26 @@
               },
               {
                 "constant": false,
-                "id": 228,
+                "id": 231,
                 "mutability": "mutable",
                 "name": "proofSequence",
                 "nodeType": "VariableDeclaration",
-                "scope": 229,
-                "src": "3071:27:2",
+                "scope": 232,
+                "src": "2961:27:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_struct$_CMerkleBranch_$224_storage_ptr",
+                  "typeIdentifier": "t_struct$_CMerkleBranch_$227_storage_ptr",
                   "typeString": "struct VerusObjects.CMerkleBranch"
                 },
                 "typeName": {
-                  "id": 227,
+                  "id": 230,
                   "name": "CMerkleBranch",
                   "nodeType": "UserDefinedTypeName",
-                  "referencedDeclaration": 224,
-                  "src": "3071:13:2",
+                  "referencedDeclaration": 227,
+                  "src": "2961:13:2",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_CMerkleBranch_$224_storage_ptr",
+                    "typeIdentifier": "t_struct$_CMerkleBranch_$227_storage_ptr",
                     "typeString": "struct VerusObjects.CMerkleBranch"
                   }
                 },
@@ -2020,22 +2020,22 @@
             ],
             "name": "CTXProof",
             "nodeType": "StructDefinition",
-            "scope": 253,
-            "src": "3017:89:2",
+            "scope": 256,
+            "src": "2909:86:2",
             "visibility": "public"
           },
           {
             "canonicalName": "VerusObjects.CComponents",
-            "id": 241,
+            "id": 244,
             "members": [
               {
                 "constant": false,
-                "id": 231,
+                "id": 234,
                 "mutability": "mutable",
                 "name": "elType",
                 "nodeType": "VariableDeclaration",
-                "scope": 241,
-                "src": "3144:12:2",
+                "scope": 244,
+                "src": "3030:12:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -2043,10 +2043,10 @@
                   "typeString": "uint8"
                 },
                 "typeName": {
-                  "id": 230,
+                  "id": 233,
                   "name": "uint8",
                   "nodeType": "ElementaryTypeName",
-                  "src": "3144:5:2",
+                  "src": "3030:5:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint8",
                     "typeString": "uint8"
@@ -2056,12 +2056,12 @@
               },
               {
                 "constant": false,
-                "id": 233,
+                "id": 236,
                 "mutability": "mutable",
                 "name": "elIdx",
                 "nodeType": "VariableDeclaration",
-                "scope": 241,
-                "src": "3167:11:2",
+                "scope": 244,
+                "src": "3052:11:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -2069,10 +2069,10 @@
                   "typeString": "uint8"
                 },
                 "typeName": {
-                  "id": 232,
+                  "id": 235,
                   "name": "uint8",
                   "nodeType": "ElementaryTypeName",
-                  "src": "3167:5:2",
+                  "src": "3052:5:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint8",
                     "typeString": "uint8"
@@ -2082,12 +2082,12 @@
               },
               {
                 "constant": false,
-                "id": 235,
+                "id": 238,
                 "mutability": "mutable",
                 "name": "elVchObj",
                 "nodeType": "VariableDeclaration",
-                "scope": 241,
-                "src": "3189:14:2",
+                "scope": 244,
+                "src": "3073:14:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -2095,10 +2095,10 @@
                   "typeString": "bytes"
                 },
                 "typeName": {
-                  "id": 234,
+                  "id": 237,
                   "name": "bytes",
                   "nodeType": "ElementaryTypeName",
-                  "src": "3189:5:2",
+                  "src": "3073:5:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_bytes_storage_ptr",
                     "typeString": "bytes"
@@ -2108,35 +2108,35 @@
               },
               {
                 "constant": false,
-                "id": 238,
+                "id": 241,
                 "mutability": "mutable",
                 "name": "elProof",
                 "nodeType": "VariableDeclaration",
-                "scope": 241,
-                "src": "3214:18:2",
+                "scope": 244,
+                "src": "3097:18:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_array$_t_struct$_CTXProof_$229_storage_$dyn_storage_ptr",
+                  "typeIdentifier": "t_array$_t_struct$_CTXProof_$232_storage_$dyn_storage_ptr",
                   "typeString": "struct VerusObjects.CTXProof[]"
                 },
                 "typeName": {
                   "baseType": {
-                    "id": 236,
+                    "id": 239,
                     "name": "CTXProof",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 229,
-                    "src": "3214:8:2",
+                    "referencedDeclaration": 232,
+                    "src": "3097:8:2",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_CTXProof_$229_storage_ptr",
+                      "typeIdentifier": "t_struct$_CTXProof_$232_storage_ptr",
                       "typeString": "struct VerusObjects.CTXProof"
                     }
                   },
-                  "id": 237,
+                  "id": 240,
                   "nodeType": "ArrayTypeName",
-                  "src": "3214:10:2",
+                  "src": "3097:10:2",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_struct$_CTXProof_$229_storage_$dyn_storage_ptr",
+                    "typeIdentifier": "t_array$_t_struct$_CTXProof_$232_storage_$dyn_storage_ptr",
                     "typeString": "struct VerusObjects.CTXProof[]"
                   }
                 },
@@ -2144,12 +2144,12 @@
               },
               {
                 "constant": false,
-                "id": 240,
+                "id": 243,
                 "mutability": "mutable",
                 "name": "VchObjIndex",
                 "nodeType": "VariableDeclaration",
-                "scope": 241,
-                "src": "3243:18:2",
+                "scope": 244,
+                "src": "3125:18:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -2157,10 +2157,10 @@
                   "typeString": "uint32"
                 },
                 "typeName": {
-                  "id": 239,
+                  "id": 242,
                   "name": "uint32",
                   "nodeType": "ElementaryTypeName",
-                  "src": "3243:6:2",
+                  "src": "3125:6:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint32",
                     "typeString": "uint32"
@@ -2171,22 +2171,22 @@
             ],
             "name": "CComponents",
             "nodeType": "StructDefinition",
-            "scope": 253,
-            "src": "3114:157:2",
+            "scope": 256,
+            "src": "3001:150:2",
             "visibility": "public"
           },
           {
             "canonicalName": "VerusObjects.CPtransactionproof",
-            "id": 252,
+            "id": 255,
             "members": [
               {
                 "constant": false,
-                "id": 243,
+                "id": 246,
                 "mutability": "mutable",
                 "name": "version",
                 "nodeType": "VariableDeclaration",
-                "scope": 252,
-                "src": "3320:13:2",
+                "scope": 255,
+                "src": "3197:13:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -2194,36 +2194,10 @@
                   "typeString": "uint8"
                 },
                 "typeName": {
-                  "id": 242,
+                  "id": 245,
                   "name": "uint8",
                   "nodeType": "ElementaryTypeName",
-                  "src": "3320:5:2",
-                  "typeDescriptions": {
-                    "typeIdentifier": "t_uint8",
-                    "typeString": "uint8"
-                  }
-                },
-                "visibility": "internal"
-              },
-              {
-                "constant": false,
-                "id": 245,
-                "mutability": "mutable",
-                "name": "typeC",
-                "nodeType": "VariableDeclaration",
-                "scope": 252,
-                "src": "3344:11:2",
-                "stateVariable": false,
-                "storageLocation": "default",
-                "typeDescriptions": {
-                  "typeIdentifier": "t_uint8",
-                  "typeString": "uint8"
-                },
-                "typeName": {
-                  "id": 244,
-                  "name": "uint8",
-                  "nodeType": "ElementaryTypeName",
-                  "src": "3344:5:2",
+                  "src": "3197:5:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint8",
                     "typeString": "uint8"
@@ -2235,34 +2209,24 @@
                 "constant": false,
                 "id": 248,
                 "mutability": "mutable",
-                "name": "txproof",
+                "name": "typeC",
                 "nodeType": "VariableDeclaration",
-                "scope": 252,
-                "src": "3366:18:2",
+                "scope": 255,
+                "src": "3220:11:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_array$_t_struct$_CTXProof_$229_storage_$dyn_storage_ptr",
-                  "typeString": "struct VerusObjects.CTXProof[]"
+                  "typeIdentifier": "t_uint8",
+                  "typeString": "uint8"
                 },
                 "typeName": {
-                  "baseType": {
-                    "id": 246,
-                    "name": "CTXProof",
-                    "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 229,
-                    "src": "3366:8:2",
-                    "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_CTXProof_$229_storage_ptr",
-                      "typeString": "struct VerusObjects.CTXProof"
-                    }
-                  },
                   "id": 247,
-                  "nodeType": "ArrayTypeName",
-                  "src": "3366:10:2",
+                  "name": "uint8",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "3220:5:2",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_struct$_CTXProof_$229_storage_$dyn_storage_ptr",
-                    "typeString": "struct VerusObjects.CTXProof[]"
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
                   }
                 },
                 "visibility": "internal"
@@ -2271,33 +2235,69 @@
                 "constant": false,
                 "id": 251,
                 "mutability": "mutable",
-                "name": "components",
+                "name": "txproof",
                 "nodeType": "VariableDeclaration",
-                "scope": 252,
-                "src": "3395:24:2",
+                "scope": 255,
+                "src": "3241:18:2",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_array$_t_struct$_CComponents_$241_storage_$dyn_storage_ptr",
-                  "typeString": "struct VerusObjects.CComponents[]"
+                  "typeIdentifier": "t_array$_t_struct$_CTXProof_$232_storage_$dyn_storage_ptr",
+                  "typeString": "struct VerusObjects.CTXProof[]"
                 },
                 "typeName": {
                   "baseType": {
                     "id": 249,
-                    "name": "CComponents",
+                    "name": "CTXProof",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 241,
-                    "src": "3395:11:2",
+                    "referencedDeclaration": 232,
+                    "src": "3241:8:2",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_CComponents_$241_storage_ptr",
-                      "typeString": "struct VerusObjects.CComponents"
+                      "typeIdentifier": "t_struct$_CTXProof_$232_storage_ptr",
+                      "typeString": "struct VerusObjects.CTXProof"
                     }
                   },
                   "id": 250,
                   "nodeType": "ArrayTypeName",
-                  "src": "3395:13:2",
+                  "src": "3241:10:2",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_array$_t_struct$_CComponents_$241_storage_$dyn_storage_ptr",
+                    "typeIdentifier": "t_array$_t_struct$_CTXProof_$232_storage_$dyn_storage_ptr",
+                    "typeString": "struct VerusObjects.CTXProof[]"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 254,
+                "mutability": "mutable",
+                "name": "components",
+                "nodeType": "VariableDeclaration",
+                "scope": 255,
+                "src": "3269:24:2",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_array$_t_struct$_CComponents_$244_storage_$dyn_storage_ptr",
+                  "typeString": "struct VerusObjects.CComponents[]"
+                },
+                "typeName": {
+                  "baseType": {
+                    "id": 252,
+                    "name": "CComponents",
+                    "nodeType": "UserDefinedTypeName",
+                    "referencedDeclaration": 244,
+                    "src": "3269:11:2",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_CComponents_$244_storage_ptr",
+                      "typeString": "struct VerusObjects.CComponents"
+                    }
+                  },
+                  "id": 253,
+                  "nodeType": "ArrayTypeName",
+                  "src": "3269:13:2",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_struct$_CComponents_$244_storage_$dyn_storage_ptr",
                     "typeString": "struct VerusObjects.CComponents[]"
                   }
                 },
@@ -2306,26 +2306,26 @@
             ],
             "name": "CPtransactionproof",
             "nodeType": "StructDefinition",
-            "scope": 253,
-            "src": "3283:144:2",
+            "scope": 256,
+            "src": "3161:139:2",
             "visibility": "public"
           }
         ],
-        "scope": 254,
-        "src": "182:3248:2"
+        "scope": 257,
+        "src": "174:3128:2"
       }
     ],
-    "src": "73:3357:2"
+    "src": "70:3232:2"
   },
   "legacyAST": {
     "attributes": {
       "absolutePath": "project:/contracts/Libraries/VerusObjects.sol",
       "exportedSymbols": {
         "VerusObjects": [
-          253
+          256
         ],
         "VerusObjectsCommon": [
-          271
+          274
         ]
       },
       "license": "MIT"
@@ -2343,9 +2343,9 @@
             ".0"
           ]
         },
-        "id": 75,
+        "id": 78,
         "name": "PragmaDirective",
-        "src": "73:32:2"
+        "src": "70:32:2"
       },
       {
         "attributes": {
@@ -2354,24 +2354,24 @@
             "ABIEncoderV2"
           ]
         },
-        "id": 76,
+        "id": 79,
         "name": "PragmaDirective",
-        "src": "107:33:2"
+        "src": "103:33:2"
       },
       {
         "attributes": {
-          "SourceUnit": 272,
+          "SourceUnit": 275,
           "absolutePath": "project:/contracts/Libraries/VerusObjectsCommon.sol",
           "file": "./VerusObjectsCommon.sol",
-          "scope": 254,
+          "scope": 257,
           "symbolAliases": [
             null
           ],
           "unitAlias": ""
         },
-        "id": 77,
+        "id": 80,
         "name": "ImportDirective",
-        "src": "144:34:2"
+        "src": "138:34:2"
       },
       {
         "attributes": {
@@ -2385,17 +2385,17 @@
           "contractKind": "library",
           "fullyImplemented": true,
           "linearizedBaseContracts": [
-            253
+            256
           ],
           "name": "VerusObjects",
-          "scope": 254
+          "scope": 257
         },
         "children": [
           {
             "attributes": {
               "canonicalName": "VerusObjects.blockCreated",
               "name": "blockCreated",
-              "scope": 253,
+              "scope": 256,
               "visibility": "public"
             },
             "children": [
@@ -2404,7 +2404,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "index",
-                  "scope": 82,
+                  "scope": 85,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -2416,21 +2416,21 @@
                       "name": "uint",
                       "type": "uint256"
                     },
-                    "id": 78,
+                    "id": 81,
                     "name": "ElementaryTypeName",
-                    "src": "247:4:2"
+                    "src": "236:4:2"
                   }
                 ],
-                "id": 79,
+                "id": 82,
                 "name": "VariableDeclaration",
-                "src": "247:10:2"
+                "src": "236:10:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "created",
-                  "scope": 82,
+                  "scope": 85,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "bool",
@@ -2442,25 +2442,25 @@
                       "name": "bool",
                       "type": "bool"
                     },
-                    "id": 80,
+                    "id": 83,
                     "name": "ElementaryTypeName",
-                    "src": "268:4:2"
+                    "src": "256:4:2"
                   }
                 ],
-                "id": 81,
+                "id": 84,
                 "name": "VariableDeclaration",
-                "src": "268:12:2"
+                "src": "256:12:2"
               }
             ],
-            "id": 82,
+            "id": 85,
             "name": "StructDefinition",
-            "src": "216:72:2"
+            "src": "206:69:2"
           },
           {
             "attributes": {
               "canonicalName": "VerusObjects.infoDetails",
               "name": "infoDetails",
-              "scope": 253,
+              "scope": 256,
               "visibility": "public"
             },
             "children": [
@@ -2469,7 +2469,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "version",
-                  "scope": 95,
+                  "scope": 98,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -2481,21 +2481,21 @@
                       "name": "uint",
                       "type": "uint256"
                     },
-                    "id": 83,
+                    "id": 86,
                     "name": "ElementaryTypeName",
-                    "src": "324:4:2"
+                    "src": "309:4:2"
                   }
                 ],
-                "id": 84,
+                "id": 87,
                 "name": "VariableDeclaration",
-                "src": "324:12:2"
+                "src": "309:12:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "VRSCversion",
-                  "scope": 95,
+                  "scope": 98,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "string",
@@ -2507,21 +2507,21 @@
                       "name": "string",
                       "type": "string"
                     },
-                    "id": 85,
+                    "id": 88,
                     "name": "ElementaryTypeName",
-                    "src": "347:6:2"
+                    "src": "331:6:2"
                   }
                 ],
-                "id": 86,
+                "id": 89,
                 "name": "VariableDeclaration",
-                "src": "347:18:2"
+                "src": "331:18:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "blocks",
-                  "scope": 95,
+                  "scope": 98,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -2533,21 +2533,21 @@
                       "name": "uint",
                       "type": "uint256"
                     },
-                    "id": 87,
+                    "id": 90,
                     "name": "ElementaryTypeName",
-                    "src": "376:4:2"
+                    "src": "359:4:2"
                   }
                 ],
-                "id": 88,
+                "id": 91,
                 "name": "VariableDeclaration",
-                "src": "376:11:2"
+                "src": "359:11:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "tiptime",
-                  "scope": 95,
+                  "scope": 98,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -2559,21 +2559,21 @@
                       "name": "uint",
                       "type": "uint256"
                     },
-                    "id": 89,
+                    "id": 92,
                     "name": "ElementaryTypeName",
-                    "src": "398:4:2"
+                    "src": "380:4:2"
                   }
                 ],
-                "id": 90,
+                "id": 93,
                 "name": "VariableDeclaration",
-                "src": "398:12:2"
+                "src": "380:12:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "name",
-                  "scope": 95,
+                  "scope": 98,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "string",
@@ -2585,21 +2585,21 @@
                       "name": "string",
                       "type": "string"
                     },
-                    "id": 91,
+                    "id": 94,
                     "name": "ElementaryTypeName",
-                    "src": "421:6:2"
+                    "src": "402:6:2"
                   }
                 ],
-                "id": 92,
+                "id": 95,
                 "name": "VariableDeclaration",
-                "src": "421:11:2"
+                "src": "402:11:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "testnet",
-                  "scope": 95,
+                  "scope": 98,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "bool",
@@ -2611,25 +2611,25 @@
                       "name": "bool",
                       "type": "bool"
                     },
-                    "id": 93,
+                    "id": 96,
                     "name": "ElementaryTypeName",
-                    "src": "443:4:2"
+                    "src": "423:4:2"
                   }
                 ],
-                "id": 94,
+                "id": 97,
                 "name": "VariableDeclaration",
-                "src": "443:12:2"
+                "src": "423:12:2"
               }
             ],
-            "id": 95,
+            "id": 98,
             "name": "StructDefinition",
-            "src": "294:169:2"
+            "src": "280:162:2"
           },
           {
             "attributes": {
               "canonicalName": "VerusObjects.currencyDetail",
               "name": "currencyDetail",
-              "scope": 253,
+              "scope": 256,
               "visibility": "public"
             },
             "children": [
@@ -2638,7 +2638,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "version",
-                  "scope": 129,
+                  "scope": 132,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -2650,21 +2650,21 @@
                       "name": "uint",
                       "type": "uint256"
                     },
-                    "id": 96,
+                    "id": 99,
                     "name": "ElementaryTypeName",
-                    "src": "508:4:2"
+                    "src": "484:4:2"
                   }
                 ],
-                "id": 97,
+                "id": 100,
                 "name": "VariableDeclaration",
-                "src": "508:12:2"
+                "src": "484:12:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "name",
-                  "scope": 129,
+                  "scope": 132,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "string",
@@ -2676,21 +2676,21 @@
                       "name": "string",
                       "type": "string"
                     },
-                    "id": 98,
+                    "id": 101,
                     "name": "ElementaryTypeName",
-                    "src": "531:6:2"
+                    "src": "506:6:2"
                   }
                 ],
-                "id": 99,
+                "id": 102,
                 "name": "VariableDeclaration",
-                "src": "531:11:2"
+                "src": "506:11:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "currencyid",
-                  "scope": 129,
+                  "scope": 132,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address",
@@ -2703,21 +2703,21 @@
                       "stateMutability": "nonpayable",
                       "type": "address"
                     },
-                    "id": 100,
+                    "id": 103,
                     "name": "ElementaryTypeName",
-                    "src": "553:7:2"
+                    "src": "527:7:2"
                   }
                 ],
-                "id": 101,
+                "id": 104,
                 "name": "VariableDeclaration",
-                "src": "553:18:2"
+                "src": "527:18:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "parent",
-                  "scope": 129,
+                  "scope": 132,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address",
@@ -2730,21 +2730,21 @@
                       "stateMutability": "nonpayable",
                       "type": "address"
                     },
-                    "id": 102,
+                    "id": 105,
                     "name": "ElementaryTypeName",
-                    "src": "582:7:2"
+                    "src": "555:7:2"
                   }
                 ],
-                "id": 103,
+                "id": 106,
                 "name": "VariableDeclaration",
-                "src": "582:14:2"
+                "src": "555:14:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "systemid",
-                  "scope": 129,
+                  "scope": 132,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address",
@@ -2757,21 +2757,21 @@
                       "stateMutability": "nonpayable",
                       "type": "address"
                     },
-                    "id": 104,
+                    "id": 107,
                     "name": "ElementaryTypeName",
-                    "src": "607:7:2"
+                    "src": "579:7:2"
                   }
                 ],
-                "id": 105,
+                "id": 108,
                 "name": "VariableDeclaration",
-                "src": "607:16:2"
+                "src": "579:16:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "notarizationprotocol",
-                  "scope": 129,
+                  "scope": 132,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint8",
@@ -2783,21 +2783,21 @@
                       "name": "uint8",
                       "type": "uint8"
                     },
-                    "id": 106,
+                    "id": 109,
                     "name": "ElementaryTypeName",
-                    "src": "634:5:2"
+                    "src": "605:5:2"
                   }
                 ],
-                "id": 107,
+                "id": 110,
                 "name": "VariableDeclaration",
-                "src": "634:26:2"
+                "src": "605:26:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "proofprotocol",
-                  "scope": 129,
+                  "scope": 132,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint8",
@@ -2809,21 +2809,21 @@
                       "name": "uint8",
                       "type": "uint8"
                     },
-                    "id": 108,
+                    "id": 111,
                     "name": "ElementaryTypeName",
-                    "src": "671:5:2"
+                    "src": "641:5:2"
                   }
                 ],
-                "id": 109,
+                "id": 112,
                 "name": "VariableDeclaration",
-                "src": "671:19:2"
+                "src": "641:19:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "nativecurrencyid",
-                  "scope": 129,
+                  "scope": 132,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "struct VerusObjectsCommon.CTransferDestination",
@@ -2833,24 +2833,24 @@
                   {
                     "attributes": {
                       "name": "VerusObjectsCommon.CTransferDestination",
-                      "referencedDeclaration": 270,
+                      "referencedDeclaration": 273,
                       "type": "struct VerusObjectsCommon.CTransferDestination"
                     },
-                    "id": 110,
+                    "id": 113,
                     "name": "UserDefinedTypeName",
-                    "src": "701:39:2"
+                    "src": "670:39:2"
                   }
                 ],
-                "id": 111,
+                "id": 114,
                 "name": "VariableDeclaration",
-                "src": "701:56:2"
+                "src": "670:56:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "launchsystemid",
-                  "scope": 129,
+                  "scope": 132,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address",
@@ -2863,21 +2863,21 @@
                       "stateMutability": "nonpayable",
                       "type": "address"
                     },
-                    "id": 112,
+                    "id": 115,
                     "name": "ElementaryTypeName",
-                    "src": "768:7:2"
+                    "src": "736:7:2"
                   }
                 ],
-                "id": 113,
+                "id": 116,
                 "name": "VariableDeclaration",
-                "src": "768:22:2"
+                "src": "736:22:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "startblock",
-                  "scope": 129,
+                  "scope": 132,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -2889,21 +2889,21 @@
                       "name": "uint",
                       "type": "uint256"
                     },
-                    "id": 114,
+                    "id": 117,
                     "name": "ElementaryTypeName",
-                    "src": "801:4:2"
+                    "src": "768:4:2"
                   }
                 ],
-                "id": 115,
+                "id": 118,
                 "name": "VariableDeclaration",
-                "src": "801:15:2"
+                "src": "768:15:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "endblock",
-                  "scope": 129,
+                  "scope": 132,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -2915,21 +2915,21 @@
                       "name": "uint",
                       "type": "uint256"
                     },
-                    "id": 116,
+                    "id": 119,
                     "name": "ElementaryTypeName",
-                    "src": "827:4:2"
+                    "src": "793:4:2"
                   }
                 ],
-                "id": 117,
+                "id": 120,
                 "name": "VariableDeclaration",
-                "src": "827:13:2"
+                "src": "793:13:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "initialsupply",
-                  "scope": 129,
+                  "scope": 132,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -2941,21 +2941,21 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 118,
+                    "id": 121,
                     "name": "ElementaryTypeName",
-                    "src": "851:7:2"
+                    "src": "816:7:2"
                   }
                 ],
-                "id": 119,
+                "id": 122,
                 "name": "VariableDeclaration",
-                "src": "851:21:2"
+                "src": "816:21:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "prelaunchcarveout",
-                  "scope": 129,
+                  "scope": 132,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -2967,21 +2967,21 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 120,
+                    "id": 123,
                     "name": "ElementaryTypeName",
-                    "src": "883:7:2"
+                    "src": "847:7:2"
                   }
                 ],
-                "id": 121,
+                "id": 124,
                 "name": "VariableDeclaration",
-                "src": "883:25:2"
+                "src": "847:25:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "gatewayid",
-                  "scope": 129,
+                  "scope": 132,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address",
@@ -2994,21 +2994,21 @@
                       "stateMutability": "nonpayable",
                       "type": "address"
                     },
-                    "id": 122,
+                    "id": 125,
                     "name": "ElementaryTypeName",
-                    "src": "919:7:2"
+                    "src": "882:7:2"
                   }
                 ],
-                "id": 123,
+                "id": 126,
                 "name": "VariableDeclaration",
-                "src": "919:17:2"
+                "src": "882:17:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "notaries",
-                  "scope": 129,
+                  "scope": 132,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address[]",
@@ -3026,26 +3026,26 @@
                           "stateMutability": "nonpayable",
                           "type": "address"
                         },
-                        "id": 124,
+                        "id": 127,
                         "name": "ElementaryTypeName",
-                        "src": "947:7:2"
+                        "src": "909:7:2"
                       }
                     ],
-                    "id": 125,
+                    "id": 128,
                     "name": "ArrayTypeName",
-                    "src": "947:9:2"
+                    "src": "909:9:2"
                   }
                 ],
-                "id": 126,
+                "id": 129,
                 "name": "VariableDeclaration",
-                "src": "947:18:2"
+                "src": "909:18:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "minnotariesconfirm",
-                  "scope": 129,
+                  "scope": 132,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -3057,25 +3057,25 @@
                       "name": "uint",
                       "type": "uint256"
                     },
-                    "id": 127,
+                    "id": 130,
                     "name": "ElementaryTypeName",
-                    "src": "976:4:2"
+                    "src": "937:4:2"
                   }
                 ],
-                "id": 128,
+                "id": 131,
                 "name": "VariableDeclaration",
-                "src": "976:23:2"
+                "src": "937:23:2"
               }
             ],
-            "id": 129,
+            "id": 132,
             "name": "StructDefinition",
-            "src": "475:532:2"
+            "src": "452:515:2"
           },
           {
             "attributes": {
               "canonicalName": "VerusObjects.CCurrencyValueMap",
               "name": "CCurrencyValueMap",
-              "scope": 253,
+              "scope": 256,
               "visibility": "public"
             },
             "children": [
@@ -3084,7 +3084,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "currency",
-                  "scope": 134,
+                  "scope": 137,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address",
@@ -3097,21 +3097,21 @@
                       "stateMutability": "nonpayable",
                       "type": "address"
                     },
-                    "id": 130,
+                    "id": 133,
                     "name": "ElementaryTypeName",
-                    "src": "1055:7:2"
+                    "src": "1012:7:2"
                   }
                 ],
-                "id": 131,
+                "id": 134,
                 "name": "VariableDeclaration",
-                "src": "1055:16:2"
+                "src": "1012:16:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "amount",
-                  "scope": 134,
+                  "scope": 137,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint64",
@@ -3123,25 +3123,25 @@
                       "name": "uint64",
                       "type": "uint64"
                     },
-                    "id": 132,
+                    "id": 135,
                     "name": "ElementaryTypeName",
-                    "src": "1082:6:2"
+                    "src": "1038:6:2"
                   }
                 ],
-                "id": 133,
+                "id": 136,
                 "name": "VariableDeclaration",
-                "src": "1082:13:2"
+                "src": "1038:13:2"
               }
             ],
-            "id": 134,
+            "id": 137,
             "name": "StructDefinition",
-            "src": "1019:84:2"
+            "src": "977:81:2"
           },
           {
             "attributes": {
               "canonicalName": "VerusObjects.CReserveTransfer",
               "name": "CReserveTransfer",
-              "scope": 253,
+              "scope": 256,
               "visibility": "public"
             },
             "children": [
@@ -3150,7 +3150,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "version",
-                  "scope": 153,
+                  "scope": 156,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint32",
@@ -3162,21 +3162,21 @@
                       "name": "uint32",
                       "type": "uint32"
                     },
-                    "id": 135,
+                    "id": 138,
                     "name": "ElementaryTypeName",
-                    "src": "1146:6:2"
+                    "src": "1098:6:2"
                   }
                 ],
-                "id": 136,
+                "id": 139,
                 "name": "VariableDeclaration",
-                "src": "1146:14:2"
+                "src": "1098:14:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "currencyvalue",
-                  "scope": 153,
+                  "scope": 156,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "struct VerusObjects.CCurrencyValueMap",
@@ -3186,24 +3186,24 @@
                   {
                     "attributes": {
                       "name": "CCurrencyValueMap",
-                      "referencedDeclaration": 134,
+                      "referencedDeclaration": 137,
                       "type": "struct VerusObjects.CCurrencyValueMap"
                     },
-                    "id": 137,
+                    "id": 140,
                     "name": "UserDefinedTypeName",
-                    "src": "1171:17:2"
+                    "src": "1122:17:2"
                   }
                 ],
-                "id": 138,
+                "id": 141,
                 "name": "VariableDeclaration",
-                "src": "1171:31:2"
+                "src": "1122:31:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "flags",
-                  "scope": 153,
+                  "scope": 156,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint32",
@@ -3215,21 +3215,21 @@
                       "name": "uint32",
                       "type": "uint32"
                     },
-                    "id": 139,
+                    "id": 142,
                     "name": "ElementaryTypeName",
-                    "src": "1213:6:2"
+                    "src": "1163:6:2"
                   }
                 ],
-                "id": 140,
+                "id": 143,
                 "name": "VariableDeclaration",
-                "src": "1213:12:2"
+                "src": "1163:12:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "feecurrencyid",
-                  "scope": 153,
+                  "scope": 156,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address",
@@ -3242,21 +3242,21 @@
                       "stateMutability": "nonpayable",
                       "type": "address"
                     },
-                    "id": 141,
+                    "id": 144,
                     "name": "ElementaryTypeName",
-                    "src": "1236:7:2"
+                    "src": "1185:7:2"
                   }
                 ],
-                "id": 142,
+                "id": 145,
                 "name": "VariableDeclaration",
-                "src": "1236:21:2"
+                "src": "1185:21:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "fees",
-                  "scope": 153,
+                  "scope": 156,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -3268,21 +3268,21 @@
                       "name": "uint256",
                       "type": "uint256"
                     },
-                    "id": 143,
+                    "id": 146,
                     "name": "ElementaryTypeName",
-                    "src": "1268:7:2"
+                    "src": "1216:7:2"
                   }
                 ],
-                "id": 144,
+                "id": 147,
                 "name": "VariableDeclaration",
-                "src": "1268:12:2"
+                "src": "1216:12:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "destination",
-                  "scope": 153,
+                  "scope": 156,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "struct VerusObjectsCommon.CTransferDestination",
@@ -3292,24 +3292,24 @@
                   {
                     "attributes": {
                       "name": "VerusObjectsCommon.CTransferDestination",
-                      "referencedDeclaration": 270,
+                      "referencedDeclaration": 273,
                       "type": "struct VerusObjectsCommon.CTransferDestination"
                     },
-                    "id": 145,
+                    "id": 148,
                     "name": "UserDefinedTypeName",
-                    "src": "1291:39:2"
+                    "src": "1238:39:2"
                   }
                 ],
-                "id": 146,
+                "id": 149,
                 "name": "VariableDeclaration",
-                "src": "1291:51:2"
+                "src": "1238:51:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "destcurrencyid",
-                  "scope": 153,
+                  "scope": 156,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address",
@@ -3322,21 +3322,21 @@
                       "stateMutability": "nonpayable",
                       "type": "address"
                     },
-                    "id": 147,
+                    "id": 150,
                     "name": "ElementaryTypeName",
-                    "src": "1353:7:2"
+                    "src": "1299:7:2"
                   }
                 ],
-                "id": 148,
+                "id": 151,
                 "name": "VariableDeclaration",
-                "src": "1353:22:2"
+                "src": "1299:22:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "destsystemid",
-                  "scope": 153,
+                  "scope": 156,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address",
@@ -3349,21 +3349,21 @@
                       "stateMutability": "nonpayable",
                       "type": "address"
                     },
-                    "id": 149,
+                    "id": 152,
                     "name": "ElementaryTypeName",
-                    "src": "1386:7:2"
+                    "src": "1331:7:2"
                   }
                 ],
-                "id": 150,
+                "id": 153,
                 "name": "VariableDeclaration",
-                "src": "1386:20:2"
+                "src": "1331:20:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "secondreserveid",
-                  "scope": 153,
+                  "scope": 156,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address",
@@ -3376,25 +3376,25 @@
                       "stateMutability": "nonpayable",
                       "type": "address"
                     },
-                    "id": 151,
+                    "id": 154,
                     "name": "ElementaryTypeName",
-                    "src": "1417:7:2"
+                    "src": "1361:7:2"
                   }
                 ],
-                "id": 152,
+                "id": 155,
                 "name": "VariableDeclaration",
-                "src": "1417:23:2"
+                "src": "1361:23:2"
               }
             ],
-            "id": 153,
+            "id": 156,
             "name": "StructDefinition",
-            "src": "1111:337:2"
+            "src": "1064:327:2"
           },
           {
             "attributes": {
               "canonicalName": "VerusObjects.CReserveTransferSet",
               "name": "CReserveTransferSet",
-              "scope": 253,
+              "scope": 256,
               "visibility": "public"
             },
             "children": [
@@ -3403,7 +3403,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "position",
-                  "scope": 163,
+                  "scope": 166,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -3415,21 +3415,21 @@
                       "name": "uint",
                       "type": "uint256"
                     },
-                    "id": 154,
+                    "id": 157,
                     "name": "ElementaryTypeName",
-                    "src": "1611:4:2"
+                    "src": "1548:4:2"
                   }
                 ],
-                "id": 155,
+                "id": 158,
                 "name": "VariableDeclaration",
-                "src": "1611:13:2"
+                "src": "1548:13:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "blockHeight",
-                  "scope": 163,
+                  "scope": 166,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -3441,21 +3441,21 @@
                       "name": "uint",
                       "type": "uint256"
                     },
-                    "id": 156,
+                    "id": 159,
                     "name": "ElementaryTypeName",
-                    "src": "1635:4:2"
+                    "src": "1571:4:2"
                   }
                 ],
-                "id": 157,
+                "id": 160,
                 "name": "VariableDeclaration",
-                "src": "1635:16:2"
+                "src": "1571:16:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "exportHash",
-                  "scope": 163,
+                  "scope": 166,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "bytes32",
@@ -3467,21 +3467,21 @@
                       "name": "bytes32",
                       "type": "bytes32"
                     },
-                    "id": 158,
+                    "id": 161,
                     "name": "ElementaryTypeName",
-                    "src": "1662:7:2"
+                    "src": "1597:7:2"
                   }
                 ],
-                "id": 159,
+                "id": 162,
                 "name": "VariableDeclaration",
-                "src": "1662:18:2"
+                "src": "1597:18:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "transfers",
-                  "scope": 163,
+                  "scope": 166,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "struct VerusObjects.CReserveTransfer[]",
@@ -3496,33 +3496,33 @@
                       {
                         "attributes": {
                           "name": "CReserveTransfer",
-                          "referencedDeclaration": 153,
+                          "referencedDeclaration": 156,
                           "type": "struct VerusObjects.CReserveTransfer"
                         },
-                        "id": 160,
+                        "id": 163,
                         "name": "UserDefinedTypeName",
-                        "src": "1691:16:2"
+                        "src": "1625:16:2"
                       }
                     ],
-                    "id": 161,
+                    "id": 164,
                     "name": "ArrayTypeName",
-                    "src": "1691:18:2"
+                    "src": "1625:18:2"
                   }
                 ],
-                "id": 162,
+                "id": 165,
                 "name": "VariableDeclaration",
-                "src": "1691:28:2"
+                "src": "1625:28:2"
               }
             ],
-            "id": 163,
+            "id": 166,
             "name": "StructDefinition",
-            "src": "1573:154:2"
+            "src": "1511:149:2"
           },
           {
             "attributes": {
               "canonicalName": "VerusObjects.LastImport",
               "name": "LastImport",
-              "scope": 253,
+              "scope": 256,
               "visibility": "public"
             },
             "children": [
@@ -3531,7 +3531,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "height",
-                  "scope": 168,
+                  "scope": 171,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -3543,21 +3543,21 @@
                       "name": "uint",
                       "type": "uint256"
                     },
-                    "id": 164,
+                    "id": 167,
                     "name": "ElementaryTypeName",
-                    "src": "1764:4:2"
+                    "src": "1694:4:2"
                   }
                 ],
-                "id": 165,
+                "id": 168,
                 "name": "VariableDeclaration",
-                "src": "1764:11:2"
+                "src": "1694:11:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "txid",
-                  "scope": 168,
+                  "scope": 171,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "bytes32",
@@ -3569,25 +3569,25 @@
                       "name": "bytes32",
                       "type": "bytes32"
                     },
-                    "id": 166,
+                    "id": 169,
                     "name": "ElementaryTypeName",
-                    "src": "1786:7:2"
+                    "src": "1715:7:2"
                   }
                 ],
-                "id": 167,
+                "id": 170,
                 "name": "VariableDeclaration",
-                "src": "1786:12:2"
+                "src": "1715:12:2"
               }
             ],
-            "id": 168,
+            "id": 171,
             "name": "StructDefinition",
-            "src": "1735:143:2"
+            "src": "1666:140:2"
           },
           {
             "attributes": {
               "canonicalName": "VerusObjects.CReserveTransferImport",
               "name": "CReserveTransferImport",
-              "scope": 253,
+              "scope": 256,
               "visibility": "public"
             },
             "children": [
@@ -3596,7 +3596,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "height",
-                  "scope": 182,
+                  "scope": 185,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -3608,21 +3608,21 @@
                       "name": "uint",
                       "type": "uint256"
                     },
-                    "id": 169,
+                    "id": 172,
                     "name": "ElementaryTypeName",
-                    "src": "1927:4:2"
+                    "src": "1852:4:2"
                   }
                 ],
-                "id": 170,
+                "id": 173,
                 "name": "VariableDeclaration",
-                "src": "1927:11:2"
+                "src": "1852:11:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "txid",
-                  "scope": 182,
+                  "scope": 185,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "bytes32",
@@ -3634,21 +3634,21 @@
                       "name": "bytes32",
                       "type": "bytes32"
                     },
-                    "id": 171,
+                    "id": 174,
                     "name": "ElementaryTypeName",
-                    "src": "1949:7:2"
+                    "src": "1873:7:2"
                   }
                 ],
-                "id": 172,
+                "id": 175,
                 "name": "VariableDeclaration",
-                "src": "1949:12:2"
+                "src": "1873:12:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "txoutnum",
-                  "scope": 182,
+                  "scope": 185,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint256",
@@ -3660,21 +3660,21 @@
                       "name": "uint",
                       "type": "uint256"
                     },
-                    "id": 173,
+                    "id": 176,
                     "name": "ElementaryTypeName",
-                    "src": "2044:4:2"
+                    "src": "1967:4:2"
                   }
                 ],
-                "id": 174,
+                "id": 177,
                 "name": "VariableDeclaration",
-                "src": "2044:13:2"
+                "src": "1967:13:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "exportinfo",
-                  "scope": 182,
+                  "scope": 185,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "struct VerusObjects.CCrossChainExport",
@@ -3684,24 +3684,24 @@
                   {
                     "attributes": {
                       "name": "CCrossChainExport",
-                      "referencedDeclaration": 214,
+                      "referencedDeclaration": 217,
                       "type": "struct VerusObjects.CCrossChainExport"
                     },
-                    "id": 175,
+                    "id": 178,
                     "name": "UserDefinedTypeName",
-                    "src": "2114:17:2"
+                    "src": "2036:17:2"
                   }
                 ],
-                "id": 176,
+                "id": 179,
                 "name": "VariableDeclaration",
-                "src": "2114:28:2"
+                "src": "2036:28:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "partialtransactionproof",
-                  "scope": 182,
+                  "scope": 185,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "struct VerusObjects.CPtransactionproof",
@@ -3711,24 +3711,24 @@
                   {
                     "attributes": {
                       "name": "CPtransactionproof",
-                      "referencedDeclaration": 252,
+                      "referencedDeclaration": 255,
                       "type": "struct VerusObjects.CPtransactionproof"
                     },
-                    "id": 177,
+                    "id": 180,
                     "name": "UserDefinedTypeName",
-                    "src": "2153:18:2"
+                    "src": "2074:18:2"
                   }
                 ],
-                "id": 178,
+                "id": 181,
                 "name": "VariableDeclaration",
-                "src": "2153:42:2"
+                "src": "2074:42:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "transfers",
-                  "scope": 182,
+                  "scope": 185,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "struct VerusObjects.CReserveTransfer[]",
@@ -3743,33 +3743,33 @@
                       {
                         "attributes": {
                           "name": "CReserveTransfer",
-                          "referencedDeclaration": 153,
+                          "referencedDeclaration": 156,
                           "type": "struct VerusObjects.CReserveTransfer"
                         },
-                        "id": 179,
+                        "id": 182,
                         "name": "UserDefinedTypeName",
-                        "src": "2247:16:2"
+                        "src": "2167:16:2"
                       }
                     ],
-                    "id": 180,
+                    "id": 183,
                     "name": "ArrayTypeName",
-                    "src": "2247:18:2"
+                    "src": "2167:18:2"
                   }
                 ],
-                "id": 181,
+                "id": 184,
                 "name": "VariableDeclaration",
-                "src": "2247:28:2"
+                "src": "2167:28:2"
               }
             ],
-            "id": 182,
+            "id": 185,
             "name": "StructDefinition",
-            "src": "1886:398:2"
+            "src": "1812:391:2"
           },
           {
             "attributes": {
               "canonicalName": "VerusObjects.CCrossChainExport",
               "name": "CCrossChainExport",
-              "scope": 253,
+              "scope": 256,
               "visibility": "public"
             },
             "children": [
@@ -3778,7 +3778,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "version",
-                  "scope": 214,
+                  "scope": 217,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint16",
@@ -3790,21 +3790,21 @@
                       "name": "uint16",
                       "type": "uint16"
                     },
-                    "id": 183,
+                    "id": 186,
                     "name": "ElementaryTypeName",
-                    "src": "2328:6:2"
+                    "src": "2244:6:2"
                   }
                 ],
-                "id": 184,
+                "id": 187,
                 "name": "VariableDeclaration",
-                "src": "2328:14:2"
+                "src": "2244:14:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "flags",
-                  "scope": 214,
+                  "scope": 217,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint16",
@@ -3816,21 +3816,21 @@
                       "name": "uint16",
                       "type": "uint16"
                     },
-                    "id": 185,
+                    "id": 188,
                     "name": "ElementaryTypeName",
-                    "src": "2353:6:2"
+                    "src": "2268:6:2"
                   }
                 ],
-                "id": 186,
+                "id": 189,
                 "name": "VariableDeclaration",
-                "src": "2353:12:2"
+                "src": "2268:12:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "sourcesystemid",
-                  "scope": 214,
+                  "scope": 217,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address",
@@ -3843,21 +3843,21 @@
                       "stateMutability": "nonpayable",
                       "type": "address"
                     },
-                    "id": 187,
+                    "id": 190,
                     "name": "ElementaryTypeName",
-                    "src": "2376:7:2"
+                    "src": "2290:7:2"
                   }
                 ],
-                "id": 188,
+                "id": 191,
                 "name": "VariableDeclaration",
-                "src": "2376:22:2"
+                "src": "2290:22:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "sourceheightstart",
-                  "scope": 214,
+                  "scope": 217,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint32",
@@ -3869,21 +3869,21 @@
                       "name": "uint32",
                       "type": "uint32"
                     },
-                    "id": 189,
+                    "id": 192,
                     "name": "ElementaryTypeName",
-                    "src": "2409:6:2"
+                    "src": "2322:6:2"
                   }
                 ],
-                "id": 190,
+                "id": 193,
                 "name": "VariableDeclaration",
-                "src": "2409:24:2"
+                "src": "2322:24:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "sourceheightend",
-                  "scope": 214,
+                  "scope": 217,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint32",
@@ -3895,21 +3895,21 @@
                       "name": "uint32",
                       "type": "uint32"
                     },
-                    "id": 191,
+                    "id": 194,
                     "name": "ElementaryTypeName",
-                    "src": "2444:6:2"
+                    "src": "2356:6:2"
                   }
                 ],
-                "id": 192,
+                "id": 195,
                 "name": "VariableDeclaration",
-                "src": "2444:22:2"
+                "src": "2356:22:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "destinationsystemid",
-                  "scope": 214,
+                  "scope": 217,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address",
@@ -3922,21 +3922,21 @@
                       "stateMutability": "nonpayable",
                       "type": "address"
                     },
-                    "id": 193,
+                    "id": 196,
                     "name": "ElementaryTypeName",
-                    "src": "2477:7:2"
+                    "src": "2388:7:2"
                   }
                 ],
-                "id": 194,
+                "id": 197,
                 "name": "VariableDeclaration",
-                "src": "2477:27:2"
+                "src": "2388:27:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "destinationcurrencyid",
-                  "scope": 214,
+                  "scope": 217,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "address",
@@ -3949,21 +3949,21 @@
                       "stateMutability": "nonpayable",
                       "type": "address"
                     },
-                    "id": 195,
+                    "id": 198,
                     "name": "ElementaryTypeName",
-                    "src": "2515:7:2"
+                    "src": "2425:7:2"
                   }
                 ],
-                "id": 196,
+                "id": 199,
                 "name": "VariableDeclaration",
-                "src": "2515:29:2"
+                "src": "2425:29:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "numinputs",
-                  "scope": 214,
+                  "scope": 217,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint32",
@@ -3975,21 +3975,21 @@
                       "name": "uint32",
                       "type": "uint32"
                     },
-                    "id": 197,
+                    "id": 200,
                     "name": "ElementaryTypeName",
-                    "src": "2555:6:2"
+                    "src": "2464:6:2"
                   }
                 ],
-                "id": 198,
+                "id": 201,
                 "name": "VariableDeclaration",
-                "src": "2555:16:2"
+                "src": "2464:16:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "totalamounts",
-                  "scope": 214,
+                  "scope": 217,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "struct VerusObjects.CCurrencyValueMap[]",
@@ -4004,29 +4004,29 @@
                       {
                         "attributes": {
                           "name": "CCurrencyValueMap",
-                          "referencedDeclaration": 134,
+                          "referencedDeclaration": 137,
                           "type": "struct VerusObjects.CCurrencyValueMap"
                         },
-                        "id": 199,
+                        "id": 202,
                         "name": "UserDefinedTypeName",
-                        "src": "2582:17:2"
+                        "src": "2490:17:2"
                       }
                     ],
-                    "id": 200,
+                    "id": 203,
                     "name": "ArrayTypeName",
-                    "src": "2582:19:2"
+                    "src": "2490:19:2"
                   }
                 ],
-                "id": 201,
+                "id": 204,
                 "name": "VariableDeclaration",
-                "src": "2582:32:2"
+                "src": "2490:32:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "totalfees",
-                  "scope": 214,
+                  "scope": 217,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "struct VerusObjects.CCurrencyValueMap[]",
@@ -4041,29 +4041,29 @@
                       {
                         "attributes": {
                           "name": "CCurrencyValueMap",
-                          "referencedDeclaration": 134,
+                          "referencedDeclaration": 137,
                           "type": "struct VerusObjects.CCurrencyValueMap"
                         },
-                        "id": 202,
+                        "id": 205,
                         "name": "UserDefinedTypeName",
-                        "src": "2625:17:2"
+                        "src": "2532:17:2"
                       }
                     ],
-                    "id": 203,
+                    "id": 206,
                     "name": "ArrayTypeName",
-                    "src": "2625:19:2"
+                    "src": "2532:19:2"
                   }
                 ],
-                "id": 204,
+                "id": 207,
                 "name": "VariableDeclaration",
-                "src": "2625:29:2"
+                "src": "2532:29:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "hashtransfers",
-                  "scope": 214,
+                  "scope": 217,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "bytes32",
@@ -4075,21 +4075,21 @@
                       "name": "bytes32",
                       "type": "bytes32"
                     },
-                    "id": 205,
+                    "id": 208,
                     "name": "ElementaryTypeName",
-                    "src": "2665:7:2"
+                    "src": "2571:7:2"
                   }
                 ],
-                "id": 206,
+                "id": 209,
                 "name": "VariableDeclaration",
-                "src": "2665:21:2"
+                "src": "2571:21:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "totalburned",
-                  "scope": 214,
+                  "scope": 217,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "struct VerusObjects.CCurrencyValueMap[]",
@@ -4104,29 +4104,29 @@
                       {
                         "attributes": {
                           "name": "CCurrencyValueMap",
-                          "referencedDeclaration": 134,
+                          "referencedDeclaration": 137,
                           "type": "struct VerusObjects.CCurrencyValueMap"
                         },
-                        "id": 207,
+                        "id": 210,
                         "name": "UserDefinedTypeName",
-                        "src": "2714:17:2"
+                        "src": "2619:17:2"
                       }
                     ],
-                    "id": 208,
+                    "id": 211,
                     "name": "ArrayTypeName",
-                    "src": "2714:19:2"
+                    "src": "2619:19:2"
                   }
                 ],
-                "id": 209,
+                "id": 212,
                 "name": "VariableDeclaration",
-                "src": "2714:31:2"
+                "src": "2619:31:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "rewardaddress",
-                  "scope": 214,
+                  "scope": 217,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "struct VerusObjectsCommon.CTransferDestination",
@@ -4136,24 +4136,24 @@
                   {
                     "attributes": {
                       "name": "VerusObjectsCommon.CTransferDestination",
-                      "referencedDeclaration": 270,
+                      "referencedDeclaration": 273,
                       "type": "struct VerusObjectsCommon.CTransferDestination"
                     },
-                    "id": 210,
+                    "id": 213,
                     "name": "UserDefinedTypeName",
-                    "src": "2756:39:2"
+                    "src": "2660:39:2"
                   }
                 ],
-                "id": 211,
+                "id": 214,
                 "name": "VariableDeclaration",
-                "src": "2756:53:2"
+                "src": "2660:53:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "firstinput",
-                  "scope": 214,
+                  "scope": 217,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "int32",
@@ -4165,25 +4165,25 @@
                       "name": "int32",
                       "type": "int32"
                     },
-                    "id": 212,
+                    "id": 215,
                     "name": "ElementaryTypeName",
-                    "src": "2837:5:2"
+                    "src": "2740:5:2"
                   }
                 ],
-                "id": 213,
+                "id": 216,
                 "name": "VariableDeclaration",
-                "src": "2837:16:2"
+                "src": "2740:16:2"
               }
             ],
-            "id": 214,
+            "id": 217,
             "name": "StructDefinition",
-            "src": "2292:569:2"
+            "src": "2209:554:2"
           },
           {
             "attributes": {
               "canonicalName": "VerusObjects.CMerkleBranch",
               "name": "CMerkleBranch",
-              "scope": 253,
+              "scope": 256,
               "visibility": "public"
             },
             "children": [
@@ -4192,7 +4192,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "CMerkleBranchBase",
-                  "scope": 224,
+                  "scope": 227,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint8",
@@ -4204,21 +4204,21 @@
                       "name": "uint8",
                       "type": "uint8"
                     },
-                    "id": 215,
+                    "id": 218,
                     "name": "ElementaryTypeName",
-                    "src": "2903:5:2"
+                    "src": "2801:5:2"
                   }
                 ],
-                "id": 216,
+                "id": 219,
                 "name": "VariableDeclaration",
-                "src": "2903:24:2"
+                "src": "2801:24:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "nIndex",
-                  "scope": 224,
+                  "scope": 227,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint32",
@@ -4230,21 +4230,21 @@
                       "name": "uint32",
                       "type": "uint32"
                     },
-                    "id": 217,
+                    "id": 220,
                     "name": "ElementaryTypeName",
-                    "src": "2938:6:2"
+                    "src": "2835:6:2"
                   }
                 ],
-                "id": 218,
+                "id": 221,
                 "name": "VariableDeclaration",
-                "src": "2938:13:2"
+                "src": "2835:13:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "nSize",
-                  "scope": 224,
+                  "scope": 227,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint32",
@@ -4256,21 +4256,21 @@
                       "name": "uint32",
                       "type": "uint32"
                     },
-                    "id": 219,
+                    "id": 222,
                     "name": "ElementaryTypeName",
-                    "src": "2962:6:2"
+                    "src": "2858:6:2"
                   }
                 ],
-                "id": 220,
+                "id": 223,
                 "name": "VariableDeclaration",
-                "src": "2962:12:2"
+                "src": "2858:12:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "branch",
-                  "scope": 224,
+                  "scope": 227,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "bytes32[]",
@@ -4287,30 +4287,30 @@
                           "name": "bytes32",
                           "type": "bytes32"
                         },
-                        "id": 221,
+                        "id": 224,
                         "name": "ElementaryTypeName",
-                        "src": "2985:7:2"
+                        "src": "2880:7:2"
                       }
                     ],
-                    "id": 222,
+                    "id": 225,
                     "name": "ArrayTypeName",
-                    "src": "2985:9:2"
+                    "src": "2880:9:2"
                   }
                 ],
-                "id": 223,
+                "id": 226,
                 "name": "VariableDeclaration",
-                "src": "2985:16:2"
+                "src": "2880:16:2"
               }
             ],
-            "id": 224,
+            "id": 227,
             "name": "StructDefinition",
-            "src": "2869:140:2"
+            "src": "2769:134:2"
           },
           {
             "attributes": {
               "canonicalName": "VerusObjects.CTXProof",
               "name": "CTXProof",
-              "scope": 253,
+              "scope": 256,
               "visibility": "public"
             },
             "children": [
@@ -4319,7 +4319,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "branchType",
-                  "scope": 229,
+                  "scope": 232,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint8",
@@ -4331,21 +4331,21 @@
                       "name": "uint8",
                       "type": "uint8"
                     },
-                    "id": 225,
+                    "id": 228,
                     "name": "ElementaryTypeName",
-                    "src": "3044:5:2"
+                    "src": "2935:5:2"
                   }
                 ],
-                "id": 226,
+                "id": 229,
                 "name": "VariableDeclaration",
-                "src": "3044:16:2"
+                "src": "2935:16:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "proofSequence",
-                  "scope": 229,
+                  "scope": 232,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "struct VerusObjects.CMerkleBranch",
@@ -4355,28 +4355,28 @@
                   {
                     "attributes": {
                       "name": "CMerkleBranch",
-                      "referencedDeclaration": 224,
+                      "referencedDeclaration": 227,
                       "type": "struct VerusObjects.CMerkleBranch"
                     },
-                    "id": 227,
+                    "id": 230,
                     "name": "UserDefinedTypeName",
-                    "src": "3071:13:2"
+                    "src": "2961:13:2"
                   }
                 ],
-                "id": 228,
+                "id": 231,
                 "name": "VariableDeclaration",
-                "src": "3071:27:2"
+                "src": "2961:27:2"
               }
             ],
-            "id": 229,
+            "id": 232,
             "name": "StructDefinition",
-            "src": "3017:89:2"
+            "src": "2909:86:2"
           },
           {
             "attributes": {
               "canonicalName": "VerusObjects.CComponents",
               "name": "CComponents",
-              "scope": 253,
+              "scope": 256,
               "visibility": "public"
             },
             "children": [
@@ -4385,7 +4385,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "elType",
-                  "scope": 241,
+                  "scope": 244,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint8",
@@ -4397,21 +4397,21 @@
                       "name": "uint8",
                       "type": "uint8"
                     },
-                    "id": 230,
+                    "id": 233,
                     "name": "ElementaryTypeName",
-                    "src": "3144:5:2"
+                    "src": "3030:5:2"
                   }
                 ],
-                "id": 231,
+                "id": 234,
                 "name": "VariableDeclaration",
-                "src": "3144:12:2"
+                "src": "3030:12:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "elIdx",
-                  "scope": 241,
+                  "scope": 244,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint8",
@@ -4423,21 +4423,21 @@
                       "name": "uint8",
                       "type": "uint8"
                     },
-                    "id": 232,
+                    "id": 235,
                     "name": "ElementaryTypeName",
-                    "src": "3167:5:2"
+                    "src": "3052:5:2"
                   }
                 ],
-                "id": 233,
+                "id": 236,
                 "name": "VariableDeclaration",
-                "src": "3167:11:2"
+                "src": "3052:11:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "elVchObj",
-                  "scope": 241,
+                  "scope": 244,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "bytes",
@@ -4449,21 +4449,21 @@
                       "name": "bytes",
                       "type": "bytes"
                     },
-                    "id": 234,
+                    "id": 237,
                     "name": "ElementaryTypeName",
-                    "src": "3189:5:2"
+                    "src": "3073:5:2"
                   }
                 ],
-                "id": 235,
+                "id": 238,
                 "name": "VariableDeclaration",
-                "src": "3189:14:2"
+                "src": "3073:14:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "elProof",
-                  "scope": 241,
+                  "scope": 244,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "struct VerusObjects.CTXProof[]",
@@ -4478,29 +4478,29 @@
                       {
                         "attributes": {
                           "name": "CTXProof",
-                          "referencedDeclaration": 229,
+                          "referencedDeclaration": 232,
                           "type": "struct VerusObjects.CTXProof"
                         },
-                        "id": 236,
+                        "id": 239,
                         "name": "UserDefinedTypeName",
-                        "src": "3214:8:2"
+                        "src": "3097:8:2"
                       }
                     ],
-                    "id": 237,
+                    "id": 240,
                     "name": "ArrayTypeName",
-                    "src": "3214:10:2"
+                    "src": "3097:10:2"
                   }
                 ],
-                "id": 238,
+                "id": 241,
                 "name": "VariableDeclaration",
-                "src": "3214:18:2"
+                "src": "3097:18:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "VchObjIndex",
-                  "scope": 241,
+                  "scope": 244,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint32",
@@ -4512,25 +4512,25 @@
                       "name": "uint32",
                       "type": "uint32"
                     },
-                    "id": 239,
+                    "id": 242,
                     "name": "ElementaryTypeName",
-                    "src": "3243:6:2"
+                    "src": "3125:6:2"
                   }
                 ],
-                "id": 240,
+                "id": 243,
                 "name": "VariableDeclaration",
-                "src": "3243:18:2"
+                "src": "3125:18:2"
               }
             ],
-            "id": 241,
+            "id": 244,
             "name": "StructDefinition",
-            "src": "3114:157:2"
+            "src": "3001:150:2"
           },
           {
             "attributes": {
               "canonicalName": "VerusObjects.CPtransactionproof",
               "name": "CPtransactionproof",
-              "scope": 253,
+              "scope": 256,
               "visibility": "public"
             },
             "children": [
@@ -4539,7 +4539,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "version",
-                  "scope": 252,
+                  "scope": 255,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint8",
@@ -4551,21 +4551,21 @@
                       "name": "uint8",
                       "type": "uint8"
                     },
-                    "id": 242,
+                    "id": 245,
                     "name": "ElementaryTypeName",
-                    "src": "3320:5:2"
+                    "src": "3197:5:2"
                   }
                 ],
-                "id": 243,
+                "id": 246,
                 "name": "VariableDeclaration",
-                "src": "3320:13:2"
+                "src": "3197:13:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "typeC",
-                  "scope": 252,
+                  "scope": 255,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint8",
@@ -4577,21 +4577,21 @@
                       "name": "uint8",
                       "type": "uint8"
                     },
-                    "id": 244,
+                    "id": 247,
                     "name": "ElementaryTypeName",
-                    "src": "3344:5:2"
+                    "src": "3220:5:2"
                   }
                 ],
-                "id": 245,
+                "id": 248,
                 "name": "VariableDeclaration",
-                "src": "3344:11:2"
+                "src": "3220:11:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "txproof",
-                  "scope": 252,
+                  "scope": 255,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "struct VerusObjects.CTXProof[]",
@@ -4606,29 +4606,29 @@
                       {
                         "attributes": {
                           "name": "CTXProof",
-                          "referencedDeclaration": 229,
+                          "referencedDeclaration": 232,
                           "type": "struct VerusObjects.CTXProof"
                         },
-                        "id": 246,
+                        "id": 249,
                         "name": "UserDefinedTypeName",
-                        "src": "3366:8:2"
+                        "src": "3241:8:2"
                       }
                     ],
-                    "id": 247,
+                    "id": 250,
                     "name": "ArrayTypeName",
-                    "src": "3366:10:2"
+                    "src": "3241:10:2"
                   }
                 ],
-                "id": 248,
+                "id": 251,
                 "name": "VariableDeclaration",
-                "src": "3366:18:2"
+                "src": "3241:18:2"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "components",
-                  "scope": 252,
+                  "scope": 255,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "struct VerusObjects.CComponents[]",
@@ -4643,45 +4643,45 @@
                       {
                         "attributes": {
                           "name": "CComponents",
-                          "referencedDeclaration": 241,
+                          "referencedDeclaration": 244,
                           "type": "struct VerusObjects.CComponents"
                         },
-                        "id": 249,
+                        "id": 252,
                         "name": "UserDefinedTypeName",
-                        "src": "3395:11:2"
+                        "src": "3269:11:2"
                       }
                     ],
-                    "id": 250,
+                    "id": 253,
                     "name": "ArrayTypeName",
-                    "src": "3395:13:2"
+                    "src": "3269:13:2"
                   }
                 ],
-                "id": 251,
+                "id": 254,
                 "name": "VariableDeclaration",
-                "src": "3395:24:2"
+                "src": "3269:24:2"
               }
             ],
-            "id": 252,
+            "id": 255,
             "name": "StructDefinition",
-            "src": "3283:144:2"
+            "src": "3161:139:2"
           }
         ],
-        "id": 253,
+        "id": 256,
         "name": "ContractDefinition",
-        "src": "182:3248:2"
+        "src": "174:3128:2"
       }
     ],
-    "id": 254,
+    "id": 257,
     "name": "SourceUnit",
-    "src": "73:3357:2"
+    "src": "70:3232:2"
   },
   "compiler": {
     "name": "solc",
     "version": "0.7.6+commit.7338295f.Emscripten.clang"
   },
   "networks": {},
-  "schemaVersion": "3.4.3",
-  "updatedAt": "2021-10-10T14:35:39.499Z",
+  "schemaVersion": "3.4.4",
+  "updatedAt": "2022-02-04T09:48:04.464Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},
