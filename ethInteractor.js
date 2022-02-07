@@ -289,11 +289,11 @@ serializeEthFullProof = (ethProof) => {
     let version = 1;
     encodedOutput.writeUInt8(version);
 
-
     let type = 3; //type eth
     let typeBuffer = Buffer.alloc(1);
     typeBuffer.writeUInt8(type);
     encodedOutput = Buffer.concat([encodedOutput,typeBuffer]);
+
     //write accountProof length
     //proof size as an int 32
     let sizeBuffer = Buffer.alloc(4);
@@ -477,10 +477,10 @@ createCrossChainExport =  (transfers,blockHeight, jsonready = false, poolavailab
     cce.hashtransfers = hash.toString('hex'); //hash the transfers
     cce.destinationsystemid = VerusSystemID;
 
-    if(poolavailable != 0 && poolavailable < parseInt(blockHeight)){ // RESERVETORESERVE FLAG
+    if (poolavailable != 0 && poolavailable < parseInt(blockHeight)){ // RESERVETORESERVE FLAG
         cce.destinationcurrencyid = BridgeID;
-    }else{
-        cce.destinationcurrencyid = ETHSystemID;
+    } else {
+        cce.destinationcurrencyid = VerusSystemID;
     }
 
     cce.sourceheightstart = blockHeight;
@@ -683,7 +683,7 @@ exports.getExports = async (input) => {
         let poolavailable = await verusNotarizer.methods.poolAvailable(BridgeIDHex).call();
         poolavailable = parseInt(poolavailable);
         if(chainname != VerusSystemID) throw "i-Address not VRSCTEST";
-        if(heightstart > 0 && heightstart < verusBridgeStartBlock ||heightstart == 1 ) 
+        if(heightstart > 0 && heightstart < verusBridgeStartBlock || heightstart == 1 ) 
             heightstart = 0;
 
         //if undefined default to the last block available - 20 and last block available (this might break the node as too many queries)
@@ -693,7 +693,7 @@ exports.getExports = async (input) => {
         //end block is after startblock
         if(heightstart > 0 && heightend > 0 && heightend < heightstart) throw {message:"Start/End Height out of range: "};
         //heightstart = heightend -200;
-        let exportSets = await verusBridge.methods.getReadyExportsByRange(heightstart,heightend).call();
+        let exportSets = await verusBridge.methods.getReadyExportsByRange(heightstart, heightend).call();
         //exportSets = parseContractExports(exportSets);
         console.log("Height end: ",heightend, "heightStart:", heightstart );
 
@@ -704,8 +704,8 @@ exports.getExports = async (input) => {
             outputSet.height = exportSet.blockHeight;
             outputSet.txid = removeHexLeader(exportSet.exportHash).match(/[a-fA-F0-9]{2}/g).reverse().join('');   //export hash used for txid
             outputSet.txoutnum = 0; //exportSet.position;
-            outputSet.exportinfo = createCrossChainExport(exportSet.transfers,exportSet.blockHeight,true, poolavailable);
-            outputSet.partialtransactionproof = await getProof(exportSet.position,heightend);
+            outputSet.exportinfo = createCrossChainExport(exportSet.transfers, exportSet.blockHeight, true, poolavailable);
+            outputSet.partialtransactionproof = await getProof(exportSet.position, heightend);
 
             //serialize the prooflet index 
             let nullObj = "0x0000000000000000000000000000000000000000000000000000000000000000"
@@ -764,10 +764,9 @@ exports.getBestProofRoot = async (input) => {
 }
 
 getProofRoot = async () => {
-    try{
-    block = await web3.eth.getBlock("latest");
-    }catch(error){
-
+    try {
+        block = await web3.eth.getBlock("latest");
+    } catch (error) {
         throw "web3.eth.getBlock error:"
     }
     let latestproofroot = {};
@@ -815,10 +814,10 @@ checkProofRoot = async (height, stateroot, blockhash, power) => {
         throw "web3.eth.getBlock error:"
 
     }
-   // block.
-  //  console.log("retrieved block at height ", height);
-  //  console.log("block:", block.status, block.stateRoot, block.hash, block.totalDifficulty);
-  //  console.log("params:", height, stateroot, blockhash, BigInt(power).toString(16));
+    // block.
+    //  console.log("retrieved block at height ", height);
+    //  console.log("block:", block.status, block.stateRoot, block.hash, block.totalDifficulty);
+    //  console.log("params:", height, stateroot, blockhash, BigInt(power).toString(16));
 
     if (!block.stateRoot)
     {
@@ -828,7 +827,7 @@ checkProofRoot = async (height, stateroot, blockhash, power) => {
 
     block.stateRoot = removeHexLeader(block.stateRoot).match(/[a-fA-F0-9]{2}/g).reverse().join('');
     block.hash = removeHexLeader(block.hash).match(/[a-fA-F0-9]{2}/g).reverse().join('');
-  //  console.log(blockStateRoot, newBlockHash, BigInt(block.totalDifficulty).toString(16));
+    //  console.log(blockStateRoot, newBlockHash, BigInt(block.totalDifficulty).toString(16));
     if (block.stateRoot == stateroot && blockhash == block.hash && BigInt(block.totalDifficulty).toString(16) == BigInt(power).toString(16)) {
         return true;
     } else{
