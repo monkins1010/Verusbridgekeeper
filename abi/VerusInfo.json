@@ -10673,10 +10673,10 @@
         33
       ],
       "VerusInfo": [
-        4979
+        4982
       ],
       "VerusNotarizer": [
-        7346
+        7349
       ],
       "VerusObjects": [
         252
@@ -10688,19 +10688,19 @@
         418
       ],
       "VerusSerializer": [
-        6532
+        6535
       ]
     },
-    "id": 4980,
+    "id": 4983,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
         "absolutePath": "project:/contracts/Libraries/VerusObjects.sol",
         "file": "../Libraries/VerusObjects.sol",
-        "id": 4767,
+        "id": 4770,
         "nodeType": "ImportDirective",
-        "scope": 4980,
+        "scope": 4983,
         "sourceUnit": 253,
         "src": "73:39:29",
         "symbolAliases": [],
@@ -10709,9 +10709,9 @@
       {
         "absolutePath": "project:/contracts/Libraries/VerusObjectsCommon.sol",
         "file": "../Libraries/VerusObjectsCommon.sol",
-        "id": 4768,
+        "id": 4771,
         "nodeType": "ImportDirective",
-        "scope": 4980,
+        "scope": 4983,
         "sourceUnit": 271,
         "src": "114:45:29",
         "symbolAliases": [],
@@ -10720,9 +10720,9 @@
       {
         "absolutePath": "project:/contracts/Libraries/VerusConstants.sol",
         "file": "../Libraries/VerusConstants.sol",
-        "id": 4769,
+        "id": 4772,
         "nodeType": "ImportDirective",
-        "scope": 4980,
+        "scope": 4983,
         "sourceUnit": 34,
         "src": "161:41:29",
         "symbolAliases": [],
@@ -10731,16 +10731,16 @@
       {
         "absolutePath": "project:/contracts/VerusNotarizer/VerusNotarizer.sol",
         "file": "../VerusNotarizer/VerusNotarizer.sol",
-        "id": 4770,
+        "id": 4773,
         "nodeType": "ImportDirective",
-        "scope": 4980,
-        "sourceUnit": 7347,
+        "scope": 4983,
+        "sourceUnit": 7350,
         "src": "204:46:29",
         "symbolAliases": [],
         "unitAlias": ""
       },
       {
-        "id": 4771,
+        "id": 4774,
         "literals": [
           "solidity",
           ">=",
@@ -10754,7 +10754,7 @@
         "src": "254:31:29"
       },
       {
-        "id": 4772,
+        "id": 4775,
         "literals": [
           "experimental",
           "ABIEncoderV2"
@@ -10768,35 +10768,35 @@
         "contractDependencies": [],
         "contractKind": "contract",
         "fullyImplemented": true,
-        "id": 4979,
+        "id": 4982,
         "linearizedBaseContracts": [
-          4979
+          4982
         ],
         "name": "VerusInfo",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "constant": false,
-            "id": 4774,
+            "id": 4777,
             "mutability": "mutable",
             "name": "verusNotarizer",
             "nodeType": "VariableDeclaration",
-            "scope": 4979,
+            "scope": 4982,
             "src": "352:29:29",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_contract$_VerusNotarizer_$7346",
+              "typeIdentifier": "t_contract$_VerusNotarizer_$7349",
               "typeString": "contract VerusNotarizer"
             },
             "typeName": {
-              "id": 4773,
+              "id": 4776,
               "name": "VerusNotarizer",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 7346,
+              "referencedDeclaration": 7349,
               "src": "352:14:29",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_VerusNotarizer_$7346",
+                "typeIdentifier": "t_contract$_VerusNotarizer_$7349",
                 "typeString": "contract VerusNotarizer"
               }
             },
@@ -10804,11 +10804,11 @@
           },
           {
             "constant": false,
-            "id": 4776,
+            "id": 4779,
             "mutability": "mutable",
             "name": "chainInfo",
             "nodeType": "VariableDeclaration",
-            "scope": 4979,
+            "scope": 4982,
             "src": "394:34:29",
             "stateVariable": true,
             "storageLocation": "default",
@@ -10817,7 +10817,7 @@
               "typeString": "struct VerusObjects.infoDetails"
             },
             "typeName": {
-              "id": 4775,
+              "id": 4778,
               "name": "VerusObjects.infoDetails",
               "nodeType": "UserDefinedTypeName",
               "referencedDeclaration": 96,
@@ -10831,26 +10831,26 @@
           },
           {
             "body": {
-              "id": 4819,
+              "id": 4822,
               "nodeType": "Block",
               "src": "633:248:29",
               "statements": [
                 {
                   "expression": {
-                    "id": 4793,
+                    "id": 4796,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
-                      "id": 4789,
+                      "id": 4792,
                       "name": "verusNotarizer",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 4774,
+                      "referencedDeclaration": 4777,
                       "src": "644:14:29",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_VerusNotarizer_$7346",
+                        "typeIdentifier": "t_contract$_VerusNotarizer_$7349",
                         "typeString": "contract VerusNotarizer"
                       }
                     },
@@ -10859,11 +10859,11 @@
                     "rightHandSide": {
                       "arguments": [
                         {
-                          "id": 4791,
+                          "id": 4794,
                           "name": "verusNotarizerAddress",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 4778,
+                          "referencedDeclaration": 4781,
                           "src": "676:21:29",
                           "typeDescriptions": {
                             "typeIdentifier": "t_address",
@@ -10878,18 +10878,18 @@
                             "typeString": "address"
                           }
                         ],
-                        "id": 4790,
+                        "id": 4793,
                         "name": "VerusNotarizer",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 7346,
+                        "referencedDeclaration": 7349,
                         "src": "661:14:29",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_type$_t_contract$_VerusNotarizer_$7346_$",
+                          "typeIdentifier": "t_type$_t_contract$_VerusNotarizer_$7349_$",
                           "typeString": "type(contract VerusNotarizer)"
                         }
                       },
-                      "id": 4792,
+                      "id": 4795,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -10900,41 +10900,41 @@
                       "src": "661:37:29",
                       "tryCall": false,
                       "typeDescriptions": {
-                        "typeIdentifier": "t_contract$_VerusNotarizer_$7346",
+                        "typeIdentifier": "t_contract$_VerusNotarizer_$7349",
                         "typeString": "contract VerusNotarizer"
                       }
                     },
                     "src": "644:54:29",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_contract$_VerusNotarizer_$7346",
+                      "typeIdentifier": "t_contract$_VerusNotarizer_$7349",
                       "typeString": "contract VerusNotarizer"
                     }
                   },
-                  "id": 4794,
+                  "id": 4797,
                   "nodeType": "ExpressionStatement",
                   "src": "644:54:29"
                 },
                 {
                   "expression": {
-                    "id": 4799,
+                    "id": 4802,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "expression": {
-                        "id": 4795,
+                        "id": 4798,
                         "name": "chainInfo",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 4776,
+                        "referencedDeclaration": 4779,
                         "src": "709:9:29",
                         "typeDescriptions": {
                           "typeIdentifier": "t_struct$_infoDetails_$96_storage",
                           "typeString": "struct VerusObjects.infoDetails storage ref"
                         }
                       },
-                      "id": 4797,
+                      "id": 4800,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
@@ -10951,11 +10951,11 @@
                     "nodeType": "Assignment",
                     "operator": "=",
                     "rightHandSide": {
-                      "id": 4798,
+                      "id": 4801,
                       "name": "chainVersion",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 4780,
+                      "referencedDeclaration": 4783,
                       "src": "729:12:29",
                       "typeDescriptions": {
                         "typeIdentifier": "t_uint256",
@@ -10968,31 +10968,31 @@
                       "typeString": "uint256"
                     }
                   },
-                  "id": 4800,
+                  "id": 4803,
                   "nodeType": "ExpressionStatement",
                   "src": "709:32:29"
                 },
                 {
                   "expression": {
-                    "id": 4805,
+                    "id": 4808,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "expression": {
-                        "id": 4801,
+                        "id": 4804,
                         "name": "chainInfo",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 4776,
+                        "referencedDeclaration": 4779,
                         "src": "752:9:29",
                         "typeDescriptions": {
                           "typeIdentifier": "t_struct$_infoDetails_$96_storage",
                           "typeString": "struct VerusObjects.infoDetails storage ref"
                         }
                       },
-                      "id": 4803,
+                      "id": 4806,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
@@ -11009,11 +11009,11 @@
                     "nodeType": "Assignment",
                     "operator": "=",
                     "rightHandSide": {
-                      "id": 4804,
+                      "id": 4807,
                       "name": "chainVerusVersion",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 4782,
+                      "referencedDeclaration": 4785,
                       "src": "776:17:29",
                       "typeDescriptions": {
                         "typeIdentifier": "t_string_memory_ptr",
@@ -11026,31 +11026,31 @@
                       "typeString": "string storage ref"
                     }
                   },
-                  "id": 4806,
+                  "id": 4809,
                   "nodeType": "ExpressionStatement",
                   "src": "752:41:29"
                 },
                 {
                   "expression": {
-                    "id": 4811,
+                    "id": 4814,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "expression": {
-                        "id": 4807,
+                        "id": 4810,
                         "name": "chainInfo",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 4776,
+                        "referencedDeclaration": 4779,
                         "src": "804:9:29",
                         "typeDescriptions": {
                           "typeIdentifier": "t_struct$_infoDetails_$96_storage",
                           "typeString": "struct VerusObjects.infoDetails storage ref"
                         }
                       },
-                      "id": 4809,
+                      "id": 4812,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
@@ -11067,11 +11067,11 @@
                     "nodeType": "Assignment",
                     "operator": "=",
                     "rightHandSide": {
-                      "id": 4810,
+                      "id": 4813,
                       "name": "chainName",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 4784,
+                      "referencedDeclaration": 4787,
                       "src": "821:9:29",
                       "typeDescriptions": {
                         "typeIdentifier": "t_string_memory_ptr",
@@ -11084,31 +11084,31 @@
                       "typeString": "string storage ref"
                     }
                   },
-                  "id": 4812,
+                  "id": 4815,
                   "nodeType": "ExpressionStatement",
                   "src": "804:26:29"
                 },
                 {
                   "expression": {
-                    "id": 4817,
+                    "id": 4820,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "expression": {
-                        "id": 4813,
+                        "id": 4816,
                         "name": "chainInfo",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 4776,
+                        "referencedDeclaration": 4779,
                         "src": "841:9:29",
                         "typeDescriptions": {
                           "typeIdentifier": "t_struct$_infoDetails_$96_storage",
                           "typeString": "struct VerusObjects.infoDetails storage ref"
                         }
                       },
-                      "id": 4815,
+                      "id": 4818,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
@@ -11125,11 +11125,11 @@
                     "nodeType": "Assignment",
                     "operator": "=",
                     "rightHandSide": {
-                      "id": 4816,
+                      "id": 4819,
                       "name": "chainTestnet",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 4786,
+                      "referencedDeclaration": 4789,
                       "src": "861:12:29",
                       "typeDescriptions": {
                         "typeIdentifier": "t_bool",
@@ -11142,29 +11142,29 @@
                       "typeString": "bool"
                     }
                   },
-                  "id": 4818,
+                  "id": 4821,
                   "nodeType": "ExpressionStatement",
                   "src": "841:32:29"
                 }
               ]
             },
-            "id": 4820,
+            "id": 4823,
             "implemented": true,
             "kind": "constructor",
             "modifiers": [],
             "name": "",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 4787,
+              "id": 4790,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 4778,
+                  "id": 4781,
                   "mutability": "mutable",
                   "name": "verusNotarizerAddress",
                   "nodeType": "VariableDeclaration",
-                  "scope": 4820,
+                  "scope": 4823,
                   "src": "463:29:29",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -11173,7 +11173,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 4777,
+                    "id": 4780,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "463:7:29",
@@ -11187,11 +11187,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 4780,
+                  "id": 4783,
                   "mutability": "mutable",
                   "name": "chainVersion",
                   "nodeType": "VariableDeclaration",
-                  "scope": 4820,
+                  "scope": 4823,
                   "src": "503:17:29",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -11200,7 +11200,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 4779,
+                    "id": 4782,
                     "name": "uint",
                     "nodeType": "ElementaryTypeName",
                     "src": "503:4:29",
@@ -11213,11 +11213,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 4782,
+                  "id": 4785,
                   "mutability": "mutable",
                   "name": "chainVerusVersion",
                   "nodeType": "VariableDeclaration",
-                  "scope": 4820,
+                  "scope": 4823,
                   "src": "531:31:29",
                   "stateVariable": false,
                   "storageLocation": "memory",
@@ -11226,7 +11226,7 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 4781,
+                    "id": 4784,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
                     "src": "531:6:29",
@@ -11239,11 +11239,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 4784,
+                  "id": 4787,
                   "mutability": "mutable",
                   "name": "chainName",
                   "nodeType": "VariableDeclaration",
-                  "scope": 4820,
+                  "scope": 4823,
                   "src": "573:23:29",
                   "stateVariable": false,
                   "storageLocation": "memory",
@@ -11252,7 +11252,7 @@
                     "typeString": "string"
                   },
                   "typeName": {
-                    "id": 4783,
+                    "id": 4786,
                     "name": "string",
                     "nodeType": "ElementaryTypeName",
                     "src": "573:6:29",
@@ -11265,11 +11265,11 @@
                 },
                 {
                   "constant": false,
-                  "id": 4786,
+                  "id": 4789,
                   "mutability": "mutable",
                   "name": "chainTestnet",
                   "nodeType": "VariableDeclaration",
-                  "scope": 4820,
+                  "scope": 4823,
                   "src": "607:17:29",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -11278,7 +11278,7 @@
                     "typeString": "bool"
                   },
                   "typeName": {
-                    "id": 4785,
+                    "id": 4788,
                     "name": "bool",
                     "nodeType": "ElementaryTypeName",
                     "src": "607:4:29",
@@ -11293,12 +11293,12 @@
               "src": "452:173:29"
             },
             "returnParameters": {
-              "id": 4788,
+              "id": 4791,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "633:0:29"
             },
-            "scope": 4979,
+            "scope": 4982,
             "src": "441:440:29",
             "stateMutability": "nonpayable",
             "virtual": false,
@@ -11306,22 +11306,22 @@
           },
           {
             "body": {
-              "id": 4874,
+              "id": 4877,
               "nodeType": "Block",
               "src": "962:399:29",
               "statements": [
                 {
                   "assignments": [
-                    4828
+                    4831
                   ],
                   "declarations": [
                     {
                       "constant": false,
-                      "id": 4828,
+                      "id": 4831,
                       "mutability": "mutable",
                       "name": "returnInfo",
                       "nodeType": "VariableDeclaration",
-                      "scope": 4874,
+                      "scope": 4877,
                       "src": "995:42:29",
                       "stateVariable": false,
                       "storageLocation": "memory",
@@ -11330,7 +11330,7 @@
                         "typeString": "struct VerusObjects.infoDetails"
                       },
                       "typeName": {
-                        "id": 4827,
+                        "id": 4830,
                         "name": "VerusObjects.infoDetails",
                         "nodeType": "UserDefinedTypeName",
                         "referencedDeclaration": 96,
@@ -11343,31 +11343,31 @@
                       "visibility": "internal"
                     }
                   ],
-                  "id": 4829,
+                  "id": 4832,
                   "nodeType": "VariableDeclarationStatement",
                   "src": "995:42:29"
                 },
                 {
                   "expression": {
-                    "id": 4835,
+                    "id": 4838,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "expression": {
-                        "id": 4830,
+                        "id": 4833,
                         "name": "returnInfo",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 4828,
+                        "referencedDeclaration": 4831,
                         "src": "1048:10:29",
                         "typeDescriptions": {
                           "typeIdentifier": "t_struct$_infoDetails_$96_memory_ptr",
                           "typeString": "struct VerusObjects.infoDetails memory"
                         }
                       },
-                      "id": 4832,
+                      "id": 4835,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
@@ -11385,18 +11385,18 @@
                     "operator": "=",
                     "rightHandSide": {
                       "expression": {
-                        "id": 4833,
+                        "id": 4836,
                         "name": "chainInfo",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 4776,
+                        "referencedDeclaration": 4779,
                         "src": "1069:9:29",
                         "typeDescriptions": {
                           "typeIdentifier": "t_struct$_infoDetails_$96_storage",
                           "typeString": "struct VerusObjects.infoDetails storage ref"
                         }
                       },
-                      "id": 4834,
+                      "id": 4837,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
@@ -11416,31 +11416,31 @@
                       "typeString": "uint256"
                     }
                   },
-                  "id": 4836,
+                  "id": 4839,
                   "nodeType": "ExpressionStatement",
                   "src": "1048:38:29"
                 },
                 {
                   "expression": {
-                    "id": 4842,
+                    "id": 4845,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "expression": {
-                        "id": 4837,
+                        "id": 4840,
                         "name": "returnInfo",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 4828,
+                        "referencedDeclaration": 4831,
                         "src": "1097:10:29",
                         "typeDescriptions": {
                           "typeIdentifier": "t_struct$_infoDetails_$96_memory_ptr",
                           "typeString": "struct VerusObjects.infoDetails memory"
                         }
                       },
-                      "id": 4839,
+                      "id": 4842,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
@@ -11458,18 +11458,18 @@
                     "operator": "=",
                     "rightHandSide": {
                       "expression": {
-                        "id": 4840,
+                        "id": 4843,
                         "name": "chainInfo",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 4776,
+                        "referencedDeclaration": 4779,
                         "src": "1122:9:29",
                         "typeDescriptions": {
                           "typeIdentifier": "t_struct$_infoDetails_$96_storage",
                           "typeString": "struct VerusObjects.infoDetails storage ref"
                         }
                       },
-                      "id": 4841,
+                      "id": 4844,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
@@ -11489,31 +11489,31 @@
                       "typeString": "string memory"
                     }
                   },
-                  "id": 4843,
+                  "id": 4846,
                   "nodeType": "ExpressionStatement",
                   "src": "1097:46:29"
                 },
                 {
                   "expression": {
-                    "id": 4849,
+                    "id": 4852,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "expression": {
-                        "id": 4844,
+                        "id": 4847,
                         "name": "returnInfo",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 4828,
+                        "referencedDeclaration": 4831,
                         "src": "1154:10:29",
                         "typeDescriptions": {
                           "typeIdentifier": "t_struct$_infoDetails_$96_memory_ptr",
                           "typeString": "struct VerusObjects.infoDetails memory"
                         }
                       },
-                      "id": 4846,
+                      "id": 4849,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
@@ -11531,7 +11531,7 @@
                     "operator": "=",
                     "rightHandSide": {
                       "expression": {
-                        "id": 4847,
+                        "id": 4850,
                         "name": "block",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
@@ -11542,7 +11542,7 @@
                           "typeString": "block"
                         }
                       },
-                      "id": 4848,
+                      "id": 4851,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -11561,31 +11561,31 @@
                       "typeString": "uint256"
                     }
                   },
-                  "id": 4850,
+                  "id": 4853,
                   "nodeType": "ExpressionStatement",
                   "src": "1154:32:29"
                 },
                 {
                   "expression": {
-                    "id": 4856,
+                    "id": 4859,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "expression": {
-                        "id": 4851,
+                        "id": 4854,
                         "name": "returnInfo",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 4828,
+                        "referencedDeclaration": 4831,
                         "src": "1197:10:29",
                         "typeDescriptions": {
                           "typeIdentifier": "t_struct$_infoDetails_$96_memory_ptr",
                           "typeString": "struct VerusObjects.infoDetails memory"
                         }
                       },
-                      "id": 4853,
+                      "id": 4856,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
@@ -11603,7 +11603,7 @@
                     "operator": "=",
                     "rightHandSide": {
                       "expression": {
-                        "id": 4854,
+                        "id": 4857,
                         "name": "block",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
@@ -11614,7 +11614,7 @@
                           "typeString": "block"
                         }
                       },
-                      "id": 4855,
+                      "id": 4858,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -11633,31 +11633,31 @@
                       "typeString": "uint256"
                     }
                   },
-                  "id": 4857,
+                  "id": 4860,
                   "nodeType": "ExpressionStatement",
                   "src": "1197:36:29"
                 },
                 {
                   "expression": {
-                    "id": 4863,
+                    "id": 4866,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "expression": {
-                        "id": 4858,
+                        "id": 4861,
                         "name": "returnInfo",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 4828,
+                        "referencedDeclaration": 4831,
                         "src": "1244:10:29",
                         "typeDescriptions": {
                           "typeIdentifier": "t_struct$_infoDetails_$96_memory_ptr",
                           "typeString": "struct VerusObjects.infoDetails memory"
                         }
                       },
-                      "id": 4860,
+                      "id": 4863,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
@@ -11675,18 +11675,18 @@
                     "operator": "=",
                     "rightHandSide": {
                       "expression": {
-                        "id": 4861,
+                        "id": 4864,
                         "name": "chainInfo",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 4776,
+                        "referencedDeclaration": 4779,
                         "src": "1262:9:29",
                         "typeDescriptions": {
                           "typeIdentifier": "t_struct$_infoDetails_$96_storage",
                           "typeString": "struct VerusObjects.infoDetails storage ref"
                         }
                       },
-                      "id": 4862,
+                      "id": 4865,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
@@ -11706,31 +11706,31 @@
                       "typeString": "string memory"
                     }
                   },
-                  "id": 4864,
+                  "id": 4867,
                   "nodeType": "ExpressionStatement",
                   "src": "1244:32:29"
                 },
                 {
                   "expression": {
-                    "id": 4870,
+                    "id": 4873,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "expression": {
-                        "id": 4865,
+                        "id": 4868,
                         "name": "returnInfo",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 4828,
+                        "referencedDeclaration": 4831,
                         "src": "1287:10:29",
                         "typeDescriptions": {
                           "typeIdentifier": "t_struct$_infoDetails_$96_memory_ptr",
                           "typeString": "struct VerusObjects.infoDetails memory"
                         }
                       },
-                      "id": 4867,
+                      "id": 4870,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
@@ -11748,18 +11748,18 @@
                     "operator": "=",
                     "rightHandSide": {
                       "expression": {
-                        "id": 4868,
+                        "id": 4871,
                         "name": "chainInfo",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 4776,
+                        "referencedDeclaration": 4779,
                         "src": "1308:9:29",
                         "typeDescriptions": {
                           "typeIdentifier": "t_struct$_infoDetails_$96_storage",
                           "typeString": "struct VerusObjects.infoDetails storage ref"
                         }
                       },
-                      "id": 4869,
+                      "id": 4872,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
@@ -11779,54 +11779,54 @@
                       "typeString": "bool"
                     }
                   },
-                  "id": 4871,
+                  "id": 4874,
                   "nodeType": "ExpressionStatement",
                   "src": "1287:38:29"
                 },
                 {
                   "expression": {
-                    "id": 4872,
+                    "id": 4875,
                     "name": "returnInfo",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 4828,
+                    "referencedDeclaration": 4831,
                     "src": "1343:10:29",
                     "typeDescriptions": {
                       "typeIdentifier": "t_struct$_infoDetails_$96_memory_ptr",
                       "typeString": "struct VerusObjects.infoDetails memory"
                     }
                   },
-                  "functionReturnParameters": 4824,
-                  "id": 4873,
+                  "functionReturnParameters": 4827,
+                  "id": 4876,
                   "nodeType": "Return",
                   "src": "1336:17:29"
                 }
               ]
             },
             "functionSelector": "1a2d8629",
-            "id": 4875,
+            "id": 4878,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
             "name": "getinfo",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 4821,
+              "id": 4824,
               "nodeType": "ParameterList",
               "parameters": [],
               "src": "907:2:29"
             },
             "returnParameters": {
-              "id": 4824,
+              "id": 4827,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 4823,
+                  "id": 4826,
                   "mutability": "mutable",
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 4875,
+                  "scope": 4878,
                   "src": "930:31:29",
                   "stateVariable": false,
                   "storageLocation": "memory",
@@ -11835,7 +11835,7 @@
                     "typeString": "struct VerusObjects.infoDetails"
                   },
                   "typeName": {
-                    "id": 4822,
+                    "id": 4825,
                     "name": "VerusObjects.infoDetails",
                     "nodeType": "UserDefinedTypeName",
                     "referencedDeclaration": 96,
@@ -11850,7 +11850,7 @@
               ],
               "src": "929:33:29"
             },
-            "scope": 4979,
+            "scope": 4982,
             "src": "891:470:29",
             "stateMutability": "view",
             "virtual": false,
@@ -11858,22 +11858,22 @@
           },
           {
             "body": {
-              "id": 4977,
+              "id": 4980,
               "nodeType": "Block",
               "src": "1466:1358:29",
               "statements": [
                 {
                   "assignments": [
-                    4885
+                    4888
                   ],
                   "declarations": [
                     {
                       "constant": false,
-                      "id": 4885,
+                      "id": 4888,
                       "mutability": "mutable",
                       "name": "returnCurrency",
                       "nodeType": "VariableDeclaration",
-                      "scope": 4977,
+                      "scope": 4980,
                       "src": "1477:49:29",
                       "stateVariable": false,
                       "storageLocation": "memory",
@@ -11882,7 +11882,7 @@
                         "typeString": "struct VerusObjects.currencyDetail"
                       },
                       "typeName": {
-                        "id": 4884,
+                        "id": 4887,
                         "name": "VerusObjects.currencyDetail",
                         "nodeType": "UserDefinedTypeName",
                         "referencedDeclaration": 130,
@@ -11895,31 +11895,31 @@
                       "visibility": "internal"
                     }
                   ],
-                  "id": 4886,
+                  "id": 4889,
                   "nodeType": "VariableDeclarationStatement",
                   "src": "1477:49:29"
                 },
                 {
                   "expression": {
-                    "id": 4892,
+                    "id": 4895,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
                       "expression": {
-                        "id": 4887,
+                        "id": 4890,
                         "name": "returnCurrency",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 4885,
+                        "referencedDeclaration": 4888,
                         "src": "1537:14:29",
                         "typeDescriptions": {
                           "typeIdentifier": "t_struct$_currencyDetail_$130_memory_ptr",
                           "typeString": "struct VerusObjects.currencyDetail memory"
                         }
                       },
-                      "id": 4889,
+                      "id": 4892,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
@@ -11937,18 +11937,18 @@
                     "operator": "=",
                     "rightHandSide": {
                       "expression": {
-                        "id": 4890,
+                        "id": 4893,
                         "name": "chainInfo",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 4776,
+                        "referencedDeclaration": 4779,
                         "src": "1562:9:29",
                         "typeDescriptions": {
                           "typeIdentifier": "t_struct$_infoDetails_$96_storage",
                           "typeString": "struct VerusObjects.infoDetails storage ref"
                         }
                       },
-                      "id": 4891,
+                      "id": 4894,
                       "isConstant": false,
                       "isLValue": true,
                       "isPure": false,
@@ -11968,22 +11968,22 @@
                       "typeString": "uint256"
                     }
                   },
-                  "id": 4893,
+                  "id": 4896,
                   "nodeType": "ExpressionStatement",
                   "src": "1537:42:29"
                 },
                 {
                   "assignments": [
-                    4898
+                    4901
                   ],
                   "declarations": [
                     {
                       "constant": false,
-                      "id": 4898,
+                      "id": 4901,
                       "mutability": "mutable",
                       "name": "notaries",
                       "nodeType": "VariableDeclaration",
-                      "scope": 4977,
+                      "scope": 4980,
                       "src": "1645:25:29",
                       "stateVariable": false,
                       "storageLocation": "memory",
@@ -11993,7 +11993,7 @@
                       },
                       "typeName": {
                         "baseType": {
-                          "id": 4896,
+                          "id": 4899,
                           "name": "address",
                           "nodeType": "ElementaryTypeName",
                           "src": "1645:7:29",
@@ -12002,7 +12002,7 @@
                             "typeString": "address"
                           }
                         },
-                        "id": 4897,
+                        "id": 4900,
                         "nodeType": "ArrayTypeName",
                         "src": "1645:9:29",
                         "typeDescriptions": {
@@ -12013,38 +12013,38 @@
                       "visibility": "internal"
                     }
                   ],
-                  "id": 4902,
+                  "id": 4905,
                   "initialValue": {
                     "arguments": [],
                     "expression": {
                       "argumentTypes": [],
                       "expression": {
-                        "id": 4899,
+                        "id": 4902,
                         "name": "verusNotarizer",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 4774,
+                        "referencedDeclaration": 4777,
                         "src": "1673:14:29",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_VerusNotarizer_$7346",
+                          "typeIdentifier": "t_contract$_VerusNotarizer_$7349",
                           "typeString": "contract VerusNotarizer"
                         }
                       },
-                      "id": 4900,
+                      "id": 4903,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "getNotaries",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 6782,
+                      "referencedDeclaration": 6785,
                       "src": "1673:26:29",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_view$__$returns$_t_array$_t_address_$dyn_memory_ptr_$",
                         "typeString": "function () view external returns (address[] memory)"
                       }
                     },
-                    "id": 4901,
+                    "id": 4904,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -12064,16 +12064,16 @@
                 },
                 {
                   "assignments": [
-                    4904
+                    4907
                   ],
                   "declarations": [
                     {
                       "constant": false,
-                      "id": 4904,
+                      "id": 4907,
                       "mutability": "mutable",
                       "name": "minnotaries",
                       "nodeType": "VariableDeclaration",
-                      "scope": 4977,
+                      "scope": 4980,
                       "src": "1712:17:29",
                       "stateVariable": false,
                       "storageLocation": "default",
@@ -12082,7 +12082,7 @@
                         "typeString": "uint8"
                       },
                       "typeName": {
-                        "id": 4903,
+                        "id": 4906,
                         "name": "uint8",
                         "nodeType": "ElementaryTypeName",
                         "src": "1712:5:29",
@@ -12094,38 +12094,38 @@
                       "visibility": "internal"
                     }
                   ],
-                  "id": 4908,
+                  "id": 4911,
                   "initialValue": {
                     "arguments": [],
                     "expression": {
                       "argumentTypes": [],
                       "expression": {
-                        "id": 4905,
+                        "id": 4908,
                         "name": "verusNotarizer",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
-                        "referencedDeclaration": 4774,
+                        "referencedDeclaration": 4777,
                         "src": "1732:14:29",
                         "typeDescriptions": {
-                          "typeIdentifier": "t_contract$_VerusNotarizer_$7346",
+                          "typeIdentifier": "t_contract$_VerusNotarizer_$7349",
                           "typeString": "contract VerusNotarizer"
                         }
                       },
-                      "id": 4906,
+                      "id": 4909,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
                       "lValueRequested": false,
                       "memberName": "currentNotariesRequired",
                       "nodeType": "MemberAccess",
-                      "referencedDeclaration": 6836,
+                      "referencedDeclaration": 6839,
                       "src": "1732:38:29",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_external_view$__$returns$_t_uint8_$",
                         "typeString": "function () view external returns (uint8)"
                       }
                     },
-                    "id": 4907,
+                    "id": 4910,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
@@ -12145,16 +12145,16 @@
                 },
                 {
                   "assignments": [
-                    4910
+                    4913
                   ],
                   "declarations": [
                     {
                       "constant": false,
-                      "id": 4910,
+                      "id": 4913,
                       "mutability": "mutable",
                       "name": "currencyAddress",
                       "nodeType": "VariableDeclaration",
-                      "scope": 4977,
+                      "scope": 4980,
                       "src": "1793:23:29",
                       "stateVariable": false,
                       "storageLocation": "default",
@@ -12163,7 +12163,7 @@
                         "typeString": "address"
                       },
                       "typeName": {
-                        "id": 4909,
+                        "id": 4912,
                         "name": "address",
                         "nodeType": "ElementaryTypeName",
                         "src": "1793:7:29",
@@ -12176,22 +12176,22 @@
                       "visibility": "internal"
                     }
                   ],
-                  "id": 4911,
+                  "id": 4914,
                   "nodeType": "VariableDeclarationStatement",
                   "src": "1793:23:29"
                 },
                 {
                   "assignments": [
-                    4913
+                    4916
                   ],
                   "declarations": [
                     {
                       "constant": false,
-                      "id": 4913,
+                      "id": 4916,
                       "mutability": "mutable",
                       "name": "initialsupply",
                       "nodeType": "VariableDeclaration",
-                      "scope": 4977,
+                      "scope": 4980,
                       "src": "1827:21:29",
                       "stateVariable": false,
                       "storageLocation": "default",
@@ -12200,7 +12200,7 @@
                         "typeString": "uint256"
                       },
                       "typeName": {
-                        "id": 4912,
+                        "id": 4915,
                         "name": "uint256",
                         "nodeType": "ElementaryTypeName",
                         "src": "1827:7:29",
@@ -12212,7 +12212,7 @@
                       "visibility": "internal"
                     }
                   ],
-                  "id": 4914,
+                  "id": 4917,
                   "nodeType": "VariableDeclarationStatement",
                   "src": "1827:21:29"
                 },
@@ -12222,17 +12222,17 @@
                       "typeIdentifier": "t_address",
                       "typeString": "address"
                     },
-                    "id": 4918,
+                    "id": 4921,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftExpression": {
-                      "id": 4915,
+                      "id": 4918,
                       "name": "_currencyid",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 4877,
+                      "referencedDeclaration": 4880,
                       "src": "1862:11:29",
                       "typeDescriptions": {
                         "typeIdentifier": "t_address",
@@ -12243,7 +12243,7 @@
                     "operator": "==",
                     "rightExpression": {
                       "expression": {
-                        "id": 4916,
+                        "id": 4919,
                         "name": "VerusConstants",
                         "nodeType": "Identifier",
                         "overloadedDeclarations": [],
@@ -12254,7 +12254,7 @@
                           "typeString": "type(library VerusConstants)"
                         }
                       },
-                      "id": 4917,
+                      "id": 4920,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -12275,23 +12275,23 @@
                     }
                   },
                   "falseBody": {
-                    "id": 4937,
+                    "id": 4940,
                     "nodeType": "Block",
                     "src": "2006:88:29",
                     "statements": [
                       {
                         "expression": {
-                          "id": 4931,
+                          "id": 4934,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
                           "lValueRequested": false,
                           "leftHandSide": {
-                            "id": 4929,
+                            "id": 4932,
                             "name": "currencyAddress",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 4910,
+                            "referencedDeclaration": 4913,
                             "src": "2021:15:29",
                             "typeDescriptions": {
                               "typeIdentifier": "t_address",
@@ -12301,11 +12301,11 @@
                           "nodeType": "Assignment",
                           "operator": "=",
                           "rightHandSide": {
-                            "id": 4930,
+                            "id": 4933,
                             "name": "_currencyid",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 4877,
+                            "referencedDeclaration": 4880,
                             "src": "2039:11:29",
                             "typeDescriptions": {
                               "typeIdentifier": "t_address",
@@ -12318,23 +12318,23 @@
                             "typeString": "address"
                           }
                         },
-                        "id": 4932,
+                        "id": 4935,
                         "nodeType": "ExpressionStatement",
                         "src": "2021:29:29"
                       },
                       {
                         "expression": {
-                          "id": 4935,
+                          "id": 4938,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
                           "lValueRequested": false,
                           "leftHandSide": {
-                            "id": 4933,
+                            "id": 4936,
                             "name": "initialsupply",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 4913,
+                            "referencedDeclaration": 4916,
                             "src": "2065:13:29",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint256",
@@ -12345,7 +12345,7 @@
                           "operator": "=",
                           "rightHandSide": {
                             "hexValue": "30",
-                            "id": 4934,
+                            "id": 4937,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": true,
@@ -12365,33 +12365,33 @@
                             "typeString": "uint256"
                           }
                         },
-                        "id": 4936,
+                        "id": 4939,
                         "nodeType": "ExpressionStatement",
                         "src": "2065:17:29"
                       }
                     ]
                   },
-                  "id": 4938,
+                  "id": 4941,
                   "nodeType": "IfStatement",
                   "src": "1859:235:29",
                   "trueBody": {
-                    "id": 4928,
+                    "id": 4931,
                     "nodeType": "Block",
                     "src": "1897:103:29",
                     "statements": [
                       {
                         "expression": {
-                          "id": 4922,
+                          "id": 4925,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
                           "lValueRequested": false,
                           "leftHandSide": {
-                            "id": 4919,
+                            "id": 4922,
                             "name": "currencyAddress",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 4910,
+                            "referencedDeclaration": 4913,
                             "src": "1912:15:29",
                             "typeDescriptions": {
                               "typeIdentifier": "t_address",
@@ -12402,7 +12402,7 @@
                           "operator": "=",
                           "rightHandSide": {
                             "expression": {
-                              "id": 4920,
+                              "id": 4923,
                               "name": "VerusConstants",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
@@ -12413,7 +12413,7 @@
                                 "typeString": "type(library VerusConstants)"
                               }
                             },
-                            "id": 4921,
+                            "id": 4924,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": false,
@@ -12433,23 +12433,23 @@
                             "typeString": "address"
                           }
                         },
-                        "id": 4923,
+                        "id": 4926,
                         "nodeType": "ExpressionStatement",
                         "src": "1912:37:29"
                       },
                       {
                         "expression": {
-                          "id": 4926,
+                          "id": 4929,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
                           "lValueRequested": false,
                           "leftHandSide": {
-                            "id": 4924,
+                            "id": 4927,
                             "name": "initialsupply",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 4913,
+                            "referencedDeclaration": 4916,
                             "src": "1964:13:29",
                             "typeDescriptions": {
                               "typeIdentifier": "t_uint256",
@@ -12460,7 +12460,7 @@
                           "operator": "=",
                           "rightHandSide": {
                             "hexValue": "3732303030303030",
-                            "id": 4925,
+                            "id": 4928,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": true,
@@ -12480,7 +12480,7 @@
                             "typeString": "uint256"
                           }
                         },
-                        "id": 4927,
+                        "id": 4930,
                         "nodeType": "ExpressionStatement",
                         "src": "1964:24:29"
                       }
@@ -12489,17 +12489,17 @@
                 },
                 {
                   "expression": {
-                    "id": 4973,
+                    "id": 4976,
                     "isConstant": false,
                     "isLValue": false,
                     "isPure": false,
                     "lValueRequested": false,
                     "leftHandSide": {
-                      "id": 4939,
+                      "id": 4942,
                       "name": "returnCurrency",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [],
-                      "referencedDeclaration": 4885,
+                      "referencedDeclaration": 4888,
                       "src": "2132:14:29",
                       "typeDescriptions": {
                         "typeIdentifier": "t_struct$_currencyDetail_$130_memory_ptr",
@@ -12512,18 +12512,18 @@
                       "arguments": [
                         {
                           "expression": {
-                            "id": 4942,
+                            "id": 4945,
                             "name": "chainInfo",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 4776,
+                            "referencedDeclaration": 4779,
                             "src": "2195:9:29",
                             "typeDescriptions": {
                               "typeIdentifier": "t_struct$_infoDetails_$96_storage",
                               "typeString": "struct VerusObjects.infoDetails storage ref"
                             }
                           },
-                          "id": 4943,
+                          "id": 4946,
                           "isConstant": false,
                           "isLValue": true,
                           "isPure": false,
@@ -12539,7 +12539,7 @@
                         },
                         {
                           "expression": {
-                            "id": 4944,
+                            "id": 4947,
                             "name": "VerusConstants",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
@@ -12550,7 +12550,7 @@
                               "typeString": "type(library VerusConstants)"
                             }
                           },
-                          "id": 4945,
+                          "id": 4948,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -12566,7 +12566,7 @@
                         },
                         {
                           "expression": {
-                            "id": 4946,
+                            "id": 4949,
                             "name": "VerusConstants",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
@@ -12577,7 +12577,7 @@
                               "typeString": "type(library VerusConstants)"
                             }
                           },
-                          "id": 4947,
+                          "id": 4950,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -12593,7 +12593,7 @@
                         },
                         {
                           "expression": {
-                            "id": 4948,
+                            "id": 4951,
                             "name": "VerusConstants",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
@@ -12604,7 +12604,7 @@
                               "typeString": "type(library VerusConstants)"
                             }
                           },
-                          "id": 4949,
+                          "id": 4952,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -12620,7 +12620,7 @@
                         },
                         {
                           "expression": {
-                            "id": 4950,
+                            "id": 4953,
                             "name": "VerusConstants",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
@@ -12631,7 +12631,7 @@
                               "typeString": "type(library VerusConstants)"
                             }
                           },
-                          "id": 4951,
+                          "id": 4954,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -12647,7 +12647,7 @@
                         },
                         {
                           "hexValue": "32",
-                          "id": 4952,
+                          "id": 4955,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": true,
@@ -12663,7 +12663,7 @@
                         },
                         {
                           "hexValue": "33",
-                          "id": 4953,
+                          "id": 4956,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": true,
@@ -12681,7 +12681,7 @@
                           "arguments": [
                             {
                               "hexValue": "39",
-                              "id": 4956,
+                              "id": 4959,
                               "isConstant": false,
                               "isLValue": false,
                               "isPure": true,
@@ -12698,11 +12698,11 @@
                             {
                               "arguments": [
                                 {
-                                  "id": 4959,
+                                  "id": 4962,
                                   "name": "currencyAddress",
                                   "nodeType": "Identifier",
                                   "overloadedDeclarations": [],
-                                  "referencedDeclaration": 4910,
+                                  "referencedDeclaration": 4913,
                                   "src": "2508:15:29",
                                   "typeDescriptions": {
                                     "typeIdentifier": "t_address",
@@ -12718,7 +12718,7 @@
                                   }
                                 ],
                                 "expression": {
-                                  "id": 4957,
+                                  "id": 4960,
                                   "name": "abi",
                                   "nodeType": "Identifier",
                                   "overloadedDeclarations": [],
@@ -12729,7 +12729,7 @@
                                     "typeString": "abi"
                                   }
                                 },
-                                "id": 4958,
+                                "id": 4961,
                                 "isConstant": false,
                                 "isLValue": false,
                                 "isPure": true,
@@ -12742,7 +12742,7 @@
                                   "typeString": "function () pure returns (bytes memory)"
                                 }
                               },
-                              "id": 4960,
+                              "id": 4963,
                               "isConstant": false,
                               "isLValue": false,
                               "isPure": false,
@@ -12770,7 +12770,7 @@
                               }
                             ],
                             "expression": {
-                              "id": 4954,
+                              "id": 4957,
                               "name": "VerusObjectsCommon",
                               "nodeType": "Identifier",
                               "overloadedDeclarations": [],
@@ -12781,7 +12781,7 @@
                                 "typeString": "type(library VerusObjectsCommon)"
                               }
                             },
-                            "id": 4955,
+                            "id": 4958,
                             "isConstant": false,
                             "isLValue": false,
                             "isPure": false,
@@ -12795,7 +12795,7 @@
                               "typeString": "type(struct VerusObjectsCommon.CTransferDestination storage pointer)"
                             }
                           },
-                          "id": 4961,
+                          "id": 4964,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -12812,7 +12812,7 @@
                         },
                         {
                           "expression": {
-                            "id": 4962,
+                            "id": 4965,
                             "name": "VerusConstants",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
@@ -12823,7 +12823,7 @@
                               "typeString": "type(library VerusConstants)"
                             }
                           },
-                          "id": 4963,
+                          "id": 4966,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -12839,7 +12839,7 @@
                         },
                         {
                           "hexValue": "30",
-                          "id": 4964,
+                          "id": 4967,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": true,
@@ -12855,7 +12855,7 @@
                         },
                         {
                           "hexValue": "30",
-                          "id": 4965,
+                          "id": 4968,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": true,
@@ -12870,11 +12870,11 @@
                           "value": "0"
                         },
                         {
-                          "id": 4966,
+                          "id": 4969,
                           "name": "initialsupply",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 4913,
+                          "referencedDeclaration": 4916,
                           "src": "2631:13:29",
                           "typeDescriptions": {
                             "typeIdentifier": "t_uint256",
@@ -12882,11 +12882,11 @@
                           }
                         },
                         {
-                          "id": 4967,
+                          "id": 4970,
                           "name": "initialsupply",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 4913,
+                          "referencedDeclaration": 4916,
                           "src": "2663:13:29",
                           "typeDescriptions": {
                             "typeIdentifier": "t_uint256",
@@ -12895,7 +12895,7 @@
                         },
                         {
                           "expression": {
-                            "id": 4968,
+                            "id": 4971,
                             "name": "VerusConstants",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
@@ -12906,7 +12906,7 @@
                               "typeString": "type(library VerusConstants)"
                             }
                           },
-                          "id": 4969,
+                          "id": 4972,
                           "isConstant": false,
                           "isLValue": false,
                           "isPure": false,
@@ -12921,11 +12921,11 @@
                           }
                         },
                         {
-                          "id": 4970,
+                          "id": 4973,
                           "name": "notaries",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 4898,
+                          "referencedDeclaration": 4901,
                           "src": "2733:8:29",
                           "typeDescriptions": {
                             "typeIdentifier": "t_array$_t_address_$dyn_memory_ptr",
@@ -12933,11 +12933,11 @@
                           }
                         },
                         {
-                          "id": 4971,
+                          "id": 4974,
                           "name": "minnotaries",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
-                          "referencedDeclaration": 4904,
+                          "referencedDeclaration": 4907,
                           "src": "2760:11:29",
                           "typeDescriptions": {
                             "typeIdentifier": "t_uint8",
@@ -13013,7 +13013,7 @@
                           }
                         ],
                         "expression": {
-                          "id": 4940,
+                          "id": 4943,
                           "name": "VerusObjects",
                           "nodeType": "Identifier",
                           "overloadedDeclarations": [],
@@ -13024,7 +13024,7 @@
                             "typeString": "type(library VerusObjects)"
                           }
                         },
-                        "id": 4941,
+                        "id": 4944,
                         "isConstant": false,
                         "isLValue": false,
                         "isPure": false,
@@ -13038,7 +13038,7 @@
                           "typeString": "type(struct VerusObjects.currencyDetail storage pointer)"
                         }
                       },
-                      "id": 4972,
+                      "id": 4975,
                       "isConstant": false,
                       "isLValue": false,
                       "isPure": false,
@@ -13059,48 +13059,48 @@
                       "typeString": "struct VerusObjects.currencyDetail memory"
                     }
                   },
-                  "id": 4974,
+                  "id": 4977,
                   "nodeType": "ExpressionStatement",
                   "src": "2132:650:29"
                 },
                 {
                   "expression": {
-                    "id": 4975,
+                    "id": 4978,
                     "name": "returnCurrency",
                     "nodeType": "Identifier",
                     "overloadedDeclarations": [],
-                    "referencedDeclaration": 4885,
+                    "referencedDeclaration": 4888,
                     "src": "2802:14:29",
                     "typeDescriptions": {
                       "typeIdentifier": "t_struct$_currencyDetail_$130_memory_ptr",
                       "typeString": "struct VerusObjects.currencyDetail memory"
                     }
                   },
-                  "functionReturnParameters": 4881,
-                  "id": 4976,
+                  "functionReturnParameters": 4884,
+                  "id": 4979,
                   "nodeType": "Return",
                   "src": "2795:21:29"
                 }
               ]
             },
             "functionSelector": "a01c6f4e",
-            "id": 4978,
+            "id": 4981,
             "implemented": true,
             "kind": "function",
             "modifiers": [],
             "name": "getcurrency",
             "nodeType": "FunctionDefinition",
             "parameters": {
-              "id": 4878,
+              "id": 4881,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 4877,
+                  "id": 4880,
                   "mutability": "mutable",
                   "name": "_currencyid",
                   "nodeType": "VariableDeclaration",
-                  "scope": 4978,
+                  "scope": 4981,
                   "src": "1390:19:29",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -13109,7 +13109,7 @@
                     "typeString": "address"
                   },
                   "typeName": {
-                    "id": 4876,
+                    "id": 4879,
                     "name": "address",
                     "nodeType": "ElementaryTypeName",
                     "src": "1390:7:29",
@@ -13125,16 +13125,16 @@
               "src": "1389:21:29"
             },
             "returnParameters": {
-              "id": 4881,
+              "id": 4884,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 4880,
+                  "id": 4883,
                   "mutability": "mutable",
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 4978,
+                  "scope": 4981,
                   "src": "1431:34:29",
                   "stateVariable": false,
                   "storageLocation": "memory",
@@ -13143,7 +13143,7 @@
                     "typeString": "struct VerusObjects.currencyDetail"
                   },
                   "typeName": {
-                    "id": 4879,
+                    "id": 4882,
                     "name": "VerusObjects.currencyDetail",
                     "nodeType": "UserDefinedTypeName",
                     "referencedDeclaration": 130,
@@ -13158,14 +13158,14 @@
               ],
               "src": "1430:36:29"
             },
-            "scope": 4979,
+            "scope": 4982,
             "src": "1369:1455:29",
             "stateMutability": "view",
             "virtual": false,
             "visibility": "public"
           }
         ],
-        "scope": 4980,
+        "scope": 4983,
         "src": "324:2503:29"
       }
     ],
@@ -13185,10 +13185,10 @@
           33
         ],
         "VerusInfo": [
-          4979
+          4982
         ],
         "VerusNotarizer": [
-          7346
+          7349
         ],
         "VerusObjects": [
           252
@@ -13200,7 +13200,7 @@
           418
         ],
         "VerusSerializer": [
-          6532
+          6535
         ]
       },
       "license": "MIT"
@@ -13211,13 +13211,13 @@
           "SourceUnit": 253,
           "absolutePath": "project:/contracts/Libraries/VerusObjects.sol",
           "file": "../Libraries/VerusObjects.sol",
-          "scope": 4980,
+          "scope": 4983,
           "symbolAliases": [
             null
           ],
           "unitAlias": ""
         },
-        "id": 4767,
+        "id": 4770,
         "name": "ImportDirective",
         "src": "73:39:29"
       },
@@ -13226,13 +13226,13 @@
           "SourceUnit": 271,
           "absolutePath": "project:/contracts/Libraries/VerusObjectsCommon.sol",
           "file": "../Libraries/VerusObjectsCommon.sol",
-          "scope": 4980,
+          "scope": 4983,
           "symbolAliases": [
             null
           ],
           "unitAlias": ""
         },
-        "id": 4768,
+        "id": 4771,
         "name": "ImportDirective",
         "src": "114:45:29"
       },
@@ -13241,28 +13241,28 @@
           "SourceUnit": 34,
           "absolutePath": "project:/contracts/Libraries/VerusConstants.sol",
           "file": "../Libraries/VerusConstants.sol",
-          "scope": 4980,
+          "scope": 4983,
           "symbolAliases": [
             null
           ],
           "unitAlias": ""
         },
-        "id": 4769,
+        "id": 4772,
         "name": "ImportDirective",
         "src": "161:41:29"
       },
       {
         "attributes": {
-          "SourceUnit": 7347,
+          "SourceUnit": 7350,
           "absolutePath": "project:/contracts/VerusNotarizer/VerusNotarizer.sol",
           "file": "../VerusNotarizer/VerusNotarizer.sol",
-          "scope": 4980,
+          "scope": 4983,
           "symbolAliases": [
             null
           ],
           "unitAlias": ""
         },
-        "id": 4770,
+        "id": 4773,
         "name": "ImportDirective",
         "src": "204:46:29"
       },
@@ -13278,7 +13278,7 @@
             ".0"
           ]
         },
-        "id": 4771,
+        "id": 4774,
         "name": "PragmaDirective",
         "src": "254:31:29"
       },
@@ -13289,7 +13289,7 @@
             "ABIEncoderV2"
           ]
         },
-        "id": 4772,
+        "id": 4775,
         "name": "PragmaDirective",
         "src": "287:33:29"
       },
@@ -13305,10 +13305,10 @@
           "contractKind": "contract",
           "fullyImplemented": true,
           "linearizedBaseContracts": [
-            4979
+            4982
           ],
           "name": "VerusInfo",
-          "scope": 4980
+          "scope": 4983
         },
         "children": [
           {
@@ -13316,7 +13316,7 @@
               "constant": false,
               "mutability": "mutable",
               "name": "verusNotarizer",
-              "scope": 4979,
+              "scope": 4982,
               "stateVariable": true,
               "storageLocation": "default",
               "type": "contract VerusNotarizer",
@@ -13326,15 +13326,15 @@
               {
                 "attributes": {
                   "name": "VerusNotarizer",
-                  "referencedDeclaration": 7346,
+                  "referencedDeclaration": 7349,
                   "type": "contract VerusNotarizer"
                 },
-                "id": 4773,
+                "id": 4776,
                 "name": "UserDefinedTypeName",
                 "src": "352:14:29"
               }
             ],
-            "id": 4774,
+            "id": 4777,
             "name": "VariableDeclaration",
             "src": "352:29:29"
           },
@@ -13343,7 +13343,7 @@
               "constant": false,
               "mutability": "mutable",
               "name": "chainInfo",
-              "scope": 4979,
+              "scope": 4982,
               "stateVariable": true,
               "storageLocation": "default",
               "type": "struct VerusObjects.infoDetails",
@@ -13356,12 +13356,12 @@
                   "referencedDeclaration": 96,
                   "type": "struct VerusObjects.infoDetails"
                 },
-                "id": 4775,
+                "id": 4778,
                 "name": "UserDefinedTypeName",
                 "src": "394:24:29"
               }
             ],
-            "id": 4776,
+            "id": 4779,
             "name": "VariableDeclaration",
             "src": "394:34:29"
           },
@@ -13374,7 +13374,7 @@
                 null
               ],
               "name": "",
-              "scope": 4979,
+              "scope": 4982,
               "stateMutability": "nonpayable",
               "virtual": false,
               "visibility": "public"
@@ -13387,7 +13387,7 @@
                       "constant": false,
                       "mutability": "mutable",
                       "name": "verusNotarizerAddress",
-                      "scope": 4820,
+                      "scope": 4823,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "address",
@@ -13400,12 +13400,12 @@
                           "stateMutability": "nonpayable",
                           "type": "address"
                         },
-                        "id": 4777,
+                        "id": 4780,
                         "name": "ElementaryTypeName",
                         "src": "463:7:29"
                       }
                     ],
-                    "id": 4778,
+                    "id": 4781,
                     "name": "VariableDeclaration",
                     "src": "463:29:29"
                   },
@@ -13414,7 +13414,7 @@
                       "constant": false,
                       "mutability": "mutable",
                       "name": "chainVersion",
-                      "scope": 4820,
+                      "scope": 4823,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "uint256",
@@ -13426,12 +13426,12 @@
                           "name": "uint",
                           "type": "uint256"
                         },
-                        "id": 4779,
+                        "id": 4782,
                         "name": "ElementaryTypeName",
                         "src": "503:4:29"
                       }
                     ],
-                    "id": 4780,
+                    "id": 4783,
                     "name": "VariableDeclaration",
                     "src": "503:17:29"
                   },
@@ -13440,7 +13440,7 @@
                       "constant": false,
                       "mutability": "mutable",
                       "name": "chainVerusVersion",
-                      "scope": 4820,
+                      "scope": 4823,
                       "stateVariable": false,
                       "storageLocation": "memory",
                       "type": "string",
@@ -13452,12 +13452,12 @@
                           "name": "string",
                           "type": "string"
                         },
-                        "id": 4781,
+                        "id": 4784,
                         "name": "ElementaryTypeName",
                         "src": "531:6:29"
                       }
                     ],
-                    "id": 4782,
+                    "id": 4785,
                     "name": "VariableDeclaration",
                     "src": "531:31:29"
                   },
@@ -13466,7 +13466,7 @@
                       "constant": false,
                       "mutability": "mutable",
                       "name": "chainName",
-                      "scope": 4820,
+                      "scope": 4823,
                       "stateVariable": false,
                       "storageLocation": "memory",
                       "type": "string",
@@ -13478,12 +13478,12 @@
                           "name": "string",
                           "type": "string"
                         },
-                        "id": 4783,
+                        "id": 4786,
                         "name": "ElementaryTypeName",
                         "src": "573:6:29"
                       }
                     ],
-                    "id": 4784,
+                    "id": 4787,
                     "name": "VariableDeclaration",
                     "src": "573:23:29"
                   },
@@ -13492,7 +13492,7 @@
                       "constant": false,
                       "mutability": "mutable",
                       "name": "chainTestnet",
-                      "scope": 4820,
+                      "scope": 4823,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "bool",
@@ -13504,17 +13504,17 @@
                           "name": "bool",
                           "type": "bool"
                         },
-                        "id": 4785,
+                        "id": 4788,
                         "name": "ElementaryTypeName",
                         "src": "607:4:29"
                       }
                     ],
-                    "id": 4786,
+                    "id": 4789,
                     "name": "VariableDeclaration",
                     "src": "607:17:29"
                   }
                 ],
-                "id": 4787,
+                "id": 4790,
                 "name": "ParameterList",
                 "src": "452:173:29"
               },
@@ -13525,7 +13525,7 @@
                   ]
                 },
                 "children": [],
-                "id": 4788,
+                "id": 4791,
                 "name": "ParameterList",
                 "src": "633:0:29"
               },
@@ -13548,11 +13548,11 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 4774,
+                              "referencedDeclaration": 4777,
                               "type": "contract VerusNotarizer",
                               "value": "verusNotarizer"
                             },
-                            "id": 4789,
+                            "id": 4792,
                             "name": "Identifier",
                             "src": "644:14:29"
                           },
@@ -13582,11 +13582,11 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 7346,
+                                  "referencedDeclaration": 7349,
                                   "type": "type(contract VerusNotarizer)",
                                   "value": "VerusNotarizer"
                                 },
-                                "id": 4790,
+                                "id": 4793,
                                 "name": "Identifier",
                                 "src": "661:14:29"
                               },
@@ -13595,26 +13595,26 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 4778,
+                                  "referencedDeclaration": 4781,
                                   "type": "address",
                                   "value": "verusNotarizerAddress"
                                 },
-                                "id": 4791,
+                                "id": 4794,
                                 "name": "Identifier",
                                 "src": "676:21:29"
                               }
                             ],
-                            "id": 4792,
+                            "id": 4795,
                             "name": "FunctionCall",
                             "src": "661:37:29"
                           }
                         ],
-                        "id": 4793,
+                        "id": 4796,
                         "name": "Assignment",
                         "src": "644:54:29"
                       }
                     ],
-                    "id": 4794,
+                    "id": 4797,
                     "name": "ExpressionStatement",
                     "src": "644:54:29"
                   },
@@ -13646,16 +13646,16 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 4776,
+                                  "referencedDeclaration": 4779,
                                   "type": "struct VerusObjects.infoDetails storage ref",
                                   "value": "chainInfo"
                                 },
-                                "id": 4795,
+                                "id": 4798,
                                 "name": "Identifier",
                                 "src": "709:9:29"
                               }
                             ],
-                            "id": 4797,
+                            "id": 4800,
                             "name": "MemberAccess",
                             "src": "709:17:29"
                           },
@@ -13664,21 +13664,21 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 4780,
+                              "referencedDeclaration": 4783,
                               "type": "uint256",
                               "value": "chainVersion"
                             },
-                            "id": 4798,
+                            "id": 4801,
                             "name": "Identifier",
                             "src": "729:12:29"
                           }
                         ],
-                        "id": 4799,
+                        "id": 4802,
                         "name": "Assignment",
                         "src": "709:32:29"
                       }
                     ],
-                    "id": 4800,
+                    "id": 4803,
                     "name": "ExpressionStatement",
                     "src": "709:32:29"
                   },
@@ -13710,16 +13710,16 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 4776,
+                                  "referencedDeclaration": 4779,
                                   "type": "struct VerusObjects.infoDetails storage ref",
                                   "value": "chainInfo"
                                 },
-                                "id": 4801,
+                                "id": 4804,
                                 "name": "Identifier",
                                 "src": "752:9:29"
                               }
                             ],
-                            "id": 4803,
+                            "id": 4806,
                             "name": "MemberAccess",
                             "src": "752:21:29"
                           },
@@ -13728,21 +13728,21 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 4782,
+                              "referencedDeclaration": 4785,
                               "type": "string memory",
                               "value": "chainVerusVersion"
                             },
-                            "id": 4804,
+                            "id": 4807,
                             "name": "Identifier",
                             "src": "776:17:29"
                           }
                         ],
-                        "id": 4805,
+                        "id": 4808,
                         "name": "Assignment",
                         "src": "752:41:29"
                       }
                     ],
-                    "id": 4806,
+                    "id": 4809,
                     "name": "ExpressionStatement",
                     "src": "752:41:29"
                   },
@@ -13774,16 +13774,16 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 4776,
+                                  "referencedDeclaration": 4779,
                                   "type": "struct VerusObjects.infoDetails storage ref",
                                   "value": "chainInfo"
                                 },
-                                "id": 4807,
+                                "id": 4810,
                                 "name": "Identifier",
                                 "src": "804:9:29"
                               }
                             ],
-                            "id": 4809,
+                            "id": 4812,
                             "name": "MemberAccess",
                             "src": "804:14:29"
                           },
@@ -13792,21 +13792,21 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 4784,
+                              "referencedDeclaration": 4787,
                               "type": "string memory",
                               "value": "chainName"
                             },
-                            "id": 4810,
+                            "id": 4813,
                             "name": "Identifier",
                             "src": "821:9:29"
                           }
                         ],
-                        "id": 4811,
+                        "id": 4814,
                         "name": "Assignment",
                         "src": "804:26:29"
                       }
                     ],
-                    "id": 4812,
+                    "id": 4815,
                     "name": "ExpressionStatement",
                     "src": "804:26:29"
                   },
@@ -13838,16 +13838,16 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 4776,
+                                  "referencedDeclaration": 4779,
                                   "type": "struct VerusObjects.infoDetails storage ref",
                                   "value": "chainInfo"
                                 },
-                                "id": 4813,
+                                "id": 4816,
                                 "name": "Identifier",
                                 "src": "841:9:29"
                               }
                             ],
-                            "id": 4815,
+                            "id": 4818,
                             "name": "MemberAccess",
                             "src": "841:17:29"
                           },
@@ -13856,31 +13856,31 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 4786,
+                              "referencedDeclaration": 4789,
                               "type": "bool",
                               "value": "chainTestnet"
                             },
-                            "id": 4816,
+                            "id": 4819,
                             "name": "Identifier",
                             "src": "861:12:29"
                           }
                         ],
-                        "id": 4817,
+                        "id": 4820,
                         "name": "Assignment",
                         "src": "841:32:29"
                       }
                     ],
-                    "id": 4818,
+                    "id": 4821,
                     "name": "ExpressionStatement",
                     "src": "841:32:29"
                   }
                 ],
-                "id": 4819,
+                "id": 4822,
                 "name": "Block",
                 "src": "633:248:29"
               }
             ],
-            "id": 4820,
+            "id": 4823,
             "name": "FunctionDefinition",
             "src": "441:440:29"
           },
@@ -13894,7 +13894,7 @@
                 null
               ],
               "name": "getinfo",
-              "scope": 4979,
+              "scope": 4982,
               "stateMutability": "view",
               "virtual": false,
               "visibility": "public"
@@ -13907,7 +13907,7 @@
                   ]
                 },
                 "children": [],
-                "id": 4821,
+                "id": 4824,
                 "name": "ParameterList",
                 "src": "907:2:29"
               },
@@ -13918,7 +13918,7 @@
                       "constant": false,
                       "mutability": "mutable",
                       "name": "",
-                      "scope": 4875,
+                      "scope": 4878,
                       "stateVariable": false,
                       "storageLocation": "memory",
                       "type": "struct VerusObjects.infoDetails",
@@ -13931,17 +13931,17 @@
                           "referencedDeclaration": 96,
                           "type": "struct VerusObjects.infoDetails"
                         },
-                        "id": 4822,
+                        "id": 4825,
                         "name": "UserDefinedTypeName",
                         "src": "930:24:29"
                       }
                     ],
-                    "id": 4823,
+                    "id": 4826,
                     "name": "VariableDeclaration",
                     "src": "930:31:29"
                   }
                 ],
-                "id": 4824,
+                "id": 4827,
                 "name": "ParameterList",
                 "src": "929:33:29"
               },
@@ -13950,7 +13950,7 @@
                   {
                     "attributes": {
                       "assignments": [
-                        4828
+                        4831
                       ]
                     },
                     "children": [
@@ -13959,7 +13959,7 @@
                           "constant": false,
                           "mutability": "mutable",
                           "name": "returnInfo",
-                          "scope": 4874,
+                          "scope": 4877,
                           "stateVariable": false,
                           "storageLocation": "memory",
                           "type": "struct VerusObjects.infoDetails",
@@ -13972,17 +13972,17 @@
                               "referencedDeclaration": 96,
                               "type": "struct VerusObjects.infoDetails"
                             },
-                            "id": 4827,
+                            "id": 4830,
                             "name": "UserDefinedTypeName",
                             "src": "995:24:29"
                           }
                         ],
-                        "id": 4828,
+                        "id": 4831,
                         "name": "VariableDeclaration",
                         "src": "995:42:29"
                       }
                     ],
-                    "id": 4829,
+                    "id": 4832,
                     "name": "VariableDeclarationStatement",
                     "src": "995:42:29"
                   },
@@ -14014,16 +14014,16 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 4828,
+                                  "referencedDeclaration": 4831,
                                   "type": "struct VerusObjects.infoDetails memory",
                                   "value": "returnInfo"
                                 },
-                                "id": 4830,
+                                "id": 4833,
                                 "name": "Identifier",
                                 "src": "1048:10:29"
                               }
                             ],
-                            "id": 4832,
+                            "id": 4835,
                             "name": "MemberAccess",
                             "src": "1048:18:29"
                           },
@@ -14043,26 +14043,26 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 4776,
+                                  "referencedDeclaration": 4779,
                                   "type": "struct VerusObjects.infoDetails storage ref",
                                   "value": "chainInfo"
                                 },
-                                "id": 4833,
+                                "id": 4836,
                                 "name": "Identifier",
                                 "src": "1069:9:29"
                               }
                             ],
-                            "id": 4834,
+                            "id": 4837,
                             "name": "MemberAccess",
                             "src": "1069:17:29"
                           }
                         ],
-                        "id": 4835,
+                        "id": 4838,
                         "name": "Assignment",
                         "src": "1048:38:29"
                       }
                     ],
-                    "id": 4836,
+                    "id": 4839,
                     "name": "ExpressionStatement",
                     "src": "1048:38:29"
                   },
@@ -14094,16 +14094,16 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 4828,
+                                  "referencedDeclaration": 4831,
                                   "type": "struct VerusObjects.infoDetails memory",
                                   "value": "returnInfo"
                                 },
-                                "id": 4837,
+                                "id": 4840,
                                 "name": "Identifier",
                                 "src": "1097:10:29"
                               }
                             ],
-                            "id": 4839,
+                            "id": 4842,
                             "name": "MemberAccess",
                             "src": "1097:22:29"
                           },
@@ -14123,26 +14123,26 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 4776,
+                                  "referencedDeclaration": 4779,
                                   "type": "struct VerusObjects.infoDetails storage ref",
                                   "value": "chainInfo"
                                 },
-                                "id": 4840,
+                                "id": 4843,
                                 "name": "Identifier",
                                 "src": "1122:9:29"
                               }
                             ],
-                            "id": 4841,
+                            "id": 4844,
                             "name": "MemberAccess",
                             "src": "1122:21:29"
                           }
                         ],
-                        "id": 4842,
+                        "id": 4845,
                         "name": "Assignment",
                         "src": "1097:46:29"
                       }
                     ],
-                    "id": 4843,
+                    "id": 4846,
                     "name": "ExpressionStatement",
                     "src": "1097:46:29"
                   },
@@ -14174,16 +14174,16 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 4828,
+                                  "referencedDeclaration": 4831,
                                   "type": "struct VerusObjects.infoDetails memory",
                                   "value": "returnInfo"
                                 },
-                                "id": 4844,
+                                "id": 4847,
                                 "name": "Identifier",
                                 "src": "1154:10:29"
                               }
                             ],
-                            "id": 4846,
+                            "id": 4849,
                             "name": "MemberAccess",
                             "src": "1154:17:29"
                           },
@@ -14206,22 +14206,22 @@
                                   "type": "block",
                                   "value": "block"
                                 },
-                                "id": 4847,
+                                "id": 4850,
                                 "name": "Identifier",
                                 "src": "1174:5:29"
                               }
                             ],
-                            "id": 4848,
+                            "id": 4851,
                             "name": "MemberAccess",
                             "src": "1174:12:29"
                           }
                         ],
-                        "id": 4849,
+                        "id": 4852,
                         "name": "Assignment",
                         "src": "1154:32:29"
                       }
                     ],
-                    "id": 4850,
+                    "id": 4853,
                     "name": "ExpressionStatement",
                     "src": "1154:32:29"
                   },
@@ -14253,16 +14253,16 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 4828,
+                                  "referencedDeclaration": 4831,
                                   "type": "struct VerusObjects.infoDetails memory",
                                   "value": "returnInfo"
                                 },
-                                "id": 4851,
+                                "id": 4854,
                                 "name": "Identifier",
                                 "src": "1197:10:29"
                               }
                             ],
-                            "id": 4853,
+                            "id": 4856,
                             "name": "MemberAccess",
                             "src": "1197:18:29"
                           },
@@ -14285,22 +14285,22 @@
                                   "type": "block",
                                   "value": "block"
                                 },
-                                "id": 4854,
+                                "id": 4857,
                                 "name": "Identifier",
                                 "src": "1218:5:29"
                               }
                             ],
-                            "id": 4855,
+                            "id": 4858,
                             "name": "MemberAccess",
                             "src": "1218:15:29"
                           }
                         ],
-                        "id": 4856,
+                        "id": 4859,
                         "name": "Assignment",
                         "src": "1197:36:29"
                       }
                     ],
-                    "id": 4857,
+                    "id": 4860,
                     "name": "ExpressionStatement",
                     "src": "1197:36:29"
                   },
@@ -14332,16 +14332,16 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 4828,
+                                  "referencedDeclaration": 4831,
                                   "type": "struct VerusObjects.infoDetails memory",
                                   "value": "returnInfo"
                                 },
-                                "id": 4858,
+                                "id": 4861,
                                 "name": "Identifier",
                                 "src": "1244:10:29"
                               }
                             ],
-                            "id": 4860,
+                            "id": 4863,
                             "name": "MemberAccess",
                             "src": "1244:15:29"
                           },
@@ -14361,26 +14361,26 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 4776,
+                                  "referencedDeclaration": 4779,
                                   "type": "struct VerusObjects.infoDetails storage ref",
                                   "value": "chainInfo"
                                 },
-                                "id": 4861,
+                                "id": 4864,
                                 "name": "Identifier",
                                 "src": "1262:9:29"
                               }
                             ],
-                            "id": 4862,
+                            "id": 4865,
                             "name": "MemberAccess",
                             "src": "1262:14:29"
                           }
                         ],
-                        "id": 4863,
+                        "id": 4866,
                         "name": "Assignment",
                         "src": "1244:32:29"
                       }
                     ],
-                    "id": 4864,
+                    "id": 4867,
                     "name": "ExpressionStatement",
                     "src": "1244:32:29"
                   },
@@ -14412,16 +14412,16 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 4828,
+                                  "referencedDeclaration": 4831,
                                   "type": "struct VerusObjects.infoDetails memory",
                                   "value": "returnInfo"
                                 },
-                                "id": 4865,
+                                "id": 4868,
                                 "name": "Identifier",
                                 "src": "1287:10:29"
                               }
                             ],
-                            "id": 4867,
+                            "id": 4870,
                             "name": "MemberAccess",
                             "src": "1287:18:29"
                           },
@@ -14441,32 +14441,32 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 4776,
+                                  "referencedDeclaration": 4779,
                                   "type": "struct VerusObjects.infoDetails storage ref",
                                   "value": "chainInfo"
                                 },
-                                "id": 4868,
+                                "id": 4871,
                                 "name": "Identifier",
                                 "src": "1308:9:29"
                               }
                             ],
-                            "id": 4869,
+                            "id": 4872,
                             "name": "MemberAccess",
                             "src": "1308:17:29"
                           }
                         ],
-                        "id": 4870,
+                        "id": 4873,
                         "name": "Assignment",
                         "src": "1287:38:29"
                       }
                     ],
-                    "id": 4871,
+                    "id": 4874,
                     "name": "ExpressionStatement",
                     "src": "1287:38:29"
                   },
                   {
                     "attributes": {
-                      "functionReturnParameters": 4824
+                      "functionReturnParameters": 4827
                     },
                     "children": [
                       {
@@ -14474,26 +14474,26 @@
                           "overloadedDeclarations": [
                             null
                           ],
-                          "referencedDeclaration": 4828,
+                          "referencedDeclaration": 4831,
                           "type": "struct VerusObjects.infoDetails memory",
                           "value": "returnInfo"
                         },
-                        "id": 4872,
+                        "id": 4875,
                         "name": "Identifier",
                         "src": "1343:10:29"
                       }
                     ],
-                    "id": 4873,
+                    "id": 4876,
                     "name": "Return",
                     "src": "1336:17:29"
                   }
                 ],
-                "id": 4874,
+                "id": 4877,
                 "name": "Block",
                 "src": "962:399:29"
               }
             ],
-            "id": 4875,
+            "id": 4878,
             "name": "FunctionDefinition",
             "src": "891:470:29"
           },
@@ -14507,7 +14507,7 @@
                 null
               ],
               "name": "getcurrency",
-              "scope": 4979,
+              "scope": 4982,
               "stateMutability": "view",
               "virtual": false,
               "visibility": "public"
@@ -14520,7 +14520,7 @@
                       "constant": false,
                       "mutability": "mutable",
                       "name": "_currencyid",
-                      "scope": 4978,
+                      "scope": 4981,
                       "stateVariable": false,
                       "storageLocation": "default",
                       "type": "address",
@@ -14533,17 +14533,17 @@
                           "stateMutability": "nonpayable",
                           "type": "address"
                         },
-                        "id": 4876,
+                        "id": 4879,
                         "name": "ElementaryTypeName",
                         "src": "1390:7:29"
                       }
                     ],
-                    "id": 4877,
+                    "id": 4880,
                     "name": "VariableDeclaration",
                     "src": "1390:19:29"
                   }
                 ],
-                "id": 4878,
+                "id": 4881,
                 "name": "ParameterList",
                 "src": "1389:21:29"
               },
@@ -14554,7 +14554,7 @@
                       "constant": false,
                       "mutability": "mutable",
                       "name": "",
-                      "scope": 4978,
+                      "scope": 4981,
                       "stateVariable": false,
                       "storageLocation": "memory",
                       "type": "struct VerusObjects.currencyDetail",
@@ -14567,17 +14567,17 @@
                           "referencedDeclaration": 130,
                           "type": "struct VerusObjects.currencyDetail"
                         },
-                        "id": 4879,
+                        "id": 4882,
                         "name": "UserDefinedTypeName",
                         "src": "1431:27:29"
                       }
                     ],
-                    "id": 4880,
+                    "id": 4883,
                     "name": "VariableDeclaration",
                     "src": "1431:34:29"
                   }
                 ],
-                "id": 4881,
+                "id": 4884,
                 "name": "ParameterList",
                 "src": "1430:36:29"
               },
@@ -14586,7 +14586,7 @@
                   {
                     "attributes": {
                       "assignments": [
-                        4885
+                        4888
                       ]
                     },
                     "children": [
@@ -14595,7 +14595,7 @@
                           "constant": false,
                           "mutability": "mutable",
                           "name": "returnCurrency",
-                          "scope": 4977,
+                          "scope": 4980,
                           "stateVariable": false,
                           "storageLocation": "memory",
                           "type": "struct VerusObjects.currencyDetail",
@@ -14608,17 +14608,17 @@
                               "referencedDeclaration": 130,
                               "type": "struct VerusObjects.currencyDetail"
                             },
-                            "id": 4884,
+                            "id": 4887,
                             "name": "UserDefinedTypeName",
                             "src": "1477:27:29"
                           }
                         ],
-                        "id": 4885,
+                        "id": 4888,
                         "name": "VariableDeclaration",
                         "src": "1477:49:29"
                       }
                     ],
-                    "id": 4886,
+                    "id": 4889,
                     "name": "VariableDeclarationStatement",
                     "src": "1477:49:29"
                   },
@@ -14650,16 +14650,16 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 4885,
+                                  "referencedDeclaration": 4888,
                                   "type": "struct VerusObjects.currencyDetail memory",
                                   "value": "returnCurrency"
                                 },
-                                "id": 4887,
+                                "id": 4890,
                                 "name": "Identifier",
                                 "src": "1537:14:29"
                               }
                             ],
-                            "id": 4889,
+                            "id": 4892,
                             "name": "MemberAccess",
                             "src": "1537:22:29"
                           },
@@ -14679,33 +14679,33 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 4776,
+                                  "referencedDeclaration": 4779,
                                   "type": "struct VerusObjects.infoDetails storage ref",
                                   "value": "chainInfo"
                                 },
-                                "id": 4890,
+                                "id": 4893,
                                 "name": "Identifier",
                                 "src": "1562:9:29"
                               }
                             ],
-                            "id": 4891,
+                            "id": 4894,
                             "name": "MemberAccess",
                             "src": "1562:17:29"
                           }
                         ],
-                        "id": 4892,
+                        "id": 4895,
                         "name": "Assignment",
                         "src": "1537:42:29"
                       }
                     ],
-                    "id": 4893,
+                    "id": 4896,
                     "name": "ExpressionStatement",
                     "src": "1537:42:29"
                   },
                   {
                     "attributes": {
                       "assignments": [
-                        4898
+                        4901
                       ]
                     },
                     "children": [
@@ -14714,7 +14714,7 @@
                           "constant": false,
                           "mutability": "mutable",
                           "name": "notaries",
-                          "scope": 4977,
+                          "scope": 4980,
                           "stateVariable": false,
                           "storageLocation": "memory",
                           "type": "address[]",
@@ -14731,17 +14731,17 @@
                                   "name": "address",
                                   "type": "address"
                                 },
-                                "id": 4896,
+                                "id": 4899,
                                 "name": "ElementaryTypeName",
                                 "src": "1645:7:29"
                               }
                             ],
-                            "id": 4897,
+                            "id": 4900,
                             "name": "ArrayTypeName",
                             "src": "1645:9:29"
                           }
                         ],
-                        "id": 4898,
+                        "id": 4901,
                         "name": "VariableDeclaration",
                         "src": "1645:25:29"
                       },
@@ -14773,7 +14773,7 @@
                               "isPure": false,
                               "lValueRequested": false,
                               "member_name": "getNotaries",
-                              "referencedDeclaration": 6782,
+                              "referencedDeclaration": 6785,
                               "type": "function () view external returns (address[] memory)"
                             },
                             "children": [
@@ -14782,33 +14782,33 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 4774,
+                                  "referencedDeclaration": 4777,
                                   "type": "contract VerusNotarizer",
                                   "value": "verusNotarizer"
                                 },
-                                "id": 4899,
+                                "id": 4902,
                                 "name": "Identifier",
                                 "src": "1673:14:29"
                               }
                             ],
-                            "id": 4900,
+                            "id": 4903,
                             "name": "MemberAccess",
                             "src": "1673:26:29"
                           }
                         ],
-                        "id": 4901,
+                        "id": 4904,
                         "name": "FunctionCall",
                         "src": "1673:28:29"
                       }
                     ],
-                    "id": 4902,
+                    "id": 4905,
                     "name": "VariableDeclarationStatement",
                     "src": "1645:56:29"
                   },
                   {
                     "attributes": {
                       "assignments": [
-                        4904
+                        4907
                       ]
                     },
                     "children": [
@@ -14817,7 +14817,7 @@
                           "constant": false,
                           "mutability": "mutable",
                           "name": "minnotaries",
-                          "scope": 4977,
+                          "scope": 4980,
                           "stateVariable": false,
                           "storageLocation": "default",
                           "type": "uint8",
@@ -14829,12 +14829,12 @@
                               "name": "uint8",
                               "type": "uint8"
                             },
-                            "id": 4903,
+                            "id": 4906,
                             "name": "ElementaryTypeName",
                             "src": "1712:5:29"
                           }
                         ],
-                        "id": 4904,
+                        "id": 4907,
                         "name": "VariableDeclaration",
                         "src": "1712:17:29"
                       },
@@ -14866,7 +14866,7 @@
                               "isPure": false,
                               "lValueRequested": false,
                               "member_name": "currentNotariesRequired",
-                              "referencedDeclaration": 6836,
+                              "referencedDeclaration": 6839,
                               "type": "function () view external returns (uint8)"
                             },
                             "children": [
@@ -14875,67 +14875,28 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 4774,
+                                  "referencedDeclaration": 4777,
                                   "type": "contract VerusNotarizer",
                                   "value": "verusNotarizer"
                                 },
-                                "id": 4905,
+                                "id": 4908,
                                 "name": "Identifier",
                                 "src": "1732:14:29"
                               }
                             ],
-                            "id": 4906,
+                            "id": 4909,
                             "name": "MemberAccess",
                             "src": "1732:38:29"
                           }
                         ],
-                        "id": 4907,
+                        "id": 4910,
                         "name": "FunctionCall",
                         "src": "1732:40:29"
                       }
                     ],
-                    "id": 4908,
-                    "name": "VariableDeclarationStatement",
-                    "src": "1712:60:29"
-                  },
-                  {
-                    "attributes": {
-                      "assignments": [
-                        4910
-                      ]
-                    },
-                    "children": [
-                      {
-                        "attributes": {
-                          "constant": false,
-                          "mutability": "mutable",
-                          "name": "currencyAddress",
-                          "scope": 4977,
-                          "stateVariable": false,
-                          "storageLocation": "default",
-                          "type": "address",
-                          "visibility": "internal"
-                        },
-                        "children": [
-                          {
-                            "attributes": {
-                              "name": "address",
-                              "stateMutability": "nonpayable",
-                              "type": "address"
-                            },
-                            "id": 4909,
-                            "name": "ElementaryTypeName",
-                            "src": "1793:7:29"
-                          }
-                        ],
-                        "id": 4910,
-                        "name": "VariableDeclaration",
-                        "src": "1793:23:29"
-                      }
-                    ],
                     "id": 4911,
                     "name": "VariableDeclarationStatement",
-                    "src": "1793:23:29"
+                    "src": "1712:60:29"
                   },
                   {
                     "attributes": {
@@ -14948,8 +14909,47 @@
                         "attributes": {
                           "constant": false,
                           "mutability": "mutable",
+                          "name": "currencyAddress",
+                          "scope": 4980,
+                          "stateVariable": false,
+                          "storageLocation": "default",
+                          "type": "address",
+                          "visibility": "internal"
+                        },
+                        "children": [
+                          {
+                            "attributes": {
+                              "name": "address",
+                              "stateMutability": "nonpayable",
+                              "type": "address"
+                            },
+                            "id": 4912,
+                            "name": "ElementaryTypeName",
+                            "src": "1793:7:29"
+                          }
+                        ],
+                        "id": 4913,
+                        "name": "VariableDeclaration",
+                        "src": "1793:23:29"
+                      }
+                    ],
+                    "id": 4914,
+                    "name": "VariableDeclarationStatement",
+                    "src": "1793:23:29"
+                  },
+                  {
+                    "attributes": {
+                      "assignments": [
+                        4916
+                      ]
+                    },
+                    "children": [
+                      {
+                        "attributes": {
+                          "constant": false,
+                          "mutability": "mutable",
                           "name": "initialsupply",
-                          "scope": 4977,
+                          "scope": 4980,
                           "stateVariable": false,
                           "storageLocation": "default",
                           "type": "uint256",
@@ -14961,17 +14961,17 @@
                               "name": "uint256",
                               "type": "uint256"
                             },
-                            "id": 4912,
+                            "id": 4915,
                             "name": "ElementaryTypeName",
                             "src": "1827:7:29"
                           }
                         ],
-                        "id": 4913,
+                        "id": 4916,
                         "name": "VariableDeclaration",
                         "src": "1827:21:29"
                       }
                     ],
-                    "id": 4914,
+                    "id": 4917,
                     "name": "VariableDeclarationStatement",
                     "src": "1827:21:29"
                   },
@@ -14996,11 +14996,11 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 4877,
+                              "referencedDeclaration": 4880,
                               "type": "address",
                               "value": "_currencyid"
                             },
-                            "id": 4915,
+                            "id": 4918,
                             "name": "Identifier",
                             "src": "1862:11:29"
                           },
@@ -15024,17 +15024,17 @@
                                   "type": "type(library VerusConstants)",
                                   "value": "VerusConstants"
                                 },
-                                "id": 4916,
+                                "id": 4919,
                                 "name": "Identifier",
                                 "src": "1877:14:29"
                               }
                             ],
-                            "id": 4917,
+                            "id": 4920,
                             "name": "MemberAccess",
                             "src": "1877:19:29"
                           }
                         ],
-                        "id": 4918,
+                        "id": 4921,
                         "name": "BinaryOperation",
                         "src": "1862:34:29"
                       },
@@ -15057,11 +15057,11 @@
                                       "overloadedDeclarations": [
                                         null
                                       ],
-                                      "referencedDeclaration": 4910,
+                                      "referencedDeclaration": 4913,
                                       "type": "address",
                                       "value": "currencyAddress"
                                     },
-                                    "id": 4919,
+                                    "id": 4922,
                                     "name": "Identifier",
                                     "src": "1912:15:29"
                                   },
@@ -15085,22 +15085,22 @@
                                           "type": "type(library VerusConstants)",
                                           "value": "VerusConstants"
                                         },
-                                        "id": 4920,
+                                        "id": 4923,
                                         "name": "Identifier",
                                         "src": "1930:14:29"
                                       }
                                     ],
-                                    "id": 4921,
+                                    "id": 4924,
                                     "name": "MemberAccess",
                                     "src": "1930:19:29"
                                   }
                                 ],
-                                "id": 4922,
+                                "id": 4925,
                                 "name": "Assignment",
                                 "src": "1912:37:29"
                               }
                             ],
-                            "id": 4923,
+                            "id": 4926,
                             "name": "ExpressionStatement",
                             "src": "1912:37:29"
                           },
@@ -15121,11 +15121,11 @@
                                       "overloadedDeclarations": [
                                         null
                                       ],
-                                      "referencedDeclaration": 4913,
+                                      "referencedDeclaration": 4916,
                                       "type": "uint256",
                                       "value": "initialsupply"
                                     },
-                                    "id": 4924,
+                                    "id": 4927,
                                     "name": "Identifier",
                                     "src": "1964:13:29"
                                   },
@@ -15140,22 +15140,22 @@
                                       "type": "int_const 72000000",
                                       "value": "72000000"
                                     },
-                                    "id": 4925,
+                                    "id": 4928,
                                     "name": "Literal",
                                     "src": "1980:8:29"
                                   }
                                 ],
-                                "id": 4926,
+                                "id": 4929,
                                 "name": "Assignment",
                                 "src": "1964:24:29"
                               }
                             ],
-                            "id": 4927,
+                            "id": 4930,
                             "name": "ExpressionStatement",
                             "src": "1964:24:29"
                           }
                         ],
-                        "id": 4928,
+                        "id": 4931,
                         "name": "Block",
                         "src": "1897:103:29"
                       },
@@ -15178,11 +15178,11 @@
                                       "overloadedDeclarations": [
                                         null
                                       ],
-                                      "referencedDeclaration": 4910,
+                                      "referencedDeclaration": 4913,
                                       "type": "address",
                                       "value": "currencyAddress"
                                     },
-                                    "id": 4929,
+                                    "id": 4932,
                                     "name": "Identifier",
                                     "src": "2021:15:29"
                                   },
@@ -15191,21 +15191,21 @@
                                       "overloadedDeclarations": [
                                         null
                                       ],
-                                      "referencedDeclaration": 4877,
+                                      "referencedDeclaration": 4880,
                                       "type": "address",
                                       "value": "_currencyid"
                                     },
-                                    "id": 4930,
+                                    "id": 4933,
                                     "name": "Identifier",
                                     "src": "2039:11:29"
                                   }
                                 ],
-                                "id": 4931,
+                                "id": 4934,
                                 "name": "Assignment",
                                 "src": "2021:29:29"
                               }
                             ],
-                            "id": 4932,
+                            "id": 4935,
                             "name": "ExpressionStatement",
                             "src": "2021:29:29"
                           },
@@ -15226,11 +15226,11 @@
                                       "overloadedDeclarations": [
                                         null
                                       ],
-                                      "referencedDeclaration": 4913,
+                                      "referencedDeclaration": 4916,
                                       "type": "uint256",
                                       "value": "initialsupply"
                                     },
-                                    "id": 4933,
+                                    "id": 4936,
                                     "name": "Identifier",
                                     "src": "2065:13:29"
                                   },
@@ -15245,27 +15245,27 @@
                                       "type": "int_const 0",
                                       "value": "0"
                                     },
-                                    "id": 4934,
+                                    "id": 4937,
                                     "name": "Literal",
                                     "src": "2081:1:29"
                                   }
                                 ],
-                                "id": 4935,
+                                "id": 4938,
                                 "name": "Assignment",
                                 "src": "2065:17:29"
                               }
                             ],
-                            "id": 4936,
+                            "id": 4939,
                             "name": "ExpressionStatement",
                             "src": "2065:17:29"
                           }
                         ],
-                        "id": 4937,
+                        "id": 4940,
                         "name": "Block",
                         "src": "2006:88:29"
                       }
                     ],
-                    "id": 4938,
+                    "id": 4941,
                     "name": "IfStatement",
                     "src": "1859:235:29"
                   },
@@ -15286,11 +15286,11 @@
                               "overloadedDeclarations": [
                                 null
                               ],
-                              "referencedDeclaration": 4885,
+                              "referencedDeclaration": 4888,
                               "type": "struct VerusObjects.currencyDetail memory",
                               "value": "returnCurrency"
                             },
-                            "id": 4939,
+                            "id": 4942,
                             "name": "Identifier",
                             "src": "2132:14:29"
                           },
@@ -15395,12 +15395,12 @@
                                       "type": "type(library VerusObjects)",
                                       "value": "VerusObjects"
                                     },
-                                    "id": 4940,
+                                    "id": 4943,
                                     "name": "Identifier",
                                     "src": "2149:12:29"
                                   }
                                 ],
-                                "id": 4941,
+                                "id": 4944,
                                 "name": "MemberAccess",
                                 "src": "2149:27:29"
                               },
@@ -15420,16 +15420,16 @@
                                       "overloadedDeclarations": [
                                         null
                                       ],
-                                      "referencedDeclaration": 4776,
+                                      "referencedDeclaration": 4779,
                                       "type": "struct VerusObjects.infoDetails storage ref",
                                       "value": "chainInfo"
                                     },
-                                    "id": 4942,
+                                    "id": 4945,
                                     "name": "Identifier",
                                     "src": "2195:9:29"
                                   }
                                 ],
-                                "id": 4943,
+                                "id": 4946,
                                 "name": "MemberAccess",
                                 "src": "2195:17:29"
                               },
@@ -15453,12 +15453,12 @@
                                       "type": "type(library VerusConstants)",
                                       "value": "VerusConstants"
                                     },
-                                    "id": 4944,
+                                    "id": 4947,
                                     "name": "Identifier",
                                     "src": "2231:14:29"
                                   }
                                 ],
-                                "id": 4945,
+                                "id": 4948,
                                 "name": "MemberAccess",
                                 "src": "2231:27:29"
                               },
@@ -15482,12 +15482,12 @@
                                       "type": "type(library VerusConstants)",
                                       "value": "VerusConstants"
                                     },
-                                    "id": 4946,
+                                    "id": 4949,
                                     "name": "Identifier",
                                     "src": "2277:14:29"
                                   }
                                 ],
-                                "id": 4947,
+                                "id": 4950,
                                 "name": "MemberAccess",
                                 "src": "2277:19:29"
                               },
@@ -15511,12 +15511,12 @@
                                       "type": "type(library VerusConstants)",
                                       "value": "VerusConstants"
                                     },
-                                    "id": 4948,
+                                    "id": 4951,
                                     "name": "Identifier",
                                     "src": "2315:14:29"
                                   }
                                 ],
-                                "id": 4949,
+                                "id": 4952,
                                 "name": "MemberAccess",
                                 "src": "2315:28:29"
                               },
@@ -15540,12 +15540,12 @@
                                       "type": "type(library VerusConstants)",
                                       "value": "VerusConstants"
                                     },
-                                    "id": 4950,
+                                    "id": 4953,
                                     "name": "Identifier",
                                     "src": "2362:14:29"
                                   }
                                 ],
-                                "id": 4951,
+                                "id": 4954,
                                 "name": "MemberAccess",
                                 "src": "2362:28:29"
                               },
@@ -15560,7 +15560,7 @@
                                   "type": "int_const 2",
                                   "value": "2"
                                 },
-                                "id": 4952,
+                                "id": 4955,
                                 "name": "Literal",
                                 "src": "2409:1:29"
                               },
@@ -15575,7 +15575,7 @@
                                   "type": "int_const 3",
                                   "value": "3"
                                 },
-                                "id": 4953,
+                                "id": 4956,
                                 "name": "Literal",
                                 "src": "2429:1:29"
                               },
@@ -15624,12 +15624,12 @@
                                           "type": "type(library VerusObjectsCommon)",
                                           "value": "VerusObjectsCommon"
                                         },
-                                        "id": 4954,
+                                        "id": 4957,
                                         "name": "Identifier",
                                         "src": "2449:18:29"
                                       }
                                     ],
-                                    "id": 4955,
+                                    "id": 4958,
                                     "name": "MemberAccess",
                                     "src": "2449:39:29"
                                   },
@@ -15644,7 +15644,7 @@
                                       "type": "int_const 9",
                                       "value": "9"
                                     },
-                                    "id": 4956,
+                                    "id": 4959,
                                     "name": "Literal",
                                     "src": "2489:1:29"
                                   },
@@ -15688,12 +15688,12 @@
                                               "type": "abi",
                                               "value": "abi"
                                             },
-                                            "id": 4957,
+                                            "id": 4960,
                                             "name": "Identifier",
                                             "src": "2491:3:29"
                                           }
                                         ],
-                                        "id": 4958,
+                                        "id": 4961,
                                         "name": "MemberAccess",
                                         "src": "2491:16:29"
                                       },
@@ -15702,21 +15702,21 @@
                                           "overloadedDeclarations": [
                                             null
                                           ],
-                                          "referencedDeclaration": 4910,
+                                          "referencedDeclaration": 4913,
                                           "type": "address",
                                           "value": "currencyAddress"
                                         },
-                                        "id": 4959,
+                                        "id": 4962,
                                         "name": "Identifier",
                                         "src": "2508:15:29"
                                       }
                                     ],
-                                    "id": 4960,
+                                    "id": 4963,
                                     "name": "FunctionCall",
                                     "src": "2491:33:29"
                                   }
                                 ],
-                                "id": 4961,
+                                "id": 4964,
                                 "name": "FunctionCall",
                                 "src": "2449:76:29"
                               },
@@ -15740,12 +15740,12 @@
                                       "type": "type(library VerusConstants)",
                                       "value": "VerusConstants"
                                     },
-                                    "id": 4962,
+                                    "id": 4965,
                                     "name": "Identifier",
                                     "src": "2544:14:29"
                                   }
                                 ],
-                                "id": 4963,
+                                "id": 4966,
                                 "name": "MemberAccess",
                                 "src": "2544:28:29"
                               },
@@ -15760,7 +15760,7 @@
                                   "type": "int_const 0",
                                   "value": "0"
                                 },
-                                "id": 4964,
+                                "id": 4967,
                                 "name": "Literal",
                                 "src": "2591:1:29"
                               },
@@ -15775,7 +15775,7 @@
                                   "type": "int_const 0",
                                   "value": "0"
                                 },
-                                "id": 4965,
+                                "id": 4968,
                                 "name": "Literal",
                                 "src": "2611:1:29"
                               },
@@ -15784,11 +15784,11 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 4913,
+                                  "referencedDeclaration": 4916,
                                   "type": "uint256",
                                   "value": "initialsupply"
                                 },
-                                "id": 4966,
+                                "id": 4969,
                                 "name": "Identifier",
                                 "src": "2631:13:29"
                               },
@@ -15797,11 +15797,11 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 4913,
+                                  "referencedDeclaration": 4916,
                                   "type": "uint256",
                                   "value": "initialsupply"
                                 },
-                                "id": 4967,
+                                "id": 4970,
                                 "name": "Identifier",
                                 "src": "2663:13:29"
                               },
@@ -15825,12 +15825,12 @@
                                       "type": "type(library VerusConstants)",
                                       "value": "VerusConstants"
                                     },
-                                    "id": 4968,
+                                    "id": 4971,
                                     "name": "Identifier",
                                     "src": "2695:14:29"
                                   }
                                 ],
-                                "id": 4969,
+                                "id": 4972,
                                 "name": "MemberAccess",
                                 "src": "2695:19:29"
                               },
@@ -15839,11 +15839,11 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 4898,
+                                  "referencedDeclaration": 4901,
                                   "type": "address[] memory",
                                   "value": "notaries"
                                 },
-                                "id": 4970,
+                                "id": 4973,
                                 "name": "Identifier",
                                 "src": "2733:8:29"
                               },
@@ -15852,32 +15852,32 @@
                                   "overloadedDeclarations": [
                                     null
                                   ],
-                                  "referencedDeclaration": 4904,
+                                  "referencedDeclaration": 4907,
                                   "type": "uint8",
                                   "value": "minnotaries"
                                 },
-                                "id": 4971,
+                                "id": 4974,
                                 "name": "Identifier",
                                 "src": "2760:11:29"
                               }
                             ],
-                            "id": 4972,
+                            "id": 4975,
                             "name": "FunctionCall",
                             "src": "2149:633:29"
                           }
                         ],
-                        "id": 4973,
+                        "id": 4976,
                         "name": "Assignment",
                         "src": "2132:650:29"
                       }
                     ],
-                    "id": 4974,
+                    "id": 4977,
                     "name": "ExpressionStatement",
                     "src": "2132:650:29"
                   },
                   {
                     "attributes": {
-                      "functionReturnParameters": 4881
+                      "functionReturnParameters": 4884
                     },
                     "children": [
                       {
@@ -15885,36 +15885,36 @@
                           "overloadedDeclarations": [
                             null
                           ],
-                          "referencedDeclaration": 4885,
+                          "referencedDeclaration": 4888,
                           "type": "struct VerusObjects.currencyDetail memory",
                           "value": "returnCurrency"
                         },
-                        "id": 4975,
+                        "id": 4978,
                         "name": "Identifier",
                         "src": "2802:14:29"
                       }
                     ],
-                    "id": 4976,
+                    "id": 4979,
                     "name": "Return",
                     "src": "2795:21:29"
                   }
                 ],
-                "id": 4977,
+                "id": 4980,
                 "name": "Block",
                 "src": "1466:1358:29"
               }
             ],
-            "id": 4978,
+            "id": 4981,
             "name": "FunctionDefinition",
             "src": "1369:1455:29"
           }
         ],
-        "id": 4979,
+        "id": 4982,
         "name": "ContractDefinition",
         "src": "324:2503:29"
       }
     ],
-    "id": 4980,
+    "id": 4983,
     "name": "SourceUnit",
     "src": "73:2754:29"
   },
@@ -15926,12 +15926,12 @@
     "4": {
       "events": {},
       "links": {},
-      "address": "0xb0163206C317AFcc224DfAEF50aA3A276A253D17",
-      "transactionHash": "0xe7dfe3072c5b6558e491f9a34149a739014a7311a961679973c2772c887ac5d5"
+      "address": "0x2D06E5F08Fd183ED2e1aCE88196504883268d36e",
+      "transactionHash": "0xfe1783908fc0b4c9a3e9fc15348bd155b9fef523c3f5274c8a9a8a5073516663"
     }
   },
   "schemaVersion": "3.4.3",
-  "updatedAt": "2022-02-08T08:21:22.015Z",
+  "updatedAt": "2022-02-09T09:35:04.156Z",
   "networkType": "ethereum",
   "devdoc": {
     "kind": "dev",
