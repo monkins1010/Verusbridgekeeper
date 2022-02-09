@@ -1,14 +1,13 @@
 GetMMRProofIndex = (pos,mmvSize,extraHashes) => {
-
-    let index = 0;
+    let index = Long(0, 0);
     let layerSizes = [];
     let merkleSizes = [];
     let peakIndexes = [];
     let bitPos = 0;
 
-    //start at the begiining o
+    //start at the beginning
     //create a simulation of a mmr based on size
-    if(!(pos > 0 && pos < mmvSize)) return index;
+    if(!(pos > 0 && pos < mmvSize)) return 0;
 
     //create an array of all the sizes
     while(mmvSize){
@@ -17,14 +16,11 @@ GetMMRProofIndex = (pos,mmvSize,extraHashes) => {
     }
     
     for(let height = 0;height < layerSizes.length;height++){
-
         if(height == layerSizes.length -1 || layerSizes[height] & 1){
-
             peakIndexes.push(height);
-
         }
-
     }
+
     //array flip peak indexes
     peakIndexes.reverse();
 
@@ -42,12 +38,12 @@ GetMMRProofIndex = (pos,mmvSize,extraHashes) => {
     for(let i = 0; i < extraHashes; i++){
         bitPos++;
     }
-
   
     let p = pos;
     for(let l = 0; l< layerSizes.length; l++){
-        if(p & 1){
-            index |= 1 << bitPos++;
+        if(p & 1) {
+            index.or(Long(1, 0, true).shl(bitPos++));
+
             p >>= 1;
         
             for(let i=0; i < extraHashes; i++){
@@ -82,8 +78,8 @@ GetMMRProofIndex = (pos,mmvSize,extraHashes) => {
                         if (p & 1)
                         {
                             // hash with the one before us
-                            index |= 1 << bitPos;
-                            bitPos++;
+                            index.or(Long(1, 0, true).shl(bitPos++));
+
                             for (let i = 0; i < extraHashes; i++)
                             {
                                 bitPos++;
@@ -108,7 +104,7 @@ GetMMRProofIndex = (pos,mmvSize,extraHashes) => {
 
         }
     }
-    return index;
+    return index.toNumber();
 }
 
 GetMMRProofIndex(926,930,1);
