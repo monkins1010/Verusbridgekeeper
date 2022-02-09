@@ -466,7 +466,7 @@ createOutboundTransfers = (transfers) => {
     return outTransfers;
 }
 
-createCrossChainExport =  (transfers,blockHeight, jsonready = false, poolavailable) => {
+createCrossChainExport =  (transfers, blockHeight, jsonready = false, poolavailable) => {
     let cce = {};
     let hash = keccak256(serializeCReserveTransfers(transfers).slice(1));
     // console.log("hash of transfers: ",hash.toString('Hex'));

@@ -1,9 +1,10 @@
 const Web3 = require('web3');
 const BigNumber = require('bignumber.js');
 const bitGoUTXO = require('bitgo-utxo-lib');
+const Long = require('long');
 const fs = require('fs');
 const homedir = require('os').homedir();
-const confFile = require('./confFile.js')
+const confFile = require('./confFile.js');
 const {  addHexPrefix } = require('ethereumjs-util');
 
 
@@ -260,17 +261,16 @@ this.writeVarInt = (newNumber) => {
         return outBuffer;
     }
 
-    this.GetMMRProofIndex = (pos,mmvSize,extraHashes) => {
-
-        let index = 0;
+    this.GetMMRProofIndex = (pos, mmvSize, extraHashes) => {
+        let index = Long(0, 0);
         let layerSizes = [];
         let merkleSizes = [];
         let peakIndexes = [];
         let bitPos = 0;
 
-        //start at the begiining o
+        //start at the beginning
         //create a simulation of a mmr based on size
-        if(!(pos > 0 && pos < mmvSize)) return index;
+        if(!(pos > 0 && pos < mmvSize)) return 0;
 
         //create an array of all the sizes
         while(mmvSize){
@@ -279,14 +279,11 @@ this.writeVarInt = (newNumber) => {
         }
         
         for(let height = 0;height < layerSizes.length;height++){
-
             if(height == layerSizes.length -1 || layerSizes[height] & 1){
-
                 peakIndexes.push(height);
-
             }
-
         }
+
         //array flip peak indexes
         peakIndexes.reverse();
 
@@ -304,12 +301,12 @@ this.writeVarInt = (newNumber) => {
         for(let i = 0; i < extraHashes; i++){
             bitPos++;
         }
-
       
         let p = pos;
         for(let l = 0; l< layerSizes.length; l++){
-            if(p & 1){
-                index |= 1 << bitPos++;
+            if(p & 1) {
+                index.or(Long(1, 0, true).shl(bitPos++));
+
                 p >>= 1;
             
                 for(let i=0; i < extraHashes; i++){
@@ -344,8 +341,8 @@ this.writeVarInt = (newNumber) => {
                             if (p & 1)
                             {
                                 // hash with the one before us
-                                index |= 1 << bitPos;
-                                bitPos++;
+                                index.or(Long(1, 0, true).shl(bitPos++));
+
                                 for (let i = 0; i < extraHashes; i++)
                                 {
                                     bitPos++;
@@ -370,8 +367,6 @@ this.writeVarInt = (newNumber) => {
 
             }
         }
-        return index;
+        return index.toNumber();
     }
-
-
 }
