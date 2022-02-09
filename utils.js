@@ -262,7 +262,7 @@ this.writeVarInt = (newNumber) => {
     }
 
     this.GetMMRProofIndex = (pos, mmvSize, extraHashes) => {
-        let index = Long(0, 0);
+        let index = new Long(0x00, 0x00);
         let layerSizes = [];
         let merkleSizes = [];
         let peakIndexes = [];
@@ -305,7 +305,7 @@ this.writeVarInt = (newNumber) => {
         let p = pos;
         for(let l = 0; l< layerSizes.length; l++){
             if(p & 1) {
-                index.or(Long(1, 0, true).shl(bitPos++));
+                index = index.or(new Long(1, 0, true).shl(bitPos++));
 
                 p >>= 1;
             
@@ -341,7 +341,7 @@ this.writeVarInt = (newNumber) => {
                             if (p & 1)
                             {
                                 // hash with the one before us
-                                index.or(Long(1, 0, true).shl(bitPos++));
+                                index = index.or(new Long(1, 0, true).shl(bitPos++));
 
                                 for (let i = 0; i < extraHashes; i++)
                                 {

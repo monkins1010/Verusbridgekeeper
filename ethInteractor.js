@@ -1076,7 +1076,7 @@ exports.submitImports = async (CTransferArray) => {
         txidArray.push(CTempArray[i].txid)
         if (logging) {
             for(var j = 0; j < CTempArray[i].transfers.length; j++){
-                //  console.log("Exports from Verus : ",JSON.stringify(CTempArray[i]));
+               // console.log("Exports from Verus : ",JSON.stringify(CTempArray[i]));
             } 
         }
     } 
