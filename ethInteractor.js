@@ -1072,14 +1072,16 @@ exports.submitImports = async (CTransferArray) => {
 
     let txidArray =[];
     let resultTxidArray =[];
-    if (logging) {
-        for (var i = 0, l = CTempArray.length; i < l; i++) {
-            txidArray.push(CTempArray[i].txid)
+   
+    for (var i = 0, l = CTempArray.length; i < l; i++) {
+        txidArray.push(CTempArray[i].txid)
+        if (logging) {
             for(var j = 0; j < CTempArray[i].transfers.length; j++){
-                  console.log("Exports from Verus : ",JSON.stringify(CTempArray[i]));
+                //  console.log("Exports from Verus : ",JSON.stringify(CTempArray[i]));
             } 
-        } 
-    }
+        }
+    } 
+    
     //  console.log(JSON.stringify(CTempArray))
     let result = {};
     try {
