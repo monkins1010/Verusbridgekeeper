@@ -186,7 +186,7 @@ serializeCTransferDestination = (ctd) => {
 
     let destination = Buffer.from(removeHexLeader(ctd.destinationaddress),'hex');
 
-    encodedOutput = Buffer.concat([encodedOutput,writeCompactSize(20),destination]);  //TODO:hardcoded for address only for now
+    encodedOutput = Buffer.concat([encodedOutput,writeCompactSize(Buffer.byteLength(destination)),destination]);  
     return encodedOutput;
 }
 
@@ -980,6 +980,12 @@ conditionSubmitImports = (CTransferArray) =>{
                         CTransferArray[i].exports[j].transfers[k].destination.address = 
                         convertVerusAddressToEthAddress(CTransferArray[i].exports[j].transfers[k].destination.address);
                     }
+                if(CTransferArray[i].exports[j].transfers[k].destination.type == constants.DEST_REGISTERCURRENCY ||
+                    CTransferArray[i].exports[j].transfers[k].destination.type == constants.DEST_FULLID ) {
+
+                    CTransferArray[i].exports[j].transfers[k].destination.address = "0x" + CTransferArray[i].exports[j].transfers[k].destination.serializeddata;
+                }
+
                 CTransferArray[i].exports[j].transfers[k].destinationcurrencyid = 
                     convertVerusAddressToEthAddress(CTransferArray[i].exports[j].transfers[k].destinationcurrencyid);
                 CTransferArray[i].exports[j].transfers[k].exportto = 
@@ -1076,7 +1082,7 @@ exports.submitImports = async (CTransferArray) => {
         txidArray.push(CTempArray[i].txid)
         if (logging) {
             for(var j = 0; j < CTempArray[i].transfers.length; j++){
-               // console.log("Exports from Verus : ",JSON.stringify(CTempArray[i]));
+              // console.log("Exports from Verus : ",JSON.stringify(CTempArray[i]));
             } 
         }
     } 
@@ -1403,4 +1409,3 @@ exports.invalid = async () => {
     return {"result": {"error": true, "message" : "Unrecognized API call"}}
 
 }
-

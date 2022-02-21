@@ -15,7 +15,9 @@ module.exports = Object.freeze({
     FLAG_ACCEPTED_MIRROR : 0x20,        // if this is set, this notarization is a mirror of an earned notarization on another chain
     FLAG_BLOCKONE_NOTARIZATION : 0x40,  // block 1 notarizations are auto-finalized, the blockchain itself will be worthless if it is wrong
     FLAG_SAME_CHAIN : 0x80,             // set if all currency information is verifiable on this chain
-    FLAG_LAUNCH_COMPLETE : 0x100        // set if all currency information is verifiable on this chain
+    FLAG_LAUNCH_COMPLETE : 0x100,        // set if all currency information is verifiable on this chain
+    DEST_FULLID : 5,
+    DEST_REGISTERCURRENCY : 6,
 
 
 });
