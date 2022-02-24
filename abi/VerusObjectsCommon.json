@@ -1,29 +1,29 @@
 {
   "contractName": "VerusObjectsCommon",
   "abi": [],
-  "metadata": "{\"compiler\":{\"version\":\"0.7.6+commit.7338295f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/Libraries/VerusObjectsCommon.sol\":\"VerusObjectsCommon\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"project:/contracts/Libraries/VerusObjectsCommon.sol\":{\"keccak256\":\"0xa72ab21f4e7cb254c2747a73f914eccc0f92f612109f4432504b916e60e43934\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://424142b8d99557d9212431e989c33b1c5ebd877d0528c32e33c36d5ba04f9699\",\"dweb:/ipfs/QmeE9w2jA4g5Nnc28o4QEAtz7jmQUKeNX8nhHFULNCmmxb\"]}},\"version\":1}",
-  "bytecode": "0x60566023600b82828239805160001a607314601657fe5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea26469706673582212206d54df2cab2e7ef146a6a4ccd5236ec22ec855178338a03d13e002765c46385664736f6c63430007060033",
-  "deployedBytecode": "0x73000000000000000000000000000000000000000030146080604052600080fdfea26469706673582212206d54df2cab2e7ef146a6a4ccd5236ec22ec855178338a03d13e002765c46385664736f6c63430007060033",
+  "metadata": "{\"compiler\":{\"version\":\"0.7.6+commit.7338295f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/Libraries/VerusObjectsCommon.sol\":\"VerusObjectsCommon\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"project:/contracts/Libraries/VerusObjectsCommon.sol\":{\"keccak256\":\"0x482958747526d1aaeecd34ba29310c6f5327d547a85402cb60574972d2e03548\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://0cb25159e249e74b7b6a3c7a36f8f30096cd08ede31b3d1e942d1193655b7a45\",\"dweb:/ipfs/QmYGbUuFHWcXNZEnb9Vsxo5GqmJxLvmSS8cHQwrtFzcHVB\"]}},\"version\":1}",
+  "bytecode": "0x60566023600b82828239805160001a607314601657fe5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea2646970667358221220bef5b04844012f0213c1b0a00d90e1e84184d5a6a46760155fc6056327d68ba364736f6c63430007060033",
+  "deployedBytecode": "0x73000000000000000000000000000000000000000030146080604052600080fdfea2646970667358221220bef5b04844012f0213c1b0a00d90e1e84184d5a6a46760155fc6056327d68ba364736f6c63430007060033",
   "immutableReferences": {},
   "generatedSources": [],
   "deployedGeneratedSources": [],
-  "sourceMap": "138:263:3:-:0;;;;;;;;;;;;;;;;;;;;;;;;;",
-  "deployedSourceMap": "138:263:3:-:0;;;;;;;;",
-  "source": "// SPDX-License-Identifier: MIT\n// Bridge between ethereum and verus\n\npragma solidity >=0.6.0 < 0.9.0;\npragma experimental ABIEncoderV2;\n\nlibrary VerusObjectsCommon {\n    enum TransferDestinationType{\n        DEST_INVALID,DEST_PK,DEST_PKH,DEST_SH,DEST_ID,DEST_FULLID,DEST_QUANTUM,DEST_RAW\n    }\n    struct CTransferDestination {\n        uint8 destinationtype;\n        bytes destinationaddress;\n    }\n}",
+  "sourceMap": "137:407:3:-:0;;;;;;;;;;;;;;;;;;;;;;;;;",
+  "deployedSourceMap": "137:407:3:-:0;;;;;;;;",
+  "source": "// SPDX-License-Identifier: MIT\n// Bridge between ethereum and verus\n\npragma solidity >=0.6.0 <0.9.0;\npragma experimental ABIEncoderV2;\n\nlibrary VerusObjectsCommon {\n    enum TransferDestinationType {\n        DEST_INVALID,\n        DEST_PK,\n        DEST_PKH,\n        DEST_SH,\n        DEST_ID,\n        DEST_FULLID,\n        DEST_QUANTUM,\n        DEST_RAW\n    }\n    struct CTransferDestination {\n        uint8 destinationtype;\n        bytes destinationaddress;\n    }\n    \n    struct UintReader {\n        uint32 offset;\n        uint32 value;\n    }\n}\n",
   "sourcePath": "/home/chris/Verus-Ethereum-contracts/contracts/Libraries/VerusObjectsCommon.sol",
   "ast": {
     "absolutePath": "project:/contracts/Libraries/VerusObjectsCommon.sol",
     "exportedSymbols": {
       "VerusObjectsCommon": [
-        274
+        282
       ]
     },
-    "id": 275,
+    "id": 283,
     "license": "MIT",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 258,
+        "id": 261,
         "literals": [
           "solidity",
           ">=",
@@ -34,16 +34,16 @@
           ".0"
         ],
         "nodeType": "PragmaDirective",
-        "src": "70:32:3"
+        "src": "70:31:3"
       },
       {
-        "id": 259,
+        "id": 262,
         "literals": [
           "experimental",
           "ABIEncoderV2"
         ],
         "nodeType": "PragmaDirective",
-        "src": "103:33:3"
+        "src": "102:33:3"
       },
       {
         "abstract": false,
@@ -51,82 +51,82 @@
         "contractDependencies": [],
         "contractKind": "library",
         "fullyImplemented": true,
-        "id": 274,
+        "id": 282,
         "linearizedBaseContracts": [
-          274
+          282
         ],
         "name": "VerusObjectsCommon",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "canonicalName": "VerusObjectsCommon.TransferDestinationType",
-            "id": 268,
+            "id": 271,
             "members": [
               {
-                "id": 260,
+                "id": 263,
                 "name": "DEST_INVALID",
                 "nodeType": "EnumValue",
                 "src": "209:12:3"
               },
               {
-                "id": 261,
+                "id": 264,
                 "name": "DEST_PK",
                 "nodeType": "EnumValue",
-                "src": "222:7:3"
-              },
-              {
-                "id": 262,
-                "name": "DEST_PKH",
-                "nodeType": "EnumValue",
-                "src": "230:8:3"
-              },
-              {
-                "id": 263,
-                "name": "DEST_SH",
-                "nodeType": "EnumValue",
-                "src": "239:7:3"
-              },
-              {
-                "id": 264,
-                "name": "DEST_ID",
-                "nodeType": "EnumValue",
-                "src": "247:7:3"
+                "src": "231:7:3"
               },
               {
                 "id": 265,
-                "name": "DEST_FULLID",
+                "name": "DEST_PKH",
                 "nodeType": "EnumValue",
-                "src": "255:11:3"
+                "src": "248:8:3"
               },
               {
                 "id": 266,
-                "name": "DEST_QUANTUM",
+                "name": "DEST_SH",
                 "nodeType": "EnumValue",
-                "src": "267:12:3"
+                "src": "266:7:3"
               },
               {
                 "id": 267,
+                "name": "DEST_ID",
+                "nodeType": "EnumValue",
+                "src": "283:7:3"
+              },
+              {
+                "id": 268,
+                "name": "DEST_FULLID",
+                "nodeType": "EnumValue",
+                "src": "300:11:3"
+              },
+              {
+                "id": 269,
+                "name": "DEST_QUANTUM",
+                "nodeType": "EnumValue",
+                "src": "321:12:3"
+              },
+              {
+                "id": 270,
                 "name": "DEST_RAW",
                 "nodeType": "EnumValue",
-                "src": "280:8:3"
+                "src": "343:8:3"
               }
             ],
             "name": "TransferDestinationType",
             "nodeType": "EnumDefinition",
-            "src": "171:123:3"
+            "src": "170:187:3"
           },
           {
             "canonicalName": "VerusObjectsCommon.CTransferDestination",
-            "id": 273,
+            "id": 276,
             "members": [
               {
                 "constant": false,
-                "id": 270,
+                "id": 273,
                 "mutability": "mutable",
                 "name": "destinationtype",
                 "nodeType": "VariableDeclaration",
-                "scope": 273,
-                "src": "337:21:3",
+                "scope": 276,
+                "src": "400:21:3",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -134,10 +134,10 @@
                   "typeString": "uint8"
                 },
                 "typeName": {
-                  "id": 269,
+                  "id": 272,
                   "name": "uint8",
                   "nodeType": "ElementaryTypeName",
-                  "src": "337:5:3",
+                  "src": "400:5:3",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint8",
                     "typeString": "uint8"
@@ -147,12 +147,12 @@
               },
               {
                 "constant": false,
-                "id": 272,
+                "id": 275,
                 "mutability": "mutable",
                 "name": "destinationaddress",
                 "nodeType": "VariableDeclaration",
-                "scope": 273,
-                "src": "368:24:3",
+                "scope": 276,
+                "src": "431:24:3",
                 "stateVariable": false,
                 "storageLocation": "default",
                 "typeDescriptions": {
@@ -160,10 +160,10 @@
                   "typeString": "bytes"
                 },
                 "typeName": {
-                  "id": 271,
+                  "id": 274,
                   "name": "bytes",
                   "nodeType": "ElementaryTypeName",
-                  "src": "368:5:3",
+                  "src": "431:5:3",
                   "typeDescriptions": {
                     "typeIdentifier": "t_bytes_storage_ptr",
                     "typeString": "bytes"
@@ -174,23 +174,86 @@
             ],
             "name": "CTransferDestination",
             "nodeType": "StructDefinition",
-            "scope": 274,
-            "src": "299:100:3",
+            "scope": 282,
+            "src": "362:100:3",
+            "visibility": "public"
+          },
+          {
+            "canonicalName": "VerusObjectsCommon.UintReader",
+            "id": 281,
+            "members": [
+              {
+                "constant": false,
+                "id": 278,
+                "mutability": "mutable",
+                "name": "offset",
+                "nodeType": "VariableDeclaration",
+                "scope": 281,
+                "src": "500:13:3",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint32",
+                  "typeString": "uint32"
+                },
+                "typeName": {
+                  "id": 277,
+                  "name": "uint32",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "500:6:3",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint32",
+                    "typeString": "uint32"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 280,
+                "mutability": "mutable",
+                "name": "value",
+                "nodeType": "VariableDeclaration",
+                "scope": 281,
+                "src": "523:12:3",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint32",
+                  "typeString": "uint32"
+                },
+                "typeName": {
+                  "id": 279,
+                  "name": "uint32",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "523:6:3",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint32",
+                    "typeString": "uint32"
+                  }
+                },
+                "visibility": "internal"
+              }
+            ],
+            "name": "UintReader",
+            "nodeType": "StructDefinition",
+            "scope": 282,
+            "src": "472:70:3",
             "visibility": "public"
           }
         ],
-        "scope": 275,
-        "src": "138:263:3"
+        "scope": 283,
+        "src": "137:407:3"
       }
     ],
-    "src": "70:331:3"
+    "src": "70:475:3"
   },
   "legacyAST": {
     "attributes": {
       "absolutePath": "project:/contracts/Libraries/VerusObjectsCommon.sol",
       "exportedSymbols": {
         "VerusObjectsCommon": [
-          274
+          282
         ]
       },
       "license": "MIT"
@@ -208,9 +271,9 @@
             ".0"
           ]
         },
-        "id": 258,
+        "id": 261,
         "name": "PragmaDirective",
-        "src": "70:32:3"
+        "src": "70:31:3"
       },
       {
         "attributes": {
@@ -219,9 +282,9 @@
             "ABIEncoderV2"
           ]
         },
-        "id": 259,
+        "id": 262,
         "name": "PragmaDirective",
-        "src": "103:33:3"
+        "src": "102:33:3"
       },
       {
         "attributes": {
@@ -235,10 +298,10 @@
           "contractKind": "library",
           "fullyImplemented": true,
           "linearizedBaseContracts": [
-            274
+            282
           ],
           "name": "VerusObjectsCommon",
-          "scope": 275
+          "scope": 283
         },
         "children": [
           {
@@ -251,7 +314,7 @@
                 "attributes": {
                   "name": "DEST_INVALID"
                 },
-                "id": 260,
+                "id": 263,
                 "name": "EnumValue",
                 "src": "209:12:3"
               },
@@ -259,68 +322,68 @@
                 "attributes": {
                   "name": "DEST_PK"
                 },
-                "id": 261,
+                "id": 264,
                 "name": "EnumValue",
-                "src": "222:7:3"
+                "src": "231:7:3"
               },
               {
                 "attributes": {
                   "name": "DEST_PKH"
                 },
-                "id": 262,
+                "id": 265,
                 "name": "EnumValue",
-                "src": "230:8:3"
+                "src": "248:8:3"
               },
               {
                 "attributes": {
                   "name": "DEST_SH"
                 },
-                "id": 263,
+                "id": 266,
                 "name": "EnumValue",
-                "src": "239:7:3"
+                "src": "266:7:3"
               },
               {
                 "attributes": {
                   "name": "DEST_ID"
                 },
-                "id": 264,
+                "id": 267,
                 "name": "EnumValue",
-                "src": "247:7:3"
+                "src": "283:7:3"
               },
               {
                 "attributes": {
                   "name": "DEST_FULLID"
                 },
-                "id": 265,
+                "id": 268,
                 "name": "EnumValue",
-                "src": "255:11:3"
+                "src": "300:11:3"
               },
               {
                 "attributes": {
                   "name": "DEST_QUANTUM"
                 },
-                "id": 266,
+                "id": 269,
                 "name": "EnumValue",
-                "src": "267:12:3"
+                "src": "321:12:3"
               },
               {
                 "attributes": {
                   "name": "DEST_RAW"
                 },
-                "id": 267,
+                "id": 270,
                 "name": "EnumValue",
-                "src": "280:8:3"
+                "src": "343:8:3"
               }
             ],
-            "id": 268,
+            "id": 271,
             "name": "EnumDefinition",
-            "src": "171:123:3"
+            "src": "170:187:3"
           },
           {
             "attributes": {
               "canonicalName": "VerusObjectsCommon.CTransferDestination",
               "name": "CTransferDestination",
-              "scope": 274,
+              "scope": 282,
               "visibility": "public"
             },
             "children": [
@@ -329,7 +392,7 @@
                   "constant": false,
                   "mutability": "mutable",
                   "name": "destinationtype",
-                  "scope": 273,
+                  "scope": 276,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "uint8",
@@ -341,21 +404,21 @@
                       "name": "uint8",
                       "type": "uint8"
                     },
-                    "id": 269,
+                    "id": 272,
                     "name": "ElementaryTypeName",
-                    "src": "337:5:3"
+                    "src": "400:5:3"
                   }
                 ],
-                "id": 270,
+                "id": 273,
                 "name": "VariableDeclaration",
-                "src": "337:21:3"
+                "src": "400:21:3"
               },
               {
                 "attributes": {
                   "constant": false,
                   "mutability": "mutable",
                   "name": "destinationaddress",
-                  "scope": 273,
+                  "scope": 276,
                   "stateVariable": false,
                   "storageLocation": "default",
                   "type": "bytes",
@@ -367,29 +430,94 @@
                       "name": "bytes",
                       "type": "bytes"
                     },
-                    "id": 271,
+                    "id": 274,
                     "name": "ElementaryTypeName",
-                    "src": "368:5:3"
+                    "src": "431:5:3"
                   }
                 ],
-                "id": 272,
+                "id": 275,
                 "name": "VariableDeclaration",
-                "src": "368:24:3"
+                "src": "431:24:3"
               }
             ],
-            "id": 273,
+            "id": 276,
             "name": "StructDefinition",
-            "src": "299:100:3"
+            "src": "362:100:3"
+          },
+          {
+            "attributes": {
+              "canonicalName": "VerusObjectsCommon.UintReader",
+              "name": "UintReader",
+              "scope": 282,
+              "visibility": "public"
+            },
+            "children": [
+              {
+                "attributes": {
+                  "constant": false,
+                  "mutability": "mutable",
+                  "name": "offset",
+                  "scope": 281,
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "type": "uint32",
+                  "visibility": "internal"
+                },
+                "children": [
+                  {
+                    "attributes": {
+                      "name": "uint32",
+                      "type": "uint32"
+                    },
+                    "id": 277,
+                    "name": "ElementaryTypeName",
+                    "src": "500:6:3"
+                  }
+                ],
+                "id": 278,
+                "name": "VariableDeclaration",
+                "src": "500:13:3"
+              },
+              {
+                "attributes": {
+                  "constant": false,
+                  "mutability": "mutable",
+                  "name": "value",
+                  "scope": 281,
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "type": "uint32",
+                  "visibility": "internal"
+                },
+                "children": [
+                  {
+                    "attributes": {
+                      "name": "uint32",
+                      "type": "uint32"
+                    },
+                    "id": 279,
+                    "name": "ElementaryTypeName",
+                    "src": "523:6:3"
+                  }
+                ],
+                "id": 280,
+                "name": "VariableDeclaration",
+                "src": "523:12:3"
+              }
+            ],
+            "id": 281,
+            "name": "StructDefinition",
+            "src": "472:70:3"
           }
         ],
-        "id": 274,
+        "id": 282,
         "name": "ContractDefinition",
-        "src": "138:263:3"
+        "src": "137:407:3"
       }
     ],
-    "id": 275,
+    "id": 283,
     "name": "SourceUnit",
-    "src": "70:331:3"
+    "src": "70:475:3"
   },
   "compiler": {
     "name": "solc",
@@ -397,7 +525,7 @@
   },
   "networks": {},
   "schemaVersion": "3.4.4",
-  "updatedAt": "2022-02-04T09:48:04.465Z",
+  "updatedAt": "2022-02-20T11:37:49.192Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

@@ -34,6 +34,8 @@ let globallastcurrency = d.getTime();
 
 
 const IAddress = 102;
+const RAddressBaseConst = 60;
+
 let maxGas = 6000000;
 
 const web3 = new Web3(new Web3.providers.WebsocketProvider(settings.ethnode, {
@@ -446,7 +448,7 @@ createOutboundTransfers = (transfers) => {
 
         if((parseInt(transfer.destination.destinationtype) & 127) == 2){
 
-            address = ethAddressToVAddress(transfer.destination.destinationaddress.slice(0,42),60);
+            address = ethAddressToVAddress(transfer.destination.destinationaddress.slice(0,42),RAddressBaseConst);
         }else if((parseInt(transfer.destination.destinationtype) & 127) == 4){
 
             address = ethAddressToVAddress(transfer.destination.destinationaddress.slice(0,42),IAddress);
