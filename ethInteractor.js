@@ -188,7 +188,7 @@ serializeCTransferDestination = (ctd) => {
 
     let destination = Buffer.from(removeHexLeader(ctd.destinationaddress),'hex');
 
-    encodedOutput = Buffer.concat([encodedOutput,writeCompactSize(Buffer.byteLength(destination)),destination]);  
+    encodedOutput = Buffer.concat([encodedOutput,writeCompactSize(20),destination]);  
     return encodedOutput;
 }
 
