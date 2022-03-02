@@ -369,7 +369,7 @@ getBlock = async (input) => {
 
 /** get Proof for **/
 getProof = async (eIndex,blockHeight) => {
-    let index = "0x000000000000000000000000000000000000000000000000000000000000000b"; 
+    let index = "0x000000000000000000000000000000000000000000000000000000000000000c"; 
     let key = web3.utils.sha3(index,{"encoding":"hex"});
     if(eIndex > 0){
         key = increaseHexByAmount(key,eIndex);
