@@ -186,9 +186,21 @@ serializeCTransferDestination = (ctd) => {
     let encodedOutput = Buffer.alloc(1);
     encodedOutput.writeUInt8(ctd.destinationtype);
 
-    let destination = Buffer.from(removeHexLeader(ctd.destinationaddress),'hex');
+    let lengthOfDestination = {};
 
-    encodedOutput = Buffer.concat([encodedOutput,writeCompactSize(20),destination]);  
+    if (ctd.destinationtype == constants.DEST_REGISTERCURRENCY) {
+
+        lengthOfDestination = Buffer.byteLength(ctd.destinationaddress);
+
+    } else {
+
+        lengthOfDestination = constants.UINT160_LENGTH;
+
+    }
+
+    let destination = Buffer.from(removeHexLeader(ctd.destinationaddress),'hex');
+    encodedOutput = Buffer.concat([encodedOutput,writeCompactSize(lengthOfDestination),destination]);  
+    
     return encodedOutput;
 }
 
