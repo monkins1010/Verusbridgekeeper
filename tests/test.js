@@ -28,10 +28,13 @@ const web3 = new Web3(new Web3.providers.WebsocketProvider(settings.ethnode, {
 
 const verusBridgeAbi = require('../abi/VerusBridge.json');
 const exportmanagerAbi = require('../abi/ExportManager.json');
+const tokenmanagerAbi = require('../abi/TokenManager.json');
 
-const verusBridge = new web3.eth.Contract(verusBridgeAbi.abi, "0x39e7DCF396E086033C0b250b5C1bEF9329C09da5");
+const verusBridge = new web3.eth.Contract(verusBridgeAbi.abi, "0xaeC03f0DE4809b5EedFA4F0615068460f2EB4861");
 
-const ExportManager = new web3.eth.Contract(exportmanagerAbi.abi, "0x49FA814b9E03e4a95Ee5BC7Ada06F3989de76f9d");
+const ExportManager = new web3.eth.Contract(exportmanagerAbi.abi, "0x93968d1E8892E2dC9C7396040d04cD76D20099ba");
+
+const TokenManager = new web3.eth.Contract(tokenmanagerAbi.abi, "0xF7587c87Ed1b1183a3179228FB122e6116041f78");
 
 let account = web3.eth.accounts.privateKeyToAccount(settings.privatekey);
 web3.eth.accounts.wallet.add(account);
@@ -40,22 +43,22 @@ const maxGas = 6000000;
 
 
 const transaction = {
-    "version": 1,
-    "currencyvalue": {
-      "currency": "0xf0a1263056c30e221f0f851c36b767fff2544f7f",
-      "amount": "1000000000"
-    },
-    "flags": 1,
-    "feecurrencyid": "0xA6ef9ea235635E328124Ff3429dB9F9E91b64e2d",
-    "fees": 20000000,
-    "destination": {
-      "destinationtype": 2,
-      "destinationaddress": "0x55f51a22c79018a00ced41e758560f5df7d4d35d"
-    },
-    "destcurrencyid": "0xA6ef9ea235635E328124Ff3429dB9F9E91b64e2d",
-    "destsystemid": "0x0000000000000000000000000000000000000000",
-    "secondreserveid": "0x0000000000000000000000000000000000000000"
-  }
+  "version": 1,
+  "currencyvalue": {
+    "currency": "0xf0a1263056c30e221f0f851c36b767fff2544f7f",
+    "amount": "100000000000"
+  },
+  "flags": 1,
+  "feecurrencyid": "0xA6ef9ea235635E328124Ff3429dB9F9E91b64e2d",
+  "fees": 2000000,
+  "destination": {
+    "destinationtype": 2,
+    "destinationaddress": "0x55f51a22c79018a00ced41e758560f5df7d4d35d"
+  },
+  "destcurrencyid": "0xA6ef9ea235635E328124Ff3429dB9F9E91b64e2d",
+  "destsystemid": "0x0000000000000000000000000000000000000000",
+  "secondreserveid": "0x0000000000000000000000000000000000000000"
+}
 const  VALID = 1
 const  CONVERT = 2
 const  PRECONVERT = 4
@@ -70,8 +73,9 @@ const  ETH_FEE = "0.003"; //0.003 ETH FEE
     const INVALID_FLAGS = 0xffffffff - (VALID + CONVERT + CROSS_SYSTEM + RESERVE_TO_RESERVE + IMPORT_TO_SOURCE);
     const result = 1091 & INVALID_FLAGS;
     const revv = await ExportManager.methods.checkExport(transaction, "3000000000000000").call(); //send({from: account.address, gas: maxGas});
-  //  const result = await verusBridge.methods.export(transaction).call();
+    const result2 = await TokenManager.methods.getTokenList().call();
     console.log("\n\n",revv);
+    console.log("\n\n",result2);
       }catch(e){
         console.log(e);
 
