@@ -28,9 +28,11 @@ const serializeraddressAddress = settings.verusserializeraddress;
 var d = new Date();
 let globalgetinfo = {};
 let globalgetcurrency = {};
+let globallastimport = {};
 let globaltimedelta = 10000; //10s
-let globallastinfo = d.getTime();
-let globallastcurrency = d.getTime();
+let globallastinfo = d.getTime() - globaltimedelta;
+let globallastcurrency = d.getTime() - globaltimedelta;
+let globalgetlastimport = d.getTime() - globaltimedelta;
 
 
 const IAddress = 102;
@@ -1335,82 +1337,89 @@ exports.getLastImportFrom = async () => {
     //create a CProofRoot from the block data
     let block;
     try{
-        block = await web3.eth.getBlock("latest");
-        let lastimportheight = await verusBridge.methods.getlastimportheight().call();
+        var d = new Date();
+        var timenow = d.getTime();
+        if (globaltimedelta + globalgetlastimport < timenow) 
+        {
+            globalgetlastimport = timenow;
+            block = await web3.eth.getBlock("latest");
+            let lastimportheight = await verusBridge.methods.getlastimportheight().call();
 
-    let lastimport = {};
+            let lastimport = {};
 
-    lastimport.version = 1;
-    lastimport.flags = 68;
-    lastimport.sourcesystemid = ETHSystemID;
-    lastimport.sourceheight  =parseInt(lastimportheight);
-    lastimport.importcurrencyid = ETHSystemID;
-    lastimport.valuein = {};
-    lastimport.tokensout = {};
-    lastimport.numoutputs = {};
-    lastimport.hashtransfers = {};
-    lastimport.exporttxid = {};
-    lastimport.exporttxout = {};
-    
+            lastimport.version = 1;
+            lastimport.flags = 68;
+            lastimport.sourcesystemid = ETHSystemID;
+            lastimport.sourceheight  =parseInt(lastimportheight);
+            lastimport.importcurrencyid = ETHSystemID;
+            lastimport.valuein = {};
+            lastimport.tokensout = {};
+            lastimport.numoutputs = {};
+            lastimport.hashtransfers = {};
+            lastimport.exporttxid = {};
+            lastimport.exporttxout = {};
 
-    let lastconfirmednotarization = {};
 
-    lastconfirmednotarization.version  = 1;
+            let lastconfirmednotarization = {};
 
-    //possibly check the contract exists?
-    lastconfirmednotarization.launchconfirmed = true;
-    lastconfirmednotarization.launchcomplete = true;
-    lastconfirmednotarization.ismirror = true;
+            lastconfirmednotarization.version  = 1;
 
-    //proposer should be set to something else this is just sample data
-    lastconfirmednotarization.proposer = {
-        "type" : 4,
-        "address" : "iPveXFAHwModR7LrvgzxxHvdkKH84evYvT"    //TODO: [EB-6] Confirm the proposer address
-    };
+            //possibly check the contract exists?
+            lastconfirmednotarization.launchconfirmed = true;
+            lastconfirmednotarization.launchcomplete = true;
+            lastconfirmednotarization.ismirror = true;
 
-    lastconfirmednotarization.currencyid = ETHSystemID;
-    lastconfirmednotarization.notarizationheight = block.number;
-    lastconfirmednotarization.currencystate = {
-        "flags" : 0,
-        "version" : 1,
-        "currencyid": ETHSystemID,
-        "launchcurrencies" : [],
-        "initialsupply": 0.00000000,
-        "emitted": 0.00000000,
-        "supply": 0.00000000,
-        "currencies": {},
-        "primarycurrencyfees": 0.00000000,
-        "primarycurrencyconversionfees": 0.00000000,
-        "primarycurrencyout": 0.00000000,
-        "preconvertedout": 0.00000000
-    };
-    lastconfirmednotarization.currencystates = [];
-    lastconfirmednotarization.prevnotarizationtxid = "0";
-    lastconfirmednotarization.prevnotarizationout = 0;
-    lastconfirmednotarization.prevheight = 0;
-    let latestProofRoot = await getProofRoot();
+            //proposer should be set to something else this is just sample data
+            lastconfirmednotarization.proposer = {
+                "type" : 4,
+                "address" : "iPveXFAHwModR7LrvgzxxHvdkKH84evYvT"    //TODO: [EB-6] Confirm the proposer address
+            };
 
-    let lastProof = await  getLastProofRoot();
+            lastconfirmednotarization.currencyid = ETHSystemID;
+            lastconfirmednotarization.notarizationheight = block.number;
+            lastconfirmednotarization.currencystate = {
+                "flags" : 0,
+                "version" : 1,
+                "currencyid": ETHSystemID,
+                "launchcurrencies" : [],
+                "initialsupply": 0.00000000,
+                "emitted": 0.00000000,
+                "supply": 0.00000000,
+                "currencies": {},
+                "primarycurrencyfees": 0.00000000,
+                "primarycurrencyconversionfees": 0.00000000,
+                "primarycurrencyout": 0.00000000,
+                "preconvertedout": 0.00000000
+            };
+            lastconfirmednotarization.currencystates = [];
+            lastconfirmednotarization.prevnotarizationtxid = "0";
+            lastconfirmednotarization.prevnotarizationout = 0;
+            lastconfirmednotarization.prevheight = 0;
+            let latestProofRoot = await getProofRoot();
 
-    
-    if(logging)
-    console.log("latestProofRoot / lastProof:\n",latestProofRoot, lastProof);
-    
-    lastconfirmednotarization.proofroots = [];
-    lastconfirmednotarization.proofroots.push(latestProofRoot);
-    
-    if(lastProof.version != 0)
-        lastconfirmednotarization.proofroots.push(lastProof);
+            let lastProof = await  getLastProofRoot();
 
-    lastconfirmednotarization.lastconfirmedheight = 0;
-    lastconfirmednotarization.lastconfirmed = 0;
 
-    let lastconfirmedutxo = {
-        "txid": "16736c05a8a28201a3680a4cc0bb7f1d8ac2ca878c358bcde52501328722ebb1",  // TODO: [EB-5] Confirm the UTXO to go here
-        "voutnum": 0
+            if(logging)
+            console.log("latestProofRoot / lastProof:\n",latestProofRoot, lastProof);
+
+            lastconfirmednotarization.proofroots = [];
+            lastconfirmednotarization.proofroots.push(latestProofRoot);
+
+            if(lastProof.version != 0)
+                lastconfirmednotarization.proofroots.push(lastProof);
+
+            lastconfirmednotarization.lastconfirmedheight = 0;
+            lastconfirmednotarization.lastconfirmed = 0;
+
+            let lastconfirmedutxo = {
+                "txid": "16736c05a8a28201a3680a4cc0bb7f1d8ac2ca878c358bcde52501328722ebb1",  // TODO: [EB-5] Confirm the UTXO to go here
+                "voutnum": 0
+                }
+            globallastimport = { "result": { lastimport, lastconfirmednotarization, lastconfirmedutxo } }
         }
 
-      return {"result":{lastimport,lastconfirmednotarization,lastconfirmedutxo }};
+        return globallastimport;
     }catch(error){
         console.log("\x1b[41m%s\x1b[0m","web3.eth.getBlock error:" + error);
         return {"result": {"error": true, "message" : error}};
