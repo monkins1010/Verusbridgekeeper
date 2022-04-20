@@ -363,77 +363,9 @@
                     "type": "tuple"
                 },
                 {
-                    "components": [{
-                            "internalType": "uint32",
-                            "name": "version",
-                            "type": "uint32"
-                        },
-                        {
-                            "components": [{
-                                    "internalType": "address",
-                                    "name": "currency",
-                                    "type": "address"
-                                },
-                                {
-                                    "internalType": "uint64",
-                                    "name": "amount",
-                                    "type": "uint64"
-                                }
-                            ],
-                            "internalType": "struct VerusObjects.CCurrencyValueMap",
-                            "name": "currencyvalue",
-                            "type": "tuple"
-                        },
-                        {
-                            "internalType": "uint32",
-                            "name": "flags",
-                            "type": "uint32"
-                        },
-                        {
-                            "internalType": "address",
-                            "name": "feecurrencyid",
-                            "type": "address"
-                        },
-                        {
-                            "internalType": "uint256",
-                            "name": "fees",
-                            "type": "uint256"
-                        },
-                        {
-                            "components": [{
-                                    "internalType": "uint8",
-                                    "name": "destinationtype",
-                                    "type": "uint8"
-                                },
-                                {
-                                    "internalType": "bytes",
-                                    "name": "destinationaddress",
-                                    "type": "bytes"
-                                }
-                            ],
-                            "internalType": "struct VerusObjectsCommon.CTransferDestination",
-                            "name": "destination",
-                            "type": "tuple"
-                        },
-                        {
-                            "internalType": "address",
-                            "name": "destcurrencyid",
-                            "type": "address"
-                        },
-                        {
-                            "internalType": "address",
-                            "name": "destsystemid",
-                            "type": "address"
-                        },
-                        {
-                            "internalType": "address",
-                            "name": "secondreserveid",
-                            "type": "address"
-                        }
-                    ],
-                    "internalType": "struct VerusObjects.CReserveTransfer[]",
-                    "name": "transfers",
-                    "type": "tuple[]"
+                    "internalType": "bytes",
+                    "name": "serializedTransfers",
+                    "type": "bytes"
                 }
             ],
             "internalType": "struct VerusObjects.CReserveTransferImport[]",
@@ -1036,16 +968,21 @@
     },
     {
         "inputs": [{
-                "internalType": "uint256",
-                "name": "_ethAmount",
-                "type": "uint256"
-            },
-            {
-                "internalType": "address payable",
-                "name": "_ethAddress",
-                "type": "address"
-            }
-        ],
+            "components": [{
+                    "internalType": "address",
+                    "name": "destination",
+                    "type": "address"
+                },
+                {
+                    "internalType": "uint256",
+                    "name": "amount",
+                    "type": "uint256"
+                }
+            ],
+            "internalType": "struct VerusObjects.ETHPayments[]",
+            "name": "_payments",
+            "type": "tuple[]"
+        }],
         "name": "sendEth",
         "outputs": [],
         "stateMutability": "nonpayable",

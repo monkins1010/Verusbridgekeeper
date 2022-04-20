@@ -104,18 +104,17 @@ function serializeCTransferDestination(ctd) {
     encodedOutput.writeUInt8(ctd.destinationtype);
 
     let lengthOfDestination = {};
+    let destination = Buffer.from(util.removeHexLeader(ctd.destinationaddress), 'hex');
 
     if (ctd.destinationtype == constants.DEST_REGISTERCURRENCY) {
 
-        lengthOfDestination = Buffer.byteLength(ctd.destinationaddress);
-
+        lengthOfDestination = Buffer.byteLength(destination);
     } else {
 
         lengthOfDestination = constants.UINT160_LENGTH;
 
     }
 
-    let destination = Buffer.from(util.removeHexLeader(ctd.destinationaddress), 'hex');
     encodedOutput = Buffer.concat([encodedOutput, util.writeCompactSize(lengthOfDestination), destination]);
 
     return encodedOutput;
@@ -162,7 +161,7 @@ function serializeCrossChainExport(cce) {
 
 function serializeCReserveTransfers(crts) {
 
-    let encodedOutput = util.writeCompactSize(crts.length);
+    let encodedOutput = Buffer.from(''); //util.writeCompactSize(crts.length);
     for (let i = 0; i < crts.length; i++) {
         encodedOutput = Buffer.concat([encodedOutput, util.writeVarInt(crts[i].version)]); // should be 1 for single transfer
         if (crts[i].currencyvalue)
@@ -384,7 +383,7 @@ function createOutboundTransfers(transfers) {
 
 function createCrossChainExport(transfers, blockHeight, jsonready = false, poolavailable) {
     let cce = {};
-    let hash = keccak256(serializeCReserveTransfers(transfers).slice(1));
+    let hash = keccak256(serializeCReserveTransfers(transfers));
     // console.log("hash of transfers: ",hash.toString('Hex'));
     // console.log("Serialize: ",serializeCReserveTransfers(transfers).slice(1).toString('Hex'));
     cce.version = 1;
@@ -441,7 +440,7 @@ function createCrossChainExport(transfers, blockHeight, jsonready = false, poola
 
 function createCrossChainExportToETH(transfers, blockHeight, jsonready = false) { //TODO: This may not be nessassary for the import into vETH
     let cce = {};
-    let hash = keccak256(serializeCReserveTransfers(transfers).slice(1));
+    let hash = keccak256(serializeCReserveTransfers(transfers));
     //console.log("hash of transfers: ",hash.toString('Hex'));
 
     //console.log("Serialize: ",serializeCReserveTransfers(transfers).slice(1).toString('Hex'));
@@ -911,7 +910,7 @@ function conditionSubmitImports(CTransferArray) {
                     parseInt(util.convertToInt64(CTransferArray[i].exports[j].transfers[k].fees));
                 CTransferArray[i].exports[j].transfers[k].secondreserveid = CTransferArray[i].exports[j].transfers[k].secondreserveid ?
                     util.convertVerusAddressToEthAddress(CTransferArray[i].exports[j].transfers[k].secondreserveid) :
-                    "0x67460c2f56774ed27eeb8685f29f6cec0b090b00"; //dummy value never read if not set as flags will not read.
+                    "0x0000000000000000000000000000000000000000"; //dummy value never read if not set as flags will not read.
                 if (CTransferArray[i].exports[j].transfers[k].via) {
                     CTransferArray[i].exports[j].transfers[k].via =
                         util.convertVerusAddressToEthAddress(CTransferArray[i].exports[j].transfers[k].via);
@@ -949,7 +948,9 @@ function fixETHObjects(inputArray) {
         inputArray[i].destsystemid = inputArray[i].exportto;
         delete inputArray[i].exportto;
 
+
     }
+
     return inputArray;
 }
 
@@ -959,7 +960,11 @@ function reshapeTransfers(CTransferArray) {
     for (let i = 0; i < CTransferArray.length; i++) {
         for (let j = 0; j < CTransferArray[i].exports.length; j++) {
 
-            let exportinfo = createCrossChainExportToETH(fixETHObjects(CTransferArray[i].exports[j].transfers));
+            const transfers = fixETHObjects(CTransferArray[i].exports[j].transfers);
+            const serializedTransfers = serializeCReserveTransfers(transfers);
+            if (i == -1)
+                console.log("Serialized transfers: 0x", serializedTransfers.toString('hex'));
+            let exportinfo = createCrossChainExportToETH(transfers);
 
             let subarray = {
                 height: 1,
@@ -968,9 +973,12 @@ function reshapeTransfers(CTransferArray) {
                 exportinfo,
                 partialtransactionproof: [CTransferArray[i].exports[j].partialtransactionproof],
                 transfers: CTransferArray[i].exports[j].transfers,
+                serializedTransfers: addHexPrefix(serializedTransfers.toString('hex'))
             };
 
             CTempArray.push(subarray);
+            //let hashtest = keccak256(serializedTransfers);
+            //console.log("TRanmsfers hash: ", hashtest.toString('hex'));
         }
     }
 
@@ -992,7 +1000,7 @@ exports.submitImports = async(CTransferArray) => {
     CTempArray = deserializer.insertHeights(CTempArray);
 
     let submitArray = [];
-    console.log(JSON.stringify(CTempArray))
+    //  console.log(JSON.stringify(CTempArray))
     let result = {};
     try {
 
@@ -1012,13 +1020,14 @@ exports.submitImports = async(CTransferArray) => {
 
         }
     } catch (error) {
-        //console.log("Error in\n",JSON.stringify(CTempArray));
+        // console.log("Error in\n", JSON.stringify(CTempArray));
 
         if (error.reason)
             console.log("\x1b[41m%s\x1b[0m", "submitImports:" + error.reason);
         else {
             if (error.receipt)
-                console.log("\x1b[41m%s\x1b[0m", "submitImports:" + error.reason);
+
+                console.log("\x1b[41m%s\x1b[0m", "submitImports:" + error.receipt);
             console.log("\x1b[41m%s\x1b[0m", "submitImports:" + error);
         }
         return { result: { result: error.message } };
