@@ -19,8 +19,8 @@ const VerusSystemID = constants.VERUSSYSTEMID
 const BridgeID = constants.BRIDGEID
     //const BridgeIDHex = constants.BRIDGEIDHEX
 
-const bridgeAddress = settings.verusbridgeaddress;
-const storageAddress = settings.storageaddress;
+const bridgeAddress = settings.bridgemasteraddress;
+const storageAddress = settings.bridgestorageaddress;
 
 var d = new Date();
 let globalgetinfo = {};
