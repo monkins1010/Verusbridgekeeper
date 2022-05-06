@@ -56,7 +56,7 @@ const ContractType = {
 
 const verusUpgradeAbi = require('../abi/VerusUpgrade.json');
 
-const verusUpgrade = new web3.eth.Contract(verusUpgradeAbi, "0x418e7E3e5E435ccdBDEb8428226Bd0A78CcBBB90");
+const verusUpgrade = new web3.eth.Contract(verusUpgradeAbi, "0x8b71a27A8d13286d19BEB2c6E746c1D79bc935c9");
 
 let account = web3.eth.accounts.privateKeyToAccount(settings.privatekey);
 web3.eth.accounts.wallet.add(account);
@@ -94,20 +94,20 @@ const testfunc1 = async() => {
             contractsHex = Buffer.concat([contractsHex, Buffer.from(contracts[i].substr(2, 40), 'hex')]);
         }
 
-        contracts[ContractType.VerusBridge] = "0xFB98f23Ebbba5e2A8cB6743C626e888Caf3461bE"; //new contract address from remixd
+        contracts[ContractType.VerusBridge] = "0x11a35FfFB2CA808DB3Cbe0FAF4565356e29E5040"; //new contract address from remixd
 
         for (let i = 0; i < 12; i++) {
             contractsHex = Buffer.concat([contractsHex, Buffer.from(contracts[i].substr(2, 40), 'hex')]);
         }
 
-        const signatureAddress = "RH7h8p9LN2Yb48SkxzNQ29c1Ltfju8Cd5i";
+        // const signatureAddress = "RH7h8p9LN2Yb48SkxzNQ29c1Ltfju8Cd5i";
 
-        const signature = await getSig([signatureAddress, contractsHex.toString('Hex')])
+        //  const signature = await getSig([signatureAddress, contractsHex.toString('Hex')])
 
-        const signatureHex = Buffer.from(signature, 'base64');
-        const vVal = signatureHex[0];
-        const rVal = addHexPrefix(signatureHex.slice(1, 33));
-        const sVal = addHexPrefix(signatureHex.slice(33, 65));
+        // const signatureHex = "0x454545"; // TODO: Buffer.from(signature, 'base64');
+        const vVal = "1"; // TODO: signatureHex[0];
+        const rVal = "0x019303cdd05b16c507d64489d336b2f94e15b13fc84d9407d4580b37d622ac1f"; // TODO: addHexPrefix(signatureHex.slice(1, 33));
+        const sVal = "0x019303cdd05b16c507d64489d336b2f94e15b13fc84d9407d4580b37d622ac1f"; // TODO: addHexPrefix(signatureHex.slice(33, 65));
 
         let submission = [];
 
@@ -118,9 +118,9 @@ const testfunc1 = async() => {
         }
 
 
-        const revv2 = await verusUpgrade.methods.upgradeContracts(submission).call();
+        const revv2 = await verusUpgrade.methods.upgradeContracts(submission).send({ from: account.address, gas: maxGas });
 
-        console.log("\nsignature: ", signature, revv2);
+        console.log("\nsignature: ", /* signature,*/ revv2);
 
     } catch (e) {
         console.log(e);
