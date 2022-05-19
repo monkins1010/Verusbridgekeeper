@@ -1,6 +1,6 @@
 {
-    "name": "alan",
-    "version": "1.0.0",
+    "name": "verus_bridgekeeper",
+    "version": "1.0.2",
     "description": "Verus Bridgekeeper",
     "main": "index.js",
     "scripts": {

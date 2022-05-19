@@ -33,8 +33,7 @@ function processPost(request, response, callback) {
     }
 }
 
-
-http.createServer((request, response) => {
+const alanServer = http.createServer((request, response) => {
     if(request.method == 'POST') {
         processPost(request, response, function() {
             //handle the post request based upon the url
@@ -64,4 +63,13 @@ http.createServer((request, response) => {
         response.end();
     }
 
-}).listen(8000);
+});
+
+
+exports.alanStart = function() {
+    alanServer.listen(8000);
+}
+
+exports.alanStop = function() {
+    alanServer.close();
+}
