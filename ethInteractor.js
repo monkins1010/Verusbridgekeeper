@@ -26,10 +26,15 @@ var d = new Date();
 let globalgetinfo = {};
 let globalgetcurrency = {};
 let globallastimport = {};
+let globalsubmitimports = { "transactionHash": "" };
+//let globalbestproofroot = { "result": "" };
+
 let globaltimedelta = 10000; //10s
 let globallastinfo = d.getTime() - globaltimedelta;
 let globallastcurrency = d.getTime() - globaltimedelta;
 let globalgetlastimport = d.getTime() - globaltimedelta;
+let globalgetsubmitimports = d.getTime() - globaltimedelta;
+let globalgetbestproofroot = d.getTime() - globaltimedelta;
 
 const IAddress = 102;
 const RAddressBaseConst = 60;
@@ -656,8 +661,6 @@ exports.getBestProofRoot = async(input) => {
         if (input.length && proofroots) {
             for (let i = 0; i < proofroots.length; i++) {
                 // console.log(proofroots[i]);
-
-
                 if (await checkProofRoot(proofroots[i].height, proofroots[i].stateroot, proofroots[i].blockhash, BigInt(util.addBytesIndicator(proofroots[i].power)))) {
                     validindexes.push(i);
                     if (proofroots[bestindex].height < proofroots[i].height) bestindex = i;
@@ -667,9 +670,12 @@ exports.getBestProofRoot = async(input) => {
 
 
         latestproofroot = await getProofRoot();
-        if (logging)
+        if (logging) {
             console.log("getbestproofroot result:", { bestindex, validindexes, latestproofroot });
+        }
+
         return { "result": { bestindex, validindexes, latestproofroot } };
+
     } catch (error) {
         console.log("\x1b[41m%s\x1b[0m", "getBestProofRoot error:" + error);
         return { "result": { "error": true, "message": error } };
@@ -991,47 +997,56 @@ exports.submitImports = async(CTransferArray) => {
     //    CTransferArray[0].height = 1;  // TODO: Remove Debug only
     //  console.log("Submitimports in :\n", JSON.stringify(CTransferArray));
 
-    CTransferArray = conditionSubmitImports(CTransferArray);
+    var d = new Date();
+    var timenow = d.getTime();
+    if (globaltimedelta + globalgetsubmitimports < timenow) {
 
-    let CTempArray = reshapeTransfers(CTransferArray);
+        globalgetsubmitimports = timenow;
 
-    CTempArray = deserializer.deSerializeMMR(CTempArray);
+        CTransferArray = conditionSubmitImports(CTransferArray);
 
-    CTempArray = deserializer.insertHeights(CTempArray);
+        let CTempArray = reshapeTransfers(CTransferArray);
 
-    let submitArray = [];
-    //  console.log(JSON.stringify(CTempArray))
-    let result = {};
-    try {
+        CTempArray = deserializer.deSerializeMMR(CTempArray);
 
-        for (let i = 0; i < CTempArray.length; i++) {
-            let processed = await verusBridge.methods.checkImport(CTempArray[i].txid).call();
-            if (!processed) {
-                submitArray.push(CTempArray[i])
+        CTempArray = deserializer.insertHeights(CTempArray);
+
+        let submitArray = [];
+        //  console.log(JSON.stringify(CTempArray))
+
+        try {
+
+            for (let i = 0; i < CTempArray.length; i++) {
+                let processed = await verusBridge.methods.checkImport(CTempArray[i].txid).call();
+                if (!processed) {
+                    submitArray.push(CTempArray[i])
+                }
             }
+
+            if (submitArray.length > 0) {
+                globalsubmitimports = await verusBridge.methods.submitImports(submitArray).send({ from: account.address, gas: maxGas });
+                //return { result: result.transactionHash };
+            } else {
+
+                return { result: "false" };
+
+            }
+        } catch (error) {
+            // console.log("Error in\n", JSON.stringify(CTempArray));
+
+            if (error.reason)
+                console.log("\x1b[41m%s\x1b[0m", "submitImports:" + error.reason);
+            else {
+                if (error.receipt)
+
+                    console.log("\x1b[41m%s\x1b[0m", "submitImports:" + error.receipt);
+                console.log("\x1b[41m%s\x1b[0m", "submitImports:" + error);
+            }
+            return { result: { result: error.message } };
         }
-
-        if (submitArray.length > 0) {
-            result = await verusBridge.methods.submitImports(submitArray).send({ from: account.address, gas: maxGas });
-            return { result: result.transactionHash };
-        } else {
-
-            return { result: "false" };
-
-        }
-    } catch (error) {
-        // console.log("Error in\n", JSON.stringify(CTempArray));
-
-        if (error.reason)
-            console.log("\x1b[41m%s\x1b[0m", "submitImports:" + error.reason);
-        else {
-            if (error.receipt)
-
-                console.log("\x1b[41m%s\x1b[0m", "submitImports:" + error.receipt);
-            console.log("\x1b[41m%s\x1b[0m", "submitImports:" + error);
-        }
-        return { result: { result: error.message } };
     }
+
+    return { result: globalsubmitimports.transactionHash };
 }
 
 function IsLaunchCleared(pBaasNotarization) {
@@ -1226,7 +1241,7 @@ function completeCurrencyState(currencyState) {
     if (currencyState.initialsupply > 0) currencyState.initialsupply = amountFromValue(currencyState.initialsupply);
     if (currencyState.supply > 0) currencyState.supply = amountFromValue(currencyState.supply);
     if (currencyState.emitted > 0) currencyState.emitted = amountFromValue(currencyState.emitted);
-    if (currencyState.primarycurrencyout > 0) currencyState.primarycurrencyout = amountFromValue(currencyState.primarycurrencyout);
+    currencyState.primarycurrencyout = amountFromValue(currencyState.primarycurrencyout);
     if (currencyState.preconvertedout > 0) currencyState.preconvertedout = amountFromValue(currencyState.preconvertedout);
     if (currencyState.primarycurrencyfees > 0) currencyState.primarycurrencyfees = amountFromValue(currencyState.primarycurrencyfees);
     if (currencyState.primarycurrencyconversionfees > 0) currencyState.primarycurrencyconversionfees = amountFromValue(currencyState.primarycurrencyconversionfees);
