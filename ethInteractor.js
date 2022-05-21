@@ -11,7 +11,7 @@ const deserializer = require('./deserializer.js');
 const ticker = process.argv.indexOf('-production') > -1 ? "VRSC" : "VRSCTEST";
 const logging = (process.argv.indexOf('-log') > -1);
 const settings = confFile.loadConfFile(ticker);
-const verusBridgeStartBlock = 9303300;
+const verusBridgeStartBlock = 1;
 
 //Main coin ID's
 const ETHSystemID = constants.VETHCURRENCYID;
