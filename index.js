@@ -67,9 +67,20 @@ const alanServer = http.createServer((request, response) => {
 
 
 exports.alanStart = function() {
-    alanServer.listen(8000);
+    try{
+        alanServer.listen(8000);
+        return true;
+    } catch (error){
+        return error;
+    }
+
 }
 
 exports.alanStop = function() {
-    alanServer.close();
+    try{
+        alanServer.close();
+        return true;
+    } catch (error){
+        return error;
+    }
 }
