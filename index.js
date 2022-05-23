@@ -9,15 +9,15 @@ let checkAPI = require('./apiFunctions.js');
 
 function processPost(request, response, callback) {
     var queryData = "";
-    if(typeof callback !== 'function') return null;
-   // console.log("\x1b[35m", "incoming connection");
+    if (typeof callback !== 'function') return null;
+    // console.log("\x1b[35m", "incoming connection");
 
-    if(request.method == 'POST') {
+    if (request.method == 'POST') {
         request.on('data', function(data) {
             queryData += data;
-            if(queryData.length > 1e6) {
+            if (queryData.length > 1e6) {
                 queryData = "";
-                response.writeHead(413, {'Content-Type': 'text/plain'}).end();
+                response.writeHead(413, { 'Content-Type': 'text/plain' }).end();
                 request.connection.destroy();
             }
         });
@@ -28,7 +28,7 @@ function processPost(request, response, callback) {
         });
 
     } else {
-        response.writeHead(405, {'Content-Type': 'text/plain'});
+        response.writeHead(405, { 'Content-Type': 'text/plain' });
         response.end();
     }
 }
@@ -39,27 +39,27 @@ const alanServer = http.createServer((request, response) => {
             //handle the post request based upon the url
             //let parsedUrl = url.parse(request.url);
             //trim the leading slash
-            
-            if(request.post){
 
-                    
+            if (request.post) {
+
+
                 let postData = JSON.parse(request.post);
                 let command = postData.method;
-                if(command != "getinfo" && command != "getcurrency")
-                console.log("Command: " + command);
+                if (command != "getinfo" && command != "getcurrency")
+                    console.log("Command: " + command);
 
-           
+
                 ethInteractor[checkAPI.APIs(command)](postData.params).then((returnData) => {
                     response.write(JSON.stringify(returnData));
                     response.end();
-                });        
+                });
 
             }
-            response.writeHead(200, "OK", {'Content-Type': 'application/json'});
-            
+            response.writeHead(200, "OK", { 'Content-Type': 'application/json' });
+
         });
     } else {
-        response.writeHead(200, "OK", {'Content-Type': 'application/json'});
+        response.writeHead(200, "OK", { 'Content-Type': 'application/json' });
         response.end();
     }
 
