@@ -33,7 +33,9 @@ function processPost(request, response, callback) {
     }
 }
 
-const alanServer = http.createServer((request, response) => {
+const rollingBuffer = [];
+
+const bridgeKeeperServer = http.createServer((request, response) => {
     if(request.method == 'POST') {
         processPost(request, response, function() {
             //handle the post request based upon the url
@@ -47,7 +49,9 @@ const alanServer = http.createServer((request, response) => {
                 let command = postData.method;
                 if (command != "getinfo" && command != "getcurrency")
                     console.log("Command: " + command);
-
+                rollingBuffer.push("Command: " + command);
+                if (rollingBuffer.length > 20)
+                    rollingBuffer = rollingBuffer.slice(20 - rollingBuffer.length);
 
                 ethInteractor[checkAPI.APIs(command)](postData.params).then((returnData) => {
                     response.write(JSON.stringify(returnData));
@@ -66,9 +70,13 @@ const alanServer = http.createServer((request, response) => {
 });
 
 
-exports.alanStart = function() {
+exports.status = function() {
+  return rollingBuffer;   
+}
+
+exports.start = function() {
     try{
-        alanServer.listen(8000);
+        bridgeKeeperServer.listen(8000);
         return true;
     } catch (error){
         return error;
@@ -76,9 +84,9 @@ exports.alanStart = function() {
 
 }
 
-exports.alanStop = function() {
+exports.stop = function() {
     try{
-        alanServer.close();
+        bridgeKeeperServer.close();
         return true;
     } catch (error){
         return error;
