@@ -57,7 +57,7 @@ const ETH_FEES = "0.003"
 const testfunc1 = async() => {
     try {
     let USDCTOSEND = 100000000
-      // const approved = await erctoken.methods.approve("0xE59276C2aA4F6A2c2395ad571f0007ebf1d8A4B4","1000000000000").send({ from: account.address, gas: maxGas}); //approve verustokenmanger 100000usd
+      const approved = await erctoken.methods.approve("0xE59276C2aA4F6A2c2395ad571f0007ebf1d8A4B4","1000000000000").send({ from: account.address, gas: maxGas}); //approve verustokenmanger 100000usd
       let nonce = await web3.eth.getTransactionCount(account.address); 
       const fee = web3.utils.toWei(ETH_FEES, 'ether');
       let promises =  [];
