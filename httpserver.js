@@ -42,21 +42,27 @@ const myServer = http.createServer((request, response) => {
             //trim the leading slash
 
             if (request.post) {
+                response.writeHead(200, "OK", { 'Content-Type': 'application/json' });
+
+                try
+                {
+                    let postData = JSON.parse(request.post);
+                    let command = postData.method;
+                    if (command != "getinfo" && command != "getcurrency")
+                        console.log("Command: " + command);
 
 
-                let postData = JSON.parse(request.post);
-                let command = postData.method;
-                if (command != "getinfo" && command != "getcurrency")
-                    console.log("Command: " + command);
-
-
-                ethInteractor[checkAPI.APIs(command)](postData.params).then((returnData) => {
-                    response.write(JSON.stringify(returnData));
+                    ethInteractor[checkAPI.APIs(command)](postData.params).then((returnData) => {
+                        response.write(JSON.stringify(returnData));
+                        response.end();
+                    });
+                } catch (e)
+                {
                     response.end();
-                });
+
+                }
 
             }
-            response.writeHead(200, "OK", { 'Content-Type': 'application/json' });
 
         });
     } else {

@@ -1167,7 +1167,8 @@ exports.submitAcceptedNotarization = async(params) => {
         return { "result": txhash };
 
     } catch (error) {
-        console.log("\x1b[41m%s\x1b[0m", error);
+        if(error?.message == "already known")
+            console.log("Notarization already Submitted");
         //locknotorization = false;
         return { "result": { "txid": error } };
     }
