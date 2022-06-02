@@ -29,7 +29,7 @@ let globallastimport = {};
 let globalsubmitimports = { "transactionHash": "" };
 //let globalbestproofroot = { "result": "" };
 
-let globaltimedelta = 10000; //10s
+let globaltimedelta = 60000; //10s
 let globallastinfo = d.getTime() - globaltimedelta;
 let globallastcurrency = d.getTime() - globaltimedelta;
 let globalgetlastimport = d.getTime() - globaltimedelta;
