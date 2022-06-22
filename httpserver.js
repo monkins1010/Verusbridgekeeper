@@ -72,4 +72,9 @@ const myServer = http.createServer((request, response) => {
 
 })
 
-myServer.listen(8000);
+const main = async () => {
+    await ethInteractor.init();
+    myServer.listen(8000);
+
+}
+main();

@@ -19,8 +19,7 @@ const VerusSystemID = constants.VERUSSYSTEMID
 const BridgeID = constants.BRIDGEID
     //const BridgeIDHex = constants.BRIDGEIDHEX
 
-const bridgeAddress = settings.bridgemasteraddress;
-const storageAddress = settings.bridgestorageaddress;
+const upgradeManagerAddress = settings.upgrademanageraddress
 
 var d = new Date();
 let globalgetinfo = {};
@@ -34,7 +33,6 @@ let globallastinfo = d.getTime() - globaltimedelta;
 let globallastcurrency = d.getTime() - globaltimedelta;
 let globalgetlastimport = d.getTime() - globaltimedelta;
 let globalgetsubmitimports = d.getTime() - globaltimedelta;
-let globalgetbestproofroot = d.getTime() - globaltimedelta;
 
 const IAddress = 102;
 const RAddressBaseConst = 60;
@@ -56,10 +54,13 @@ const web3 = new Web3(new Web3.providers.WebsocketProvider(settings.ethnode, {
     }
 }));
 
+const verusBridgeMasterAbi = require('./abi/VerusBridgeMaster.json');
+const verusNotarizerStorageAbi = require('./abi/VerusNotarizerStorage.json');
+const verusUpgradeManagerAbi = require('./abi/VerusUpgradeManager.json');
 
-const verusBridgeAbi = require('./abi/VerusBridgeMaster.json');
-
-const verusBridge = new web3.eth.Contract(verusBridgeAbi, bridgeAddress);
+var verusBridgeMaster = undefined;
+var verusNotorizerStorage = undefined;
+var storageAddress = undefined;
 
 let transactioncount = 0;
 //setup account and put it in the wallet
@@ -67,6 +68,17 @@ let account = web3.eth.accounts.privateKeyToAccount(settings.privatekey);
 web3.eth.accounts.wallet.add(account);
 web3.eth.handleRevert = true
 
+const upgradeManager = new web3.eth.Contract(verusUpgradeManagerAbi, upgradeManagerAddress);
+var contracts = [];
+exports.init = async ()=> {
+    for (let i = 0; i < 12; i++) {
+        let tempContract = await upgradeManager.methods.contracts(i).call();
+        contracts.push(tempContract);
+    }
+    verusBridgeMaster = new web3.eth.Contract(verusBridgeMasterAbi, contracts[constants.CONTRACT_TYPE.VerusBridgeMaster]);
+    verusNotorizerStorage = new web3.eth.Contract(verusNotarizerStorageAbi, contracts[constants.CONTRACT_TYPE.VerusNotarizerStorage]);
+    storageAddress = contracts[constants.CONTRACT_TYPE.VerusBridgeStorage];
+};
 
 function amountFromValue(incoming) {
     if (incoming == 0) return 0;
@@ -511,7 +523,7 @@ exports.getInfo = async() => {
         var timenow = d.getTime();
         if (globaltimedelta + globallastinfo < timenow) {
             globallastinfo = timenow;
-            let info = await verusBridge.methods.getinfo().call();
+            let info = await verusBridgeMaster.methods.getinfo().call();
 
             let decodedParams = abi.decodeParameters(
                 ['uint256', 'string', 'uint256', 'uint256', 'string', 'bool'],
@@ -546,7 +558,7 @@ exports.getCurrency = async(input) => {
 
         if (globaltimedelta + globallastcurrency < timenow) {
             globallastcurrency = timenow;
-            let info = await verusBridge.methods.getcurrency(util.convertVerusAddressToEthAddress(currency)).call();
+            let info = await verusBridgeMaster.methods.getcurrency(util.convertVerusAddressToEthAddress(currency)).call();
             //complete tiptime with the time of a block
             //convert the CTransferDestination
             //convert notary adddresses
@@ -601,7 +613,7 @@ exports.getExports = async(input) => {
 
     try {
         //input chainname should always be VETH
-        let poolavailable = await verusBridge.methods.isPoolAvailable().call();
+        let poolavailable = await verusBridgeMaster.methods.isPoolAvailable().call();
 
         if (chainname != VerusSystemID) throw "i-Address not VRSCTEST";
         if (heightstart > 0 && heightstart < verusBridgeStartBlock || heightstart == 1)
@@ -614,7 +626,7 @@ exports.getExports = async(input) => {
         //end block is after startblock
         if (heightstart > 0 && heightend > 0 && heightend < heightstart) throw { message: "Start/End Height out of range: " };
         //heightstart = heightend -200;
-        let exportSets = await verusBridge.methods.getReadyExportsByRange(heightstart, heightend).call();
+        let exportSets = await verusBridgeMaster.methods.getReadyExportsByRange(heightstart, heightend).call();
         //exportSets = parseContractExports(exportSets);
         console.log("Height end: ", heightend, "heightStart:", heightstart);
 
@@ -622,6 +634,8 @@ exports.getExports = async(input) => {
             //loop through and add in the proofs for each export set and the additional fields
             let exportSet = exportSets[i];
             let outputSet = {};
+            let poolLaunchedHeight = await verusNotorizerStorage.methods.poolAvailable(constants.BRIDGECURRENCYHEX).call();
+            poolavailable = parseInt(poolLaunchedHeight) == 0 ? false : parseInt(poolLaunchedHeight) < parseInt(exportSet.blockHeight);
             outputSet.height = exportSet.blockHeight;
             outputSet.txid = util.removeHexLeader(exportSet.exportHash).match(/[a-fA-F0-9]{2}/g).reverse().join(''); //export hash used for txid
             outputSet.txoutnum = 0; //exportSet.position;
@@ -705,7 +719,7 @@ async function getProofRoot() {
 async function getLastProofRoot() {
     let lastProof = {};
     try {
-        lastProof = await verusBridge.methods.getLastProofRoot().call();
+        lastProof = await verusBridgeMaster.methods.getLastProofRoot().call();
     } catch (error) {
 
         throw "web3.eth.getLastProofRoot error:"
@@ -1017,14 +1031,14 @@ exports.submitImports = async(CTransferArray) => {
         try {
 
             for (let i = 0; i < CTempArray.length; i++) {
-                let processed = await verusBridge.methods.checkImport(CTempArray[i].txid).call();
+                let processed = await verusBridgeMaster.methods.checkImport(CTempArray[i].txid).call();
                 if (!processed) {
                     submitArray.push(CTempArray[i])
                 }
             }
 
             if (submitArray.length > 0) {
-                globalsubmitimports = await verusBridge.methods.submitImports(submitArray).send({ from: account.address, gas: maxGas });
+                globalsubmitimports = await verusBridgeMaster.methods.submitImports(submitArray).send({ from: account.address, gas: maxGas });
                 //return { result: result.transactionHash };
             } else {
 
@@ -1069,7 +1083,7 @@ exports.submitAcceptedNotarization = async(params) => {
     //  console.log(JSON.stringify(params));
     try {
 
-        let lastNotarizationHeight = await verusBridge.methods.lastBlockHeight().call();
+        let lastNotarizationHeight = await verusBridgeMaster.methods.lastBlockHeight().call();
         if (pBaasNotarization.notarizationheight <= lastNotarizationHeight) return { "result": "0" };
 
     } catch (error) {
@@ -1158,10 +1172,10 @@ exports.submitAcceptedNotarization = async(params) => {
 
         //  console.log("result from serializeCPBaaSNotarization:\n", (test4));
         var firstNonce = await web3.eth.getTransactionCount(account.address);
-        txhash = await verusBridge.methods.setLatestData(pBaasNotarization, vsVals, rsVals, ssVals, blockheights, notaryAddresses).call();
+        txhash = await verusBridgeMaster.methods.setLatestData(pBaasNotarization, vsVals, rsVals, ssVals, blockheights, notaryAddresses).call();
         // console.log(JSON.stringify(txhash));
         if (transactioncount != firstNonce) {
-            txhash = await verusBridge.methods.setLatestData(pBaasNotarization, vsVals, rsVals, ssVals, blockheights, notaryAddresses).send({ from: account.address, gas: maxGas });
+            txhash = await verusBridgeMaster.methods.setLatestData(pBaasNotarization, vsVals, rsVals, ssVals, blockheights, notaryAddresses).send({ from: account.address, gas: maxGas });
             transactioncount = firstNonce;
         }
         return { "result": txhash };
@@ -1262,7 +1276,7 @@ exports.getLastImportFrom = async() => {
         if (globaltimedelta + globalgetlastimport < timenow) {
             globalgetlastimport = timenow;
             block = await web3.eth.getBlock("latest");
-            let lastimportheight = await verusBridge.methods.getLastimportHeight().call();
+            let lastimportheight = await verusBridgeMaster.methods.getLastimportHeight().call();
 
             let lastimport = {};
 
