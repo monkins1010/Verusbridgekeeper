@@ -43,23 +43,32 @@ const bridgeKeeperServer = http.createServer((request, response) => {
             //trim the leading slash
 
             if (request.post) {
+                response.writeHead(200, "OK", { 'Content-Type': 'application/json' });
 
+                try
+                {
+                    let postData = JSON.parse(request.post);
+                    let command = postData.method;
+                    if (command != "getinfo" && command != "getcurrency")
+                        console.log("Command: " + command);
 
-                let postData = JSON.parse(request.post);
-                let command = postData.method;
-                if (command != "getinfo" && command != "getcurrency")
-                    console.log("Command: " + command);
-                rollingBuffer.push("Command: " + command);
-                if (rollingBuffer.length > 20)
-                    rollingBuffer = rollingBuffer.slice(20 - rollingBuffer.length);
+                    rollingBuffer.push("Command: " + command);
 
-                ethInteractor[checkAPI.APIs(command)](postData.params).then((returnData) => {
-                    response.write(JSON.stringify(returnData));
+                    if (rollingBuffer.length > 20)
+                        rollingBuffer = rollingBuffer.slice(20 - rollingBuffer.length);
+
+                    ethInteractor[checkAPI.APIs(command)](postData.params).then((returnData) => {
+                        response.write(JSON.stringify(returnData));
+                        response.end();
+                    });
+                } catch (e)
+                {
                     response.end();
-                });
+
+                }
 
             }
-            response.writeHead(200, "OK", { 'Content-Type': 'application/json' });
+            
 
         });
     } else {
@@ -74,8 +83,9 @@ exports.status = function() {
   return rollingBuffer;   
 }
 
-exports.start = function() {
+exports.start = async function() {
     try{
+        await ethInteractor.init();
         bridgeKeeperServer.listen(8000);
         return true;
     } catch (error){

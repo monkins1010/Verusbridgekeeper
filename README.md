@@ -16,12 +16,12 @@ Windows: %appdata%/Verustest/pbaas/veth/veth.conf
 
 Once set run the following commands:
 ```shell
-npm install
+yarn install
 ```
 Then after the installation run the following from here on
 
 ```shell
-node httpserver.js
+yarn start -log
 ```
 
 This will result in the service running on port 8000 it can be queried using the following examples:
