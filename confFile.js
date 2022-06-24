@@ -29,8 +29,6 @@ exports.loadConfFile = (chainName) => {
             break;
     }
 
-
-
     if (!fs.existsSync(confPath)) {
         fs.mkdirSync(confPath, { recursive: true });
     }

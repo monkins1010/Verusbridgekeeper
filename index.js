@@ -1,6 +1,4 @@
-let http = require('http');
-let url = require('url');
-
+const http = require('http');
 const os = require('os');
 global.HOME = os.platform() === "win32" ? process.env.APPDATA : process.env.HOME;
 let ethInteractor = require('./ethInteractor.js');

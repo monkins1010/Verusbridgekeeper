@@ -12,7 +12,7 @@ const {initApiCache, setCachedApi, getCachedApi} = require('./cache/apicalls')
 
 const ticker = process.argv.indexOf('-production') > -1 ? "VRSC" : "VRSCTEST";
 const logging = (process.argv.indexOf('-log') > -1);
-const settings = confFile.loadConfFile(ticker);
+let settings = undefined;
 const verusBridgeStartBlock = 1;
 
 //Main coin ID's
@@ -20,7 +20,7 @@ const ETHSystemID = constants.VETHCURRENCYID;
 const VerusSystemID = constants.VERUSSYSTEMID
 const BridgeID = constants.BRIDGEID
 
-const upgradeManagerAddress = settings.upgrademanageraddress
+let upgradeManagerAddress = undefined;
 
 var d = new Date();
 let globalgetinfo = {};
@@ -38,20 +38,7 @@ const RAddressBaseConst = 60;
 
 let maxGas = 6000000;
 
-const web3 = new Web3(new Web3.providers.WebsocketProvider(settings.ethnode, {
-    clientConfig: {
-        maxReceivedFrameSize: 100000000,
-        maxReceivedMessageSize: 100000000,
-        keepalive: true,
-        keepaliveInterval: -1 // ms
-    },
-    reconnect: {
-        auto: true,
-        delay: 5000, // ms
-        maxAttempts: 5,
-        onTimeout: false,
-    }
-}));
+let web3 = undefined;
 
 const verusBridgeMasterAbi = require('./abi/VerusBridgeMaster.json');
 const verusNotarizerStorageAbi = require('./abi/VerusNotarizerStorage.json');
@@ -62,14 +49,39 @@ var verusNotorizerStorage = undefined;
 var storageAddress = undefined;
 
 let transactioncount = 0;
-//setup account and put it in the wallet
-let account = web3.eth.accounts.privateKeyToAccount(settings.privatekey);
-web3.eth.accounts.wallet.add(account);
-web3.eth.handleRevert = true
 
-const upgradeManager = new web3.eth.Contract(verusUpgradeManagerAbi, upgradeManagerAddress);
+let account = undefined;
+
+let upgradeManager = undefined;
 var contracts = [];
+
+function setupConf()
+{
+    settings = confFile.loadConfFile(ticker);
+    web3 = new Web3(new Web3.providers.WebsocketProvider(settings.ethnode, {
+        clientConfig: {
+            maxReceivedFrameSize: 100000000,
+            maxReceivedMessageSize: 100000000,
+            keepalive: true,
+            keepaliveInterval: -1 // ms
+        },
+        reconnect: {
+            auto: true,
+            delay: 5000, // ms
+            maxAttempts: 5,
+            onTimeout: false,
+        }
+    }));
+    account = web3.eth.accounts.privateKeyToAccount(settings.privatekey);
+    web3.eth.accounts.wallet.add(account);
+    web3.eth.handleRevert = true    
+    upgradeManager = new web3.eth.Contract(verusUpgradeManagerAbi, settings.upgrademanageraddress);
+
+}
+
 exports.init = async ()=> {
+
+    setupConf();
     for (let i = 0; i < 12; i++) {
         let tempContract = await upgradeManager.methods.contracts(i).call();
         contracts.push(tempContract);
