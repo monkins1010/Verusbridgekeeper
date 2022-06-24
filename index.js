@@ -33,7 +33,7 @@ function processPost(request, response, callback) {
     }
 }
 
-const rollingBuffer = [];
+let rollingBuffer = [];
 
 const bridgeKeeperServer = http.createServer((request, response) => {
     if(request.method == 'POST') {
@@ -51,8 +51,11 @@ const bridgeKeeperServer = http.createServer((request, response) => {
                     let command = postData.method;
                     if (command != "getinfo" && command != "getcurrency")
                         console.log("Command: " + command);
-
-                    rollingBuffer.push("Command: " + command);
+                    
+                    const event = new Date(Date.now());
+                   
+                    console.log();
+                    rollingBuffer.push(event.toLocaleString() + " Command: " + command);
 
                     if (rollingBuffer.length > 20)
                         rollingBuffer = rollingBuffer.slice(20 - rollingBuffer.length);
