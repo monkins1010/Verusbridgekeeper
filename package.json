@@ -1,6 +1,6 @@
 {
-    "name": "alan",
-    "version": "1.0.0",
+    "name": "verus_bridgekeeper",
+    "version": "1.0.3",
     "description": "Verus Bridgekeeper",
     "main": "index.js",
     "scripts": {
@@ -9,7 +9,6 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "axios": "^0.24.0",
         "base58": "^2.0.1",
         "big-number": "^2.0.0",
         "bitgo-utxo-lib": "^1.8.0",

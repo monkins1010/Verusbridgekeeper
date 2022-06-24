@@ -33,36 +33,33 @@ function processPost(request, response, callback) {
     }
 }
 
+const rollingBuffer = [];
 
-const myServer = http.createServer((request, response) => {
-    if (request.method == 'POST') {
+const bridgeKeeperServer = http.createServer((request, response) => {
+    if(request.method == 'POST') {
         processPost(request, response, function() {
             //handle the post request based upon the url
             //let parsedUrl = url.parse(request.url);
             //trim the leading slash
 
             if (request.post) {
-                response.writeHead(200, "OK", { 'Content-Type': 'application/json' });
-
-                try
-                {
-                    let postData = JSON.parse(request.post);
-                    let command = postData.method;
-                    if (command != "getinfo" && command != "getcurrency")
-                        console.log("Command: " + command);
 
 
-                    ethInteractor[checkAPI.APIs(command)](postData.params).then((returnData) => {
-                        response.write(JSON.stringify(returnData));
-                        response.end();
-                    });
-                } catch (e)
-                {
+                let postData = JSON.parse(request.post);
+                let command = postData.method;
+                if (command != "getinfo" && command != "getcurrency")
+                    console.log("Command: " + command);
+                rollingBuffer.push("Command: " + command);
+                if (rollingBuffer.length > 20)
+                    rollingBuffer = rollingBuffer.slice(20 - rollingBuffer.length);
+
+                ethInteractor[checkAPI.APIs(command)](postData.params).then((returnData) => {
+                    response.write(JSON.stringify(returnData));
                     response.end();
-
-                }
+                });
 
             }
+            response.writeHead(200, "OK", { 'Content-Type': 'application/json' });
 
         });
     } else {
@@ -70,11 +67,28 @@ const myServer = http.createServer((request, response) => {
         response.end();
     }
 
-})
+});
 
-const main = async () => {
-    await ethInteractor.init();
-    myServer.listen(8000);
+
+exports.status = function() {
+  return rollingBuffer;   
+}
+
+exports.start = function() {
+    try{
+        bridgeKeeperServer.listen(8000);
+        return true;
+    } catch (error){
+        return error;
+    }
 
 }
-main();
+
+exports.stop = function() {
+    try{
+        bridgeKeeperServer.close();
+        return true;
+    } catch (error){
+        return error;
+    }
+}
