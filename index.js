@@ -60,10 +60,15 @@ const bridgeKeeperServer = http.createServer((request, response) => {
                     ethInteractor[checkAPI.APIs(command)](postData.params).then((returnData) => {
                         response.write(JSON.stringify(returnData));
                         response.end();
+                        if (returnData.result?.error)
+                        {
+                            rollingBuffer.push("Error: " + returnData.result?.message);
+                        }
                     });
                 } catch (e)
                 {
                     response.end();
+                    rollingBuffer.push("Error: " + e);
 
                 }
 
