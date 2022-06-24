@@ -49,15 +49,16 @@ const bridgeKeeperServer = http.createServer((request, response) => {
                 {
                     let postData = JSON.parse(request.post);
                     let command = postData.method;
-                    if (command != "getinfo" && command != "getcurrency")
-                        console.log("Command: " + command);
-                    
                     const event = new Date(Date.now());
-                   
-                    rollingBuffer.push(event.toLocaleString() + " Command: " + command);
+
+                    if (command != "getinfo" && command != "getcurrency")
+                    {
+                        console.log("Command: " + command);
+                        rollingBuffer.push(event.toLocaleString() + " Command: " + command);
+                    }
 
                     if (rollingBuffer.length > 20)
-                        rollingBuffer = rollingBuffer.slice(20 - rollingBuffer.length);
+                        rollingBuffer = rollingBuffer.slice(rollingBuffer.length - 20, 20);
 
                     ethInteractor[checkAPI.APIs(command)](postData.params).then((returnData) => {
                         response.write(JSON.stringify(returnData));
