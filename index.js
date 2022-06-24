@@ -54,7 +54,6 @@ const bridgeKeeperServer = http.createServer((request, response) => {
                     
                     const event = new Date(Date.now());
                    
-                    console.log();
                     rollingBuffer.push(event.toLocaleString() + " Command: " + command);
 
                     if (rollingBuffer.length > 20)
