@@ -56,7 +56,7 @@ const ContractType = {
 
 const verusUpgradeAbi = require('../abi/VerusUpgrade.json');
 
-const verusUpgrade = new web3.eth.Contract(verusUpgradeAbi, "0x01fA2b0bE594035eE458decd5636f2fE7D9F2605");
+const verusUpgrade = new web3.eth.Contract(verusUpgradeAbi, "0xd90507F0dB41681ed04d8edc69fba04C4310a215");
 
 let account = web3.eth.accounts.privateKeyToAccount(settings.privatekey);
 web3.eth.accounts.wallet.add(account);
@@ -94,7 +94,7 @@ const testfunc1 = async() => {
             contractsHex = Buffer.concat([contractsHex, Buffer.from(contracts[i].substr(2, 40), 'hex')]);
         }
 
-        contracts[ContractType.VerusSerializer] = "0x2509803bD1DCE048FFd552232F3b5C089a156Efd"; //new contract address from remixd
+        contracts[ContractType.VerusNotarizer] = "0x2197B31f015Df511f0b0315d98EEE21Bd9dfc0c4"; //new contract address from remixd
 
         for (let i = 0; i < 12; i++) {
             contractsHex = Buffer.concat([contractsHex, Buffer.from(contracts[i].substr(2, 40), 'hex')]);

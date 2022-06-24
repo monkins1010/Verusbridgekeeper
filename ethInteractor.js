@@ -8,6 +8,8 @@ const util = require('./utils.js');
 const abi = require('web3-eth-abi');
 const deserializer = require('./deserializer.js');
 
+const {initApiCache, setCachedApi, getCachedApi} = require('./cache/apicalls')
+
 const ticker = process.argv.indexOf('-production') > -1 ? "VRSC" : "VRSCTEST";
 const logging = (process.argv.indexOf('-log') > -1);
 const settings = confFile.loadConfFile(ticker);
@@ -17,7 +19,6 @@ const verusBridgeStartBlock = 1;
 const ETHSystemID = constants.VETHCURRENCYID;
 const VerusSystemID = constants.VERUSSYSTEMID
 const BridgeID = constants.BRIDGEID
-    //const BridgeIDHex = constants.BRIDGEIDHEX
 
 const upgradeManagerAddress = settings.upgrademanageraddress
 
@@ -26,13 +27,11 @@ let globalgetinfo = {};
 let globalgetcurrency = {};
 let globallastimport = {};
 let globalsubmitimports = { "transactionHash": "" };
-//let globalbestproofroot = { "result": "" };
 
 let globaltimedelta = 60000; //10s
 let globallastinfo = d.getTime() - globaltimedelta;
 let globallastcurrency = d.getTime() - globaltimedelta;
 let globalgetlastimport = d.getTime() - globaltimedelta;
-let globalgetsubmitimports = d.getTime() - globaltimedelta;
 
 const IAddress = 102;
 const RAddressBaseConst = 60;
@@ -78,7 +77,36 @@ exports.init = async ()=> {
     verusBridgeMaster = new web3.eth.Contract(verusBridgeMasterAbi, contracts[constants.CONTRACT_TYPE.VerusBridgeMaster]);
     verusNotorizerStorage = new web3.eth.Contract(verusNotarizerStorageAbi, contracts[constants.CONTRACT_TYPE.VerusNotarizerStorage]);
     storageAddress = contracts[constants.CONTRACT_TYPE.VerusBridgeStorage];
+    initApiCache();
+    eventListener(contracts[constants.CONTRACT_TYPE.VerusNotarizer]);
+
 };
+
+async function eventListener(notarizerAddress) {
+
+    var options = {
+        reconnect: {
+            auto: true,
+            delay: 5000, // ms
+            maxAttempts: 5,
+            onTimeout: false
+        },
+        address: notarizerAddress,
+        topics: [
+            '0xc9736e50581107bfa480a96311c69439859109d190da814a525c46e2b3c567ad'
+        ]
+    };
+
+    var subscription = web3.eth.subscribe('logs', options, function(error, result){
+        if (!error) console.log('got result');
+        else console.log(error);
+    }).on("data", function(log){
+        console.log('Got new Notarization');
+        setCachedApi(log?.blockNumber, 'lastNotarizationHeight');
+    }).on("changed", function(log){
+        console.log('changed');
+    });
+}
 
 function amountFromValue(incoming) {
     if (incoming == 0) return 0;
@@ -521,6 +549,7 @@ exports.getInfo = async() => {
 
         var d = new Date();
         var timenow = d.getTime();
+        
         if (globaltimedelta + globallastinfo < timenow) {
             globallastinfo = timenow;
             let info = await verusBridgeMaster.methods.getinfo().call();
@@ -606,10 +635,15 @@ exports.getCurrency = async(input) => {
 exports.getExports = async(input) => {
 
     let output = [];
-
+    const lastCTransferArray = await getCachedApi('lastgetExports');
     let chainname = input[0];
     let heightstart = input[1];
     let heightend = input[2];
+
+    if (lastCTransferArray == JSON.stringify(input)) {
+        
+        return { "result": null };
+    }
 
     try {
         //input chainname should always be VETH
@@ -656,6 +690,7 @@ exports.getExports = async(input) => {
         }
 
         // console.log(JSON.stringify(output));
+        await setCachedApi(input, 'lastgetExports');
         return { "result": output };
     } catch (error) {
         console.log("\x1b[41m%s\x1b[0m", "GetExports error:" + error);
@@ -1006,58 +1041,53 @@ function reshapeTransfers(CTransferArray) {
 }
 
 exports.submitImports = async(CTransferArray) => {
-    //need to convert all the base64 encoded addresses back to uint160s to be correcly passed into solidity 
-    //checks to 
-    //    CTransferArray[0].height = 1;  // TODO: Remove Debug only
-    //  console.log("Submitimports in :\n", JSON.stringify(CTransferArray));
 
-    var d = new Date();
-    var timenow = d.getTime();
-    if (globaltimedelta + globalgetsubmitimports < timenow) {
+    const lastCTransferArray = await getCachedApi('lastsubmitImports');
 
-        globalgetsubmitimports = timenow;
+    CTransferArray = conditionSubmitImports(CTransferArray);
+    
+    let CTempArray = reshapeTransfers(CTransferArray);
 
-        CTransferArray = conditionSubmitImports(CTransferArray);
+    if(lastCTransferArray === JSON.stringify(CTransferArray)) {
 
-        let CTempArray = reshapeTransfers(CTransferArray);
+        return { result: globalsubmitimports.transactionHash };
+    }
 
-        CTempArray = deserializer.deSerializeMMR(CTempArray);
+    CTempArray = deserializer.deSerializeMMR(CTempArray);
 
-        CTempArray = deserializer.insertHeights(CTempArray);
+    CTempArray = deserializer.insertHeights(CTempArray);
 
-        let submitArray = [];
-        //  console.log(JSON.stringify(CTempArray))
+    let submitArray = [];
+    //  console.log(JSON.stringify(CTempArray))
 
-        try {
+    try {
 
-            for (let i = 0; i < CTempArray.length; i++) {
-                let processed = await verusBridgeMaster.methods.checkImport(CTempArray[i].txid).call();
-                if (!processed) {
-                    submitArray.push(CTempArray[i])
-                }
+        for (let i = 0; i < CTempArray.length; i++) {
+            let processed = await verusBridgeMaster.methods.checkImport(CTempArray[i].txid).call();
+            if (!processed) {
+                submitArray.push(CTempArray[i])
             }
-
-            if (submitArray.length > 0) {
-                globalsubmitimports = await verusBridgeMaster.methods.submitImports(submitArray).send({ from: account.address, gas: maxGas });
-                //return { result: result.transactionHash };
-            } else {
-
-                return { result: "false" };
-
-            }
-        } catch (error) {
-            // console.log("Error in\n", JSON.stringify(CTempArray));
-
-            if (error.reason)
-                console.log("\x1b[41m%s\x1b[0m", "submitImports:" + error.reason);
-            else {
-                if (error.receipt)
-
-                    console.log("\x1b[41m%s\x1b[0m", "submitImports:" + error.receipt);
-                console.log("\x1b[41m%s\x1b[0m", "submitImports:" + error);
-            }
-            return { result: { result: error.message } };
         }
+
+        await setCachedApi(CTransferArray, 'lastsubmitImports');
+
+        if (submitArray.length > 0) {
+            globalsubmitimports = await verusBridgeMaster.methods.submitImports(submitArray).send({ from: account.address, gas: maxGas });
+        } else {
+            return { result: "false" };
+        }
+    } catch (error) {
+        // console.log("Error in\n", JSON.stringify(CTempArray));
+
+        if (error.reason)
+            console.log("\x1b[41m%s\x1b[0m", "submitImports:" + error.reason);
+        else {
+            if (error.receipt)
+
+                console.log("\x1b[41m%s\x1b[0m", "submitImports:" + error.receipt);
+            console.log("\x1b[41m%s\x1b[0m", "submitImports:" + error);
+        }
+        return { result: { result: error.message } };
     }
 
     return { result: globalsubmitimports.transactionHash };
@@ -1079,12 +1109,21 @@ function IsLaunchComplete(pBaasNotarization) {
 exports.submitAcceptedNotarization = async(params) => {
 
     let pBaasNotarization = params[0];
-    let signatures = params[1].signatures; //signatures are in notary key pairs e.g. "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq" : ["1232"]
+    let signatures = params[1].signatures; 
+
     //  console.log(JSON.stringify(params));
+    const lastHeight = await getCachedApi('lastNotarizationHeight');
     try {
 
+        if (lastHeight && parseInt(lastHeight) == pBaasNotarization.notarizationheight) {
+            return { "result": "0" };  
+        } 
+
         let lastNotarizationHeight = await verusBridgeMaster.methods.lastBlockHeight().call();
-        if (pBaasNotarization.notarizationheight <= lastNotarizationHeight) return { "result": "0" };
+        if (pBaasNotarization.notarizationheight <= lastNotarizationHeight) {
+            setCachedApi(parseInt(lastNotarizationHeight), 'lastNotarizationHeight');
+            return { "result": "0" };  
+        } 
 
     } catch (error) {
         console.log("submitAcceptedNotarization Error:\n", error);
