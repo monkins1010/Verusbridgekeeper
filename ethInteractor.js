@@ -672,7 +672,53 @@ exports.getExports = async(input) => {
         //end block is after startblock
         if (heightstart > 0 && heightend > 0 && heightend < heightstart) throw { message: "Start/End Height out of range: " };
         //heightstart = heightend -200;
-        let exportSets = await verusBridgeMaster.methods.getReadyExportsByRange(heightstart, heightend).call();
+
+        let exportSets = [];
+        let tempExportset = [];
+        if (heightstart == 0 || heightstart == '0')
+        {
+            exportSets = await verusBridgeMaster.methods.getReadyExportsByRange(heightstart, heightend).call();
+        } 
+        else
+        {
+            let range = parseInt(heightend) - parseInt(heightstart);
+            const DELTA = 1000;
+            if (range > DELTA)
+            {
+                let tempstartheight = undefined;
+                let tempendheight = undefined;
+                let tempfloor = Math.floor(range / DELTA);
+                let tempremaind = range % DELTA;
+               
+                for (let i = 0; i < tempfloor; i++)
+                {
+                    tempstartheight = parseInt(heightstart) + (i * DELTA);
+                    tempendheight = parseInt(heightstart) + ((i+1) * DELTA);
+                    tempExportset.push(await verusBridgeMaster.methods.getReadyExportsByRange(tempstartheight, tempendheight).call());
+                }
+                if (tempremaind > 0)
+                {
+                    tempExportset.push(await verusBridgeMaster.methods.getReadyExportsByRange(parseInt(heightend) - tempremaind , heightend).call());
+                }
+                
+                for(let j = 0; j< tempExportset.length; j++)
+                {
+                    if(tempExportset[j].length > 0 )
+                    {
+                        for (const set of tempExportset[j])
+                            exportSets.push(set);
+                    }
+
+                }
+
+            }
+            else
+            {
+                exportSets = await verusBridgeMaster.methods.getReadyExportsByRange(heightstart, heightend).call();
+            }
+
+
+        }
         //exportSets = parseContractExports(exportSets);
         console.log("Height end: ", heightend, "heightStart:", heightstart);
 
