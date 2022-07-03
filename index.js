@@ -87,8 +87,8 @@ const bridgeKeeperServer = http.createServer((request, response) => {
 
 exports.status = function() {
 
-    const serverStatus = bridgeKeeperServer.listening;
-    return {serverStatus, logs: rollingBuffer};   
+    const serverstatus = bridgeKeeperServer.listening;
+    return {serverrunning: serverstatus , logs: rollingBuffer};   
 }
 
 exports.start = async function() {
