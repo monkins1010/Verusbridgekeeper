@@ -34,14 +34,14 @@ exports.pbaasRoot = {
 
 exports.RPCDefault = {
     VRSCTEST: {
-        rpcuser: "empty",
-        rpcpassword: "empty",
+        rpcuser: "user",
+        rpcpassword: "password",
         rpcport: 8000,
-        rpchost: "empty",
+        rpchost: "127.0.0.1",
         upgrademanageraddress: "empty",
         testnet: true,
-        privateKey: "empty",
-        ethNode: "wss://rinkeby.infura.io/ws/v3/..............",
+        privatekey: "empty",
+        ethnode: "empty",
     },
     VRSC: {
         rpcuser: "username",

@@ -3,6 +3,7 @@ const os = require('os');
 global.HOME = os.platform() === "win32" ? process.env.APPDATA : process.env.HOME;
 let ethInteractor = require('./ethInteractor.js');
 let checkAPI = require('./apiFunctions.js');
+const confFile = require('./confFile.js');
 
 
 function processPost(request, response, callback) {
@@ -84,9 +85,7 @@ const bridgeKeeperServer = http.createServer((request, response) => {
 
 });
 
-
 exports.status = function() {
-
     const serverstatus = bridgeKeeperServer.listening;
     return {serverrunning: serverstatus , logs: rollingBuffer};   
 }
@@ -108,5 +107,14 @@ exports.stop = function() {
         return true;
     } catch (error){
         return error;
+    }
+}
+
+exports.set_conf = function(key, infuraLink, ethContract) {
+    try{
+        const reply = confFile.set_conf(key, infuraLink, ethContract);
+        return reply;
+    } catch (error){
+        throw (error);
     }
 }
