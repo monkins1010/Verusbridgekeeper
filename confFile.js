@@ -145,7 +145,7 @@ exports.set_conf = (key, infuraLink, ethContract)=> {
         for (const [key, value] of Object.entries(config)) {
             fs.appendFileSync(confPath + '/' + VETH + '.conf', `${key}=${value}` + "\n");
         }
-
+        return "Conf file updated";
     }
     else {
         if (!(key && infuraLink && ethContract)) {
@@ -154,6 +154,6 @@ exports.set_conf = (key, infuraLink, ethContract)=> {
         for (const [key, value] of Object.entries(confKeys)) {
             fs.appendFileSync(confPath + '/' + VETH + '.conf', `${key}=${value}` + "\n");
         }
-        return "Conf file updated";
+        return "Conf file created";
     }
 };
