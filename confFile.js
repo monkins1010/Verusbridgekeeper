@@ -3,14 +3,12 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 var ini = require('ini');
-const fixPath = require('fix-path');
 const VETH = "000b090bec6c9ff28586eb7ed24e77562f0c4667";
 
 const rootPath = function (pbaasFolder, pbaasRoot) {
     let confPath;
     switch (os.platform()) {
         case 'darwin':
-            fixPath();
             confPath = `${global.HOME}/Library/Application Support` + pbaasRoot.darwin + pbaasFolder.darwin; // + '/veth.conf';
             break;
         case 'win32':

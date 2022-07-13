@@ -16,6 +16,7 @@
         "bitgo-utxo-lib": "^1.8.0",
         "ethereum-public-key-to-address": "0.0.5",
         "ethereumjs-util": "^7.1.4",
+        "fix-path": "^4.0.0",
         "ini": "^2.0.0",
         "keccak256": "^1.0.2",
         "long": "^5.2.0",
