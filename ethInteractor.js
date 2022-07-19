@@ -763,6 +763,10 @@ exports.getBestProofRoot = async(input) => {
     let bestindex = 0;
     let validindexes = [];
     let latestproofroot = {};
+
+    // TODO: let lastconfirmedproofroot = {};
+    // new notarization scheme as of July 2022 adds lastconfirmed notarizations
+
     // block = await web3.eth.getBlock("latest");
     try {
         if (input.length && proofroots) {

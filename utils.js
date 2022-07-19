@@ -151,12 +151,7 @@ const removeHexLeader = (hexString) => {
 }
 
 const uint160ToVAddress = (number, version) => {
-    let ashex = BigInt(number).toString(16);
-    return (bitGoUTXO.address.toBase58Check(Buffer.from(ashex, 'hex'), version));
-}
-
-const ethAddressToVAddress = (ethAddress, version) => {
-    return (bitGoUTXO.address.toBase58Check(Buffer.from(removeHexLeader(ethAddress), 'hex'), version));
+    return (bitGoUTXO.address.toBase58Check(Buffer.from(removeHexLeader(number), 'hex'), version));
 }
 
 const writeUInt160LE = (uint160le) => {
@@ -166,10 +161,8 @@ const writeUInt160LE = (uint160le) => {
 }
 
 const writeUInt256LE = (uint256le) => {
-    //remove the 0x 
-    if (uint256le.substr(0, 2) == '0x') uint256le = uint256le.substr(2);
     let output = Buffer.alloc(32);
-    output.write(uint256le, 'hex');
+    output.write(removeHexLeader(uint256le), 'hex');
     return output;
 }
 
@@ -321,7 +314,7 @@ exports.writeVarInt = writeVarInt;
 exports.readVarInt = readVarInt;
 exports.writeCompactSize = writeCompactSize;
 exports.uint160ToVAddress = uint160ToVAddress;
-exports.ethAddressToVAddress = ethAddressToVAddress;
+exports.ethAddressToVAddress = uint160ToVAddress;
 exports.writeUInt160LE = writeUInt160LE;
 exports.writeUInt256LE = writeUInt256LE;
 exports.writeUInt = writeUInt;
