@@ -109,14 +109,14 @@
             "type": "uint8"
           },
           {
-            "internalType": "uint32",
-            "name": "recoverHeight",
-            "type": "uint32"
-          },
-          {
             "internalType": "bytes32",
             "name": "salt",
             "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "notarizerID",
+            "type": "address"
           }
         ],
         "internalType": "struct VerusObjects.upgradeInfo",
@@ -165,14 +165,14 @@
             "type": "uint8"
           },
           {
-            "internalType": "uint32",
-            "name": "recoverHeight",
-            "type": "uint32"
-          },
-          {
             "internalType": "bytes32",
             "name": "salt",
             "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "notarizerID",
+            "type": "address"
           }
         ],
         "internalType": "struct VerusObjects.upgradeInfo",
@@ -221,14 +221,14 @@
             "type": "uint8"
           },
           {
-            "internalType": "uint32",
-            "name": "recoverHeight",
-            "type": "uint32"
-          },
-          {
             "internalType": "bytes32",
             "name": "salt",
             "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "notarizerID",
+            "type": "address"
           }
         ],
         "internalType": "struct VerusObjects.upgradeInfo",
@@ -277,14 +277,14 @@
             "type": "uint8"
           },
           {
-            "internalType": "uint32",
-            "name": "recoverHeight",
-            "type": "uint32"
-          },
-          {
             "internalType": "bytes32",
             "name": "salt",
             "type": "bytes32"
+          },
+          {
+            "internalType": "address",
+            "name": "notarizerID",
+            "type": "address"
           }
         ],
         "internalType": "struct VerusObjects.upgradeInfo",
@@ -320,6 +320,30 @@
       }
     ],
     "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "notaryAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "uint8",
+        "name": "upgradeType",
+        "type": "uint8"
+      }
+    ],
+    "name": "setPendingUpgrade",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

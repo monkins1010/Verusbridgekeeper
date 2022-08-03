@@ -778,9 +778,19 @@ exports.getBestProofRoot = async(input) => {
                 }
             }
         }
+        //TODO: reduce reorgs
+        let latestProofHeight = proofroots[bestindex].height;
+        let latestBlock = await web3.eth.getBlockNumber();
 
-
-        latestproofroot = await getProofRoot();
+        if (parseInt(latestProofHeight) >= (parseInt(latestBlock) - 2) )
+        {
+            latestproofroot = proofroots[bestindex];
+        }
+        else
+        {
+            latestproofroot = await getProofRoot(latestBlock - 2);
+        }
+        
         if (logging) {
             console.log("getbestproofroot result:", { bestindex, validindexes, latestproofroot });
         }
@@ -793,11 +803,11 @@ exports.getBestProofRoot = async(input) => {
     }
 }
 
-async function getProofRoot() {
+async function getProofRoot(height = "latest") {
 
     let block;
     try {
-        block = await web3.eth.getBlock("latest");
+        block = await web3.eth.getBlock(height);
     } catch (error) {
         throw "web3.eth.getBlock error:"
     }
@@ -964,11 +974,9 @@ exports.getNotarizationData = async() => {
 
         Notarization.proofroots = CProofRoot;
         Notarization.nodes = [];
-        Notarization.forks = [
-            [0]
-        ];
+        Notarization.forks = [];
         Notarization.lastconfirmedheight = 0;
-        Notarization.lastconfirmed = 0;
+        Notarization.lastconfirmed = -1;
         Notarization.betchain = 0;
 
         return { "result": Notarization };
@@ -1171,7 +1179,7 @@ function IsLaunchComplete(pBaasNotarization) {
 exports.submitAcceptedNotarization = async(params) => {
 
     let pBaasNotarization = params[0];
-    let signatures = params[1].signatures; 
+    let signatures = params[1].evidence.chainobjects[0].value.signatures; 
 
     //  console.log(JSON.stringify(params));
     const lastHeight = await getCachedApi('lastNotarizationHeight');
@@ -1284,6 +1292,10 @@ exports.submitAcceptedNotarization = async(params) => {
     } catch (error) {
         if(error?.message == "already known")
             console.log("Notarization already Submitted");
+        else
+        {
+            console.log(error?.message);
+        }
         //locknotorization = false;
         return { "result": { "txid": error } };
     }

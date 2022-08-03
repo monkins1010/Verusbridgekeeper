@@ -7,16 +7,19 @@ const VETH = "000b090bec6c9ff28586eb7ed24e77562f0c4667";
 
 const rootPath = function (pbaasFolder, pbaasRoot) {
     let confPath;
+
+    let homeDir = os.homedir();
+
     switch (os.platform()) {
         case 'darwin':
-            confPath = `${global.HOME}/Library/Application Support` + pbaasRoot.darwin + pbaasFolder.darwin; // + '/veth.conf';
+            confPath = homeDir + "/Library/Application Support" + pbaasRoot.darwin + pbaasFolder.darwin; // + '/veth.conf';
             break;
         case 'win32':
-            confPath = `${global.HOME}` + pbaasRoot.win32 + pbaasFolder.win32; // + '/veth.conf' ;
+            confPath = homeDir + pbaasRoot.win32 + pbaasFolder.win32; // + '/veth.conf' ;
             confPath = path.normalize(confPath);
             break;
         case 'linux':
-            confPath = `${global.HOME}` + pbaasRoot.linux + pbaasFolder.linux; // + '/veth.conf'; 
+            confPath = homeDir + pbaasRoot.linux + pbaasFolder.linux; // + '/veth.conf'; 
             break;
     }
     return confPath;
