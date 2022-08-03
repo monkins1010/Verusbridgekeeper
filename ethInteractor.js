@@ -2,10 +2,11 @@ const Web3 = require('web3');
 const bitGoUTXO = require('bitgo-utxo-lib');
 const confFile = require('./confFile.js')
 var constants = require('./constants');
-const { keccak256, addHexPrefix } = require('ethereumjs-util');
+const ethersUtils = require('ethers').utils
+const { addHexPrefix } = require('./utils');
 
 const util = require('./utils.js');
-const abi = require('web3-eth-abi');
+const abi = Web3.eth.abi
 const deserializer = require('./deserializer.js');
 
 const {initApiCache, setCachedApi, getCachedApi} = require('./cache/apicalls')
@@ -440,13 +441,13 @@ function createOutboundTransfers(transfers) {
 
 function createCrossChainExport(transfers, blockHeight, jsonready = false, poolavailable) {
     let cce = {};
-    let hash = keccak256(serializeCReserveTransfers(transfers));
+    let hash = ethersUtils.keccak256(serializeCReserveTransfers(transfers));
     // console.log("hash of transfers: ",hash.toString('Hex'));
     // console.log("Serialize: ",serializeCReserveTransfers(transfers).slice(1).toString('Hex'));
     cce.version = 1;
     cce.flags = 2;
     cce.sourcesystemid = ETHSystemID;
-    cce.hashtransfers = hash.toString('hex'); //hash the transfers
+    cce.hashtransfers = hash;
     cce.destinationsystemid = VerusSystemID;
 
     if (poolavailable) {
@@ -497,14 +498,14 @@ function createCrossChainExport(transfers, blockHeight, jsonready = false, poola
 
 function createCrossChainExportToETH(transfers, blockHeight, jsonready = false) { //TODO: This may not be nessassary for the import into vETH
     let cce = {};
-    let hash = keccak256(serializeCReserveTransfers(transfers));
+    let hash = ethersUtils.keccak256(serializeCReserveTransfers(transfers));
     //console.log("hash of transfers: ",hash.toString('Hex'));
 
     //console.log("Serialize: ",serializeCReserveTransfers(transfers).slice(1).toString('Hex'));
     cce.version = 1;
     cce.flags = 2;
     cce.sourcesystemid = util.convertVerusAddressToEthAddress(ETHSystemID);
-    cce.hashtransfers = "0x" + hash.toString('hex'); //hash the transfers
+    cce.hashtransfers = "0x" + hash;
     cce.destinationsystemid = util.convertVerusAddressToEthAddress(VerusSystemID);
 
     if (transfers[0].destcurrencyid.slice(0, 2) == "0x" && transfers[0].destcurrencyid.length == 42) {

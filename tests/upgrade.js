@@ -1,5 +1,5 @@
 const Web3 = require('web3');
-const { addHexPrefix } = require('ethereumjs-util');
+const { addHexPrefix } = require('../utils');
 const confFile = require('../confFile.js')
 const { randomBytes } = require('crypto')
 const upgradeContracts = (process.argv.indexOf('-contracts') > -1);

@@ -1,10 +1,11 @@
 const BigNumber = require('bignumber.js');
 const bitGoUTXO = require('bitgo-utxo-lib');
 const Long = require('long');
-const { addHexPrefix } = require('ethereumjs-util');
 
-
-
+const addHexPrefix = (string) => {
+  if (string.startsWith("0x")) return string;
+  else return "0x" + string;
+};
 
 const uint64ToVerusFloat = (number) => {
     var inter = (BigInt(number) / BigInt(100000000)) + '.';
@@ -320,3 +321,4 @@ exports.writeUInt256LE = writeUInt256LE;
 exports.writeUInt = writeUInt;
 exports.GetMMRProofIndex = GetMMRProofIndex;
 exports.convertToInt64 = convertToInt64;
+exports.addHexPrefix = addHexPrefix;

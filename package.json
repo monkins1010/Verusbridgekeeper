@@ -10,25 +10,15 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "axios": "^0.27.2",
-        "base58": "^2.0.1",
-        "big-number": "^2.0.0",
-        "bitgo-utxo-lib": "^1.8.0",
-        "ethereum-public-key-to-address": "0.0.5",
-        "ethereumjs-util": "^7.1.4",
-        "fix-path": "^4.0.0",
-        "ini": "^2.0.0",
-        "keccak256": "^1.0.2",
-        "long": "^5.2.0",
+        "axios": "0.25.0",
+        "bitgo-utxo-lib": "git+https://github.com/VerusCoin/bitgo-utxo-lib.git",
+        "ethers": "5.1.0",
+        "ini": "2.0.0",
+        "long": "5.2.0",
         "react-native-cache": "git+https://github.com/michaeltout/react-native-cache.git",
-        "read-bigint": "^0.1.6",
-        "rlp": "^2.2.6",
-        "sizeof": "^1.0.0",
-        "varint": "^6.0.0",
-        "web3": "^1.7.3",
-        "web3-eth-abi": "^1.7.1"
+        "web3": "1.7.3"
     },
     "devDependencies": {
-        "eslint": "^8.11.0"
+        "eslint": "8.11.0"
     }
 }
