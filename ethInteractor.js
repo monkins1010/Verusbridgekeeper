@@ -6,7 +6,7 @@ const ethersUtils = require('ethers').utils
 const { addHexPrefix } = require('./utils');
 
 const util = require('./utils.js');
-const abi = Web3.eth.abi
+const abi = new Web3().eth.abi
 const deserializer = require('./deserializer.js');
 
 const {initApiCache, setCachedApi, getCachedApi} = require('./cache/apicalls')
