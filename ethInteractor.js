@@ -43,9 +43,11 @@ let web3 = undefined;
 const verusBridgeMasterAbi = require('./abi/VerusBridgeMaster.json');
 const verusNotarizerStorageAbi = require('./abi/VerusNotarizerStorage.json');
 const verusUpgradeManagerAbi = require('./abi/VerusUpgradeManager.json');
+const verusBridgeStorageAbi = require('./abi/VerusBridgeStorage.json');
 
 var verusBridgeMaster = undefined;
 var verusNotorizerStorage = undefined;
+var verusBridgeStorage = undefined;
 var storageAddress = undefined;
 
 let transactioncount = 0;
@@ -88,6 +90,7 @@ exports.init = async ()=> {
     }
     verusBridgeMaster = new web3.eth.Contract(verusBridgeMasterAbi, contracts[constants.CONTRACT_TYPE.VerusBridgeMaster]);
     verusNotorizerStorage = new web3.eth.Contract(verusNotarizerStorageAbi, contracts[constants.CONTRACT_TYPE.VerusNotarizerStorage]);
+    verusBridgeStorage = new web3.eth.Contract(verusBridgeStorageAbi, contracts[constants.CONTRACT_TYPE.VerusBridgeStorage]);
     storageAddress = contracts[constants.CONTRACT_TYPE.VerusBridgeStorage];
     initApiCache();
     eventListener(contracts[constants.CONTRACT_TYPE.VerusNotarizer]);
@@ -363,7 +366,7 @@ function createComponents(transfers, blockHeight, previousExportHash, poolavaila
     //elIdx
     encodedOutput = Buffer.concat([encodedOutput, util.writeUInt(0, 16)]);
     //elVchObj
-    let exportKey = constants.VDXFDATAKEY[ticker]; // TODO: [EB-1] Hardcoded
+    let exportKey = constants.VDXFDATAKEY[ticker]; 
     let serializedVDXF = Buffer.from(exportKey, 'hex');
     let version = 1;
     serializedVDXF = Buffer.concat([serializedVDXF, util.writeUInt(version, 1)]);
@@ -488,14 +491,14 @@ function createCrossChainExport(transfers, blockHeight, jsonready = false, poola
     }
 
     //  console.log(JSON.stringify(cce.totalamounts));
-    cce.totalburned = [{ "currency": '0x0000000000000000000000000000000000000000', "amount": 0 }]; // TODO: serialiser doesnt like empty strings or non BIgints
+    cce.totalburned = [{ "currency": '0x0000000000000000000000000000000000000000', "amount": 0 }]; // serialiser doesnt like empty strings or non BIgints
     cce.rewardaddress = "iKjrTCwoPFRk44fAi2nYNbPG16ZUQjv1NB"; //  TODO: what should this be?
     cce.firstinput = 1;
     //console.log("cce", JSON.stringify(cce));
     return cce;
 }
 
-function createCrossChainExportToETH(transfers, blockHeight, jsonready = false) { //TODO: This may not be nessassary for the import into vETH
+function createCrossChainExportToETH(transfers, blockHeight, jsonready = false) {
     let cce = {};
     let hash = keccak256(serializeCReserveTransfers(transfers));
     //console.log("hash of transfers: ",hash.toString('Hex'));
@@ -508,9 +511,9 @@ function createCrossChainExportToETH(transfers, blockHeight, jsonready = false) 
     cce.destinationsystemid = util.convertVerusAddressToEthAddress(VerusSystemID);
 
     if (transfers[0].destcurrencyid.slice(0, 2) == "0x" && transfers[0].destcurrencyid.length == 42) {
-        cce.destinationcurrencyid = transfers[0].destcurrencyid; //TODO:VERIFY
+        cce.destinationcurrencyid = transfers[0].destcurrencyid; 
     } else {
-        cce.destinationcurrencyid = util.convertVerusAddressToEthAddress(transfers[0].destcurrencyid); //TODO:VERIFY
+        cce.destinationcurrencyid = util.convertVerusAddressToEthAddress(transfers[0].destcurrencyid); 
     }
 
     cce.sourceheightstart = 1;
@@ -546,7 +549,7 @@ function createCrossChainExportToETH(transfers, blockHeight, jsonready = false) 
         cce.totalfees.push({ "currency": key, "amount": (jsonready ? util.uint64ToVerusFloat(totalfees[key]) : totalfees[key]) });
     }
     //  console.log(JSON.stringify(cce.totalamounts));
-    cce.totalburned = [{ "currency": '0x0000000000000000000000000000000000000000', "amount": 0 }]; // TODO: serialiser doesnt like empty strings or non BIgints
+    cce.totalburned = [{ "currency": '0x0000000000000000000000000000000000000000', "amount": 0 }]; 
     cce.rewardaddress = { destinationtype: 9, destinationaddress: util.convertVerusAddressToEthAddress("iKjrTCwoPFRk44fAi2nYNbPG16ZUQjv1NB") }; //  TODO: what should this be
     cce.firstinput = 1;
     return cce;
@@ -764,10 +767,8 @@ exports.getBestProofRoot = async(input) => {
     let validindexes = [];
     let latestproofroot = {};
 
-    // TODO: let lastconfirmedproofroot = {};
     // new notarization scheme as of July 2022 adds lastconfirmed notarizations
 
-    // block = await web3.eth.getBlock("latest");
     try {
         if (input.length && proofroots) {
             for (let i = 0; i < proofroots.length; i++) {
@@ -778,7 +779,7 @@ exports.getBestProofRoot = async(input) => {
                 }
             }
         }
-        //TODO: reduce reorgs
+
         let latestProofHeight = proofroots[bestindex].height;
         let latestBlock = await web3.eth.getBlockNumber();
 
@@ -831,14 +832,29 @@ async function getLastProofRoot() {
 
         throw "web3.eth.getLastProofRoot error:"
     }
+    // the contract returns an abi.encoded bytes array for effiencey.
+    let decodedParams = abi.decodeParameters(
+        ['int16', 'int16', 'address', 'uint32', 'bytes32', 'bytes32', 'bytes32'],
+        lastProof);
+
+    const ETHLastProofRoot = {
+            "version": decodedParams[0],
+            "cprtype": decodedParams[1],
+            "systemid": decodedParams[2],
+            "rootheight": decodedParams[3],
+            "stateroot": decodedParams[4],
+            "blockhash": decodedParams[5],
+            "compactpower": decodedParams[6],
+        }
+
     let lastproofroot = {};
-    lastproofroot.version = parseInt(lastProof.version, 10);
-    lastproofroot.type = parseInt(lastProof.cprtype, 10);
+    lastproofroot.version = parseInt(ETHLastProofRoot.version, 10);
+    lastproofroot.type = parseInt(ETHLastProofRoot.cprtype, 10);
     lastproofroot.systemid = VerusSystemID;
-    lastproofroot.height = parseInt(lastProof.rootheight, 10);
-    lastproofroot.stateroot = util.removeHexLeader(lastProof.stateroot);
-    lastproofroot.blockhash = util.removeHexLeader(lastProof.blockhash);
-    lastproofroot.power = util.removeHexLeader(lastProof.compactpower);
+    lastproofroot.height = parseInt(ETHLastProofRoot.rootheight, 10);
+    lastproofroot.stateroot = util.removeHexLeader(ETHLastProofRoot.stateroot);
+    lastproofroot.blockhash = util.removeHexLeader(ETHLastProofRoot.blockhash);
+    lastproofroot.power = util.removeHexLeader(ETHLastProofRoot.compactpower);
     return lastproofroot;
 
 }
@@ -879,6 +895,7 @@ async function checkProofRoot(height, stateroot, blockhash, power) {
 exports.getNotarizationData = async() => {
 
     //create a CProofRoot from the block data
+    //To get real notarization this should be replaced with await verusNotorizerStorage.methods.getNotarization(height).call();
     let block;
     try {
         block = await web3.eth.getBlock("latest");
@@ -893,7 +910,7 @@ exports.getNotarizationData = async() => {
             "type": 4,
             "address": "iPveXFAHwModR7LrvgzxxHvdkKH84evYvT"
         };
-        Notarization.currencyid = ETHSystemID; // this should actually be the last VRSC or VRSCTEST notarization as a mirror, but first is ignored
+        Notarization.currencyid = ETHSystemID; 
         Notarization.notarizationheight = block.number;
         Notarization.currencystate = {};
         Notarization.currencystate[ETHSystemID] = {
@@ -1391,8 +1408,10 @@ exports.getLastImportFrom = async() => {
             block = await web3.eth.getBlock("latest");
             let lastimportheight = await verusBridgeMaster.methods.getLastimportHeight().call();
 
-            let lastimport = {};
+            let lastImportInfo =  await verusBridgeStorage.methods.lastImportInfo(lastimportheight).call();
 
+            let lastimport = {};
+            //TODO: get lastimport from contract.
             lastimport.version = 1;
             lastimport.flags = 68;
             lastimport.sourcesystemid = ETHSystemID;
@@ -1401,10 +1420,9 @@ exports.getLastImportFrom = async() => {
             lastimport.valuein = {};
             lastimport.tokensout = {};
             lastimport.numoutputs = {};
-            lastimport.hashtransfers = {};
-            lastimport.exporttxid = {};
-            lastimport.exporttxout = {};
-
+            lastimport.hashtransfers = lastImportInfo.hashOfTransfers;
+            lastimport.exporttxid = lastImportInfo.exporttxid;
+            lastimport.exporttxout = lastImportInfo.exporttxoutnum;
 
             let lastconfirmednotarization = {};
 
@@ -1457,11 +1475,11 @@ exports.getLastImportFrom = async() => {
 
             lastconfirmednotarization.lastconfirmedheight = 0;
             lastconfirmednotarization.lastconfirmed = 0;
-
+            
+            //TODO: get txid from evidence of notarization
             let lastconfirmedutxo = {
                 "txid": "16736c05a8a28201a3680a4cc0bb7f1d8ac2ca878c358bcde52501328722ebb1", // TODO: [EB-5] Confirm the UTXO to go here
-                "voutnum": 0
-            }
+                "voutnum": 0 }
 
             globallastimport = { "result": { lastimport, lastconfirmednotarization, lastconfirmedutxo } }
         }
