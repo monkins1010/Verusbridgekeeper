@@ -94,7 +94,7 @@ exports.init = async ()=> {
     verusBridgeStorage = new web3.eth.Contract(verusBridgeStorageAbi, contracts[constants.CONTRACT_TYPE.VerusBridgeStorage]);
     storageAddress = contracts[constants.CONTRACT_TYPE.VerusBridgeStorage];
 
-    GLOBAL_FIRST_BLOCK = await verusNotorizerStorage.methods.firstBlock().call();
+    GLOBAL_FIRST_BLOCK = 7457963; //TODO: Reinstate await verusNotorizerStorage.methods.firstBlock().call();
 
     initApiCache();
     eventListener(contracts[constants.CONTRACT_TYPE.VerusNotarizer]);
@@ -806,12 +806,12 @@ exports.getBestProofRoot = async(input) => {
         if (parseInt(GLOBAL_FIRST_BLOCK) <= (parseInt(latestBlock) - 60) )
         {
             lastconfirmedproofroot = await getProofRoot(parseInt(latestBlock) - 60);
-            lastconfirmedindex = parseInt(latestBlock) - 60;
+            lastconfirmedindex = 0 //parseInt(latestBlock) - 60; //TODO: Fix lastconfrimed logic
         }
         else
         {
             lastconfirmedproofroot = await getProofRoot(parseInt(GLOBAL_FIRST_BLOCK));
-            lastconfirmedindex = parseInt(GLOBAL_FIRST_BLOCK);
+            lastconfirmedindex = 0 // parseInt(GLOBAL_FIRST_BLOCK);//TODO: Fix lastconfrimed logic
         }
 
         if (logging) {
