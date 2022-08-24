@@ -94,7 +94,7 @@ exports.init = async ()=> {
     verusBridgeStorage = new web3.eth.Contract(verusBridgeStorageAbi, contracts[constants.CONTRACT_TYPE.VerusBridgeStorage]);
     storageAddress = contracts[constants.CONTRACT_TYPE.VerusBridgeStorage];
 
-    GLOBAL_FIRST_BLOCK = 7457963; //TODO: Reinstate await verusNotorizerStorage.methods.firstBlock().call();
+    GLOBAL_FIRST_BLOCK = await verusNotorizerStorage.methods.firstBlock().call();
 
     initApiCache();
     eventListener(contracts[constants.CONTRACT_TYPE.VerusNotarizer]);
@@ -800,25 +800,24 @@ exports.getBestProofRoot = async(input) => {
             latestproofroot = await getProofRoot(latestBlock - 2);
         }
                 
-        let lastconfirmedproofroot = null;
-        let lastconfirmedindex = null;
+        let laststableproofroot = null;
 
-        if (parseInt(GLOBAL_FIRST_BLOCK) <= (parseInt(latestBlock) - 60) )
+
+        if (parseInt(GLOBAL_FIRST_BLOCK) <= (parseInt(latestBlock) - 30) )
         {
-            lastconfirmedproofroot = await getProofRoot(parseInt(latestBlock) - 60);
-            lastconfirmedindex = 0 //parseInt(latestBlock) - 60; //TODO: Fix lastconfrimed logic
+            laststableproofroot = await getProofRoot(parseInt(latestBlock) - 30);
+
         }
         else
         {
-            lastconfirmedproofroot = await getProofRoot(parseInt(GLOBAL_FIRST_BLOCK));
-            lastconfirmedindex = 0 // parseInt(GLOBAL_FIRST_BLOCK);//TODO: Fix lastconfrimed logic
+            laststableproofroot = await getProofRoot(parseInt(GLOBAL_FIRST_BLOCK));
         }
 
         if (logging) {
-            console.log("getbestproofroot result:", { bestindex, validindexes, latestproofroot, lastconfirmedproofroot, lastconfirmedindex });
+            console.log("getbestproofroot result:", { bestindex, validindexes, latestproofroot, laststableproofroot });
         }
 
-        return { "result": { bestindex, validindexes, latestproofroot, lastconfirmedproofroot, lastconfirmedindex } };
+        return { "result": { bestindex, validindexes, latestproofroot, laststableproofroot} };
 
     } catch (error) {
         console.log("\x1b[41m%s\x1b[0m", "getBestProofRoot error:" + error);
