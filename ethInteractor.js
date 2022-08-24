@@ -49,6 +49,7 @@ var verusBridgeMaster = undefined;
 var verusNotorizerStorage = undefined;
 var verusBridgeStorage = undefined;
 var storageAddress = undefined;
+let GLOBAL_FIRST_BLOCK = undefined;
 
 let transactioncount = 0;
 
@@ -92,6 +93,9 @@ exports.init = async ()=> {
     verusNotorizerStorage = new web3.eth.Contract(verusNotarizerStorageAbi, contracts[constants.CONTRACT_TYPE.VerusNotarizerStorage]);
     verusBridgeStorage = new web3.eth.Contract(verusBridgeStorageAbi, contracts[constants.CONTRACT_TYPE.VerusBridgeStorage]);
     storageAddress = contracts[constants.CONTRACT_TYPE.VerusBridgeStorage];
+
+    GLOBAL_FIRST_BLOCK = await verusNotorizerStorage.methods.firstBlock().call();
+
     initApiCache();
     eventListener(contracts[constants.CONTRACT_TYPE.VerusNotarizer]);
 
@@ -773,9 +777,13 @@ exports.getBestProofRoot = async(input) => {
         if (input.length && proofroots) {
             for (let i = 0; i < proofroots.length; i++) {
                 // console.log(proofroots[i]);
-                if (await checkProofRoot(proofroots[i].height, proofroots[i].stateroot, proofroots[i].blockhash, BigInt(util.addBytesIndicator(proofroots[i].power)))) {
+                if (await checkProofRoot(proofroots[i].height, proofroots[i].stateroot, proofroots[i].blockhash, BigInt(util.addBytesIndicator(proofroots[i].power)))) 
+                {
                     validindexes.push(i);
-                    if (proofroots[bestindex].height < proofroots[i].height) bestindex = i;
+                    if (proofroots[bestindex].height < proofroots[i].height) 
+                    {
+                        bestindex = i;
+                    }
                 }
             }
         }
@@ -791,12 +799,26 @@ exports.getBestProofRoot = async(input) => {
         {
             latestproofroot = await getProofRoot(latestBlock - 2);
         }
-        
-        if (logging) {
-            console.log("getbestproofroot result:", { bestindex, validindexes, latestproofroot });
+                
+        let lastconfirmedproofroot = null;
+        let lastconfirmedindex = null;
+
+        if (parseInt(GLOBAL_FIRST_BLOCK) >= (parseInt(latestBlock) - 60) )
+        {
+            lastconfirmedproofroot = await getProofRoot(parseInt(latestBlock) - 60);
+            lastconfirmedindex = parseInt(latestBlock) - 60;
+        }
+        else
+        {
+            lastconfirmedproofroot = await getProofRoot(parseInt(GLOBAL_FIRST_BLOCK));
+            lastconfirmedindex = parseInt(GLOBAL_FIRST_BLOCK);
         }
 
-        return { "result": { bestindex, validindexes, latestproofroot } };
+        if (logging) {
+            console.log("getbestproofroot result:", { bestindex, validindexes, latestproofroot, lastconfirmedproofroot, lastconfirmedindex });
+        }
+
+        return { "result": { bestindex, validindexes, latestproofroot, lastconfirmedproofroot, lastconfirmedindex } };
 
     } catch (error) {
         console.log("\x1b[41m%s\x1b[0m", "getBestProofRoot error:" + error);
@@ -830,31 +852,38 @@ async function getLastProofRoot() {
         lastProof = await verusBridgeMaster.methods.getLastProofRoot().call();
     } catch (error) {
 
-        throw "web3.eth.getLastProofRoot error:"
+        throw "web3.eth.getLastProofRoot error: \n" + error.message;
     }
     // the contract returns an abi.encoded bytes array for effiencey.
-    let decodedParams = abi.decodeParameters(
-        ['int16', 'int16', 'address', 'uint32', 'bytes32', 'bytes32', 'bytes32'],
-        lastProof);
-
-    const ETHLastProofRoot = {
-            "version": decodedParams[0],
-            "cprtype": decodedParams[1],
-            "systemid": decodedParams[2],
-            "rootheight": decodedParams[3],
-            "stateroot": decodedParams[4],
-            "blockhash": decodedParams[5],
-            "compactpower": decodedParams[6],
-        }
-
+  let decodedParams = null;
     let lastproofroot = {};
-    lastproofroot.version = parseInt(ETHLastProofRoot.version, 10);
-    lastproofroot.type = parseInt(ETHLastProofRoot.cprtype, 10);
-    lastproofroot.systemid = VerusSystemID;
-    lastproofroot.height = parseInt(ETHLastProofRoot.rootheight, 10);
-    lastproofroot.stateroot = util.removeHexLeader(ETHLastProofRoot.stateroot);
-    lastproofroot.blockhash = util.removeHexLeader(ETHLastProofRoot.blockhash);
-    lastproofroot.power = util.removeHexLeader(ETHLastProofRoot.compactpower);
+    
+    if (lastProof.length >  130)
+    {
+        let decodePattern = ['int16', 'int16', 'address', 'uint32', 'bytes32', 'bytes32', 'bytes32']
+
+        decodedParams = abi.decodeParameters(decodePattern, "0x" + lastProof.slice(578));
+        let nodeinfo = await web3.eth.getWork();
+
+        const ETHLastProofRoot = {
+                "version": decodedParams[0],
+                "cprtype": decodedParams[1],
+                "systemid": decodedParams[2],
+                "rootheight": decodedParams[3],
+                "stateroot": decodedParams[4],
+                "blockhash": decodedParams[5],
+                "compactpower": decodedParams[6],
+            }
+
+        lastproofroot.version = parseInt(ETHLastProofRoot.version, 10);
+        lastproofroot.type = parseInt(ETHLastProofRoot.cprtype, 10);
+        lastproofroot.systemid = VerusSystemID;
+        lastproofroot.height = parseInt(ETHLastProofRoot.rootheight, 10);
+        lastproofroot.stateroot = util.removeHexLeader(ETHLastProofRoot.stateroot);
+        lastproofroot.blockhash = util.removeHexLeader(ETHLastProofRoot.blockhash);
+        lastproofroot.power = util.removeHexLeader(ETHLastProofRoot.compactpower);
+    }
+
     return lastproofroot;
 
 }
@@ -1217,7 +1246,7 @@ exports.submitAcceptedNotarization = async(params) => {
         return null;
     }
 
-
+    pBaasNotarization.hashnotarization = "0x0000000000000000000000000000000000000000000000000000000000000000";  // set blank as contract will set
     pBaasNotarization.flags = IsLaunchCleared(pBaasNotarization) | IsLaunchConfirmed(pBaasNotarization) | IsLaunchComplete(pBaasNotarization);
     //change all iaddresses to ethAddress and add 0x to all hex
     pBaasNotarization.proposer.destinationtype = pBaasNotarization.proposer.type;
@@ -1298,10 +1327,32 @@ exports.submitAcceptedNotarization = async(params) => {
 
         //  console.log("result from serializeCPBaaSNotarization:\n", (test4));
         var firstNonce = await web3.eth.getTransactionCount(account.address);
-        txhash = await verusBridgeMaster.methods.setLatestData(pBaasNotarization, vsVals, rsVals, ssVals, blockheights, notaryAddresses).call();
+
+        let data = abi.encodeParameter(
+            {
+                "data": {
+                    "_vs": 'uint8[]',
+                    "_rs": 'bytes32[]',
+                    "_ss": 'bytes32[]',
+                    "blockheights": "uint32[]",
+                    "notaryAddress": "address[]"
+                }
+            },
+            {
+                "_vs": vsVals,
+                "_rs": rsVals,
+                "_ss": ssVals,
+                "blockheights": blockheights,
+                "notaryAddress": notaryAddresses
+            }
+        );
+
+        data = "0x" + data.slice(66);  //remove first 32bytes from hex array.
+
+        txhash = await verusBridgeMaster.methods.setLatestData(pBaasNotarization, data).call();
         // console.log(JSON.stringify(txhash));
         if (transactioncount != firstNonce) {
-            txhash = await verusBridgeMaster.methods.setLatestData(pBaasNotarization, vsVals, rsVals, ssVals, blockheights, notaryAddresses).send({ from: account.address, gas: maxGas });
+            txhash = await verusBridgeMaster.methods.setLatestData(pBaasNotarization, data).send({ from: account.address, gas: maxGas });
             transactioncount = firstNonce;
         }
         return { "result": txhash };
@@ -1470,7 +1521,7 @@ exports.getLastImportFrom = async() => {
             lastconfirmednotarization.proofroots = [];
             lastconfirmednotarization.proofroots.push(latestProofRoot);
 
-            if (lastProof.version != 0)
+            if (lastProof.version && lastProof.version != 0)
                 lastconfirmednotarization.proofroots.push(lastProof);
 
             lastconfirmednotarization.lastconfirmedheight = 0;
