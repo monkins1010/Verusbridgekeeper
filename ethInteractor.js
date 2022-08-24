@@ -94,7 +94,7 @@ exports.init = async ()=> {
     verusBridgeStorage = new web3.eth.Contract(verusBridgeStorageAbi, contracts[constants.CONTRACT_TYPE.VerusBridgeStorage]);
     storageAddress = contracts[constants.CONTRACT_TYPE.VerusBridgeStorage];
 
-    GLOBAL_FIRST_BLOCK = await verusNotorizerStorage.methods.firstBlock().call();
+   // GLOBAL_FIRST_BLOCK = await verusNotorizerStorage.methods.firstBlock().call();
 
     initApiCache();
     eventListener(contracts[constants.CONTRACT_TYPE.VerusNotarizer]);
@@ -863,7 +863,6 @@ async function getLastProofRoot() {
         let decodePattern = ['int16', 'int16', 'address', 'uint32', 'bytes32', 'bytes32', 'bytes32']
 
         decodedParams = abi.decodeParameters(decodePattern, "0x" + lastProof.slice(578));
-        let nodeinfo = await web3.eth.getWork();
 
         const ETHLastProofRoot = {
                 "version": decodedParams[0],
