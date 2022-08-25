@@ -1233,7 +1233,7 @@ exports.submitAcceptedNotarization = async(params) => {
             return { "result": "0" };  
         } 
 
-        let lastNotarizationHeight = await verusBridgeMaster.methods.lastBlockHeight().call();
+        let lastNotarizationHeight = await verusNotorizerStorage.methods.lastReceivedBlockHeight().call();
         if (pBaasNotarization.notarizationheight <= lastNotarizationHeight) {
             setCachedApi(parseInt(lastNotarizationHeight), 'lastNotarizationHeight');
             return { "result": "0" };  
