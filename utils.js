@@ -2,9 +2,7 @@ const BigNumber = require('bignumber.js');
 const bitGoUTXO = require('bitgo-utxo-lib');
 const Long = require('long');
 const { addHexPrefix } = require('ethereumjs-util');
-
-
-
+var constants = require('./constants');
 
 const uint64ToVerusFloat = (number) => {
     var inter = (BigInt(number) / BigInt(100000000)) + '.';
@@ -152,6 +150,22 @@ const removeHexLeader = (hexString) => {
 
 const uint160ToVAddress = (number, version) => {
     return (bitGoUTXO.address.toBase58Check(Buffer.from(removeHexLeader(number), 'hex'), version));
+}
+
+const hexAddressToBase58 = (type, address) => {
+
+    let retval = {};
+    if ((parseInt(type & constants.ADDRESS_TYPE_MASK)) == constants.R_ADDRESS_TYPE) 
+    {
+        retval = uint160ToVAddress(address, constants.RADDRESS);
+    } 
+    else if ((parseInt(type & constants.ADDRESS_TYPE_MASK)) == constants.I_ADDRESS_TYPE) 
+    {
+        retval = uint160ToVAddress(address, constants.IADDRESS);
+    } 
+
+    return retval;
+
 }
 
 const writeUInt160LE = (uint160le) => {
@@ -315,6 +329,7 @@ exports.readVarInt = readVarInt;
 exports.writeCompactSize = writeCompactSize;
 exports.uint160ToVAddress = uint160ToVAddress;
 exports.ethAddressToVAddress = uint160ToVAddress;
+exports.hexAddressToBase58 = hexAddressToBase58;
 exports.writeUInt160LE = writeUInt160LE;
 exports.writeUInt256LE = writeUInt256LE;
 exports.writeUInt = writeUInt;

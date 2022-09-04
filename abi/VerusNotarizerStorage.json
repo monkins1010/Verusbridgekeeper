@@ -13,9 +13,9 @@
   {
     "inputs": [
       {
-        "internalType": "uint32",
+        "internalType": "bytes32",
         "name": "",
-        "type": "uint32"
+        "type": "bytes32"
       }
     ],
     "name": "PBaaSNotarization",
@@ -197,9 +197,21 @@
         "type": "uint32"
       },
       {
-        "internalType": "bytes32",
-        "name": "hashnotarization",
-        "type": "bytes32"
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "hash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "n",
+            "type": "uint32"
+          }
+        ],
+        "internalType": "struct VerusObjectsNotarization.CUTXORef",
+        "name": "txid",
+        "type": "tuple"
       }
     ],
     "stateMutability": "view",
@@ -208,30 +220,44 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "claimableFees",
-    "outputs": [
-      {
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "firstBlock",
+    "name": "bestForks",
     "outputs": [
       {
+        "internalType": "bytes32",
+        "name": "hashOfNotarization",
+        "type": "bytes32"
+      },
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "hash",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint32",
+            "name": "n",
+            "type": "uint32"
+          }
+        ],
+        "internalType": "struct VerusObjectsNotarization.CUTXORef",
+        "name": "txid",
+        "type": "tuple"
+      },
+      {
         "internalType": "uint32",
-        "name": "",
+        "name": "height",
         "type": "uint32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "stateRoot",
+        "type": "bytes32"
       }
     ],
     "stateMutability": "view",
@@ -239,25 +265,12 @@
   },
   {
     "inputs": [],
-    "name": "lastAcceptedBlockHeight",
+    "name": "lastNotarizationTxid",
     "outputs": [
       {
-        "internalType": "uint32",
+        "internalType": "bytes32",
         "name": "",
-        "type": "uint32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "lastReceivedBlockHeight",
-    "outputs": [
-      {
-        "internalType": "uint32",
-        "name": "",
-        "type": "uint32"
+        "type": "bytes32"
       }
     ],
     "stateMutability": "view",
@@ -304,25 +317,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint32",
-        "name": "",
-        "type": "uint32"
-      }
-    ],
-    "name": "verusStateRoot",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address[12]",
         "name": "contracts",
         "type": "address[12]"
@@ -361,9 +355,9 @@
   {
     "inputs": [
       {
-        "internalType": "uint32",
-        "name": "height",
-        "type": "uint32"
+        "internalType": "bytes32",
+        "name": "txid",
+        "type": "bytes32"
       }
     ],
     "name": "getNotarization",
@@ -730,9 +724,21 @@
             "type": "tuple[]"
           },
           {
-            "internalType": "bytes32",
-            "name": "hashnotarization",
-            "type": "bytes32"
+            "components": [
+              {
+                "internalType": "bytes32",
+                "name": "hash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "uint32",
+                "name": "n",
+                "type": "uint32"
+              }
+            ],
+            "internalType": "struct VerusObjectsNotarization.CUTXORef",
+            "name": "txid",
+            "type": "tuple"
           }
         ],
         "internalType": "struct VerusObjectsNotarization.CPBaaSNotarization",
@@ -1107,14 +1113,31 @@
             "type": "tuple[]"
           },
           {
-            "internalType": "bytes32",
-            "name": "hashnotarization",
-            "type": "bytes32"
+            "components": [
+              {
+                "internalType": "bytes32",
+                "name": "hash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "uint32",
+                "name": "n",
+                "type": "uint32"
+              }
+            ],
+            "internalType": "struct VerusObjectsNotarization.CUTXORef",
+            "name": "txid",
+            "type": "tuple"
           }
         ],
         "internalType": "struct VerusObjectsNotarization.CPBaaSNotarization",
         "name": "_notarization",
         "type": "tuple"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "hashOfNotarization",
+        "type": "bytes32"
       }
     ],
     "name": "setNotarization",
@@ -1125,19 +1148,121 @@
   {
     "inputs": [
       {
-        "internalType": "uint32",
-        "name": "height",
-        "type": "uint32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "stateroot",
-        "type": "bytes32"
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "hashOfNotarization",
+            "type": "bytes32"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bytes32",
+                "name": "hash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "uint32",
+                "name": "n",
+                "type": "uint32"
+              }
+            ],
+            "internalType": "struct VerusObjectsNotarization.CUTXORef",
+            "name": "txid",
+            "type": "tuple"
+          },
+          {
+            "internalType": "uint32",
+            "name": "height",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "stateRoot",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct VerusObjectsNotarization.NotarizationForks",
+        "name": "proof",
+        "type": "tuple"
       }
     ],
-    "name": "setVerusStateRoot",
+    "name": "setbestFork",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "index",
+        "type": "uint256"
+      }
+    ],
+    "name": "getbestFork",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bytes32",
+            "name": "hashOfNotarization",
+            "type": "bytes32"
+          },
+          {
+            "components": [
+              {
+                "internalType": "bytes32",
+                "name": "hash",
+                "type": "bytes32"
+              },
+              {
+                "internalType": "uint32",
+                "name": "n",
+                "type": "uint32"
+              }
+            ],
+            "internalType": "struct VerusObjectsNotarization.CUTXORef",
+            "name": "txid",
+            "type": "tuple"
+          },
+          {
+            "internalType": "uint32",
+            "name": "height",
+            "type": "uint32"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "stateRoot",
+            "type": "bytes32"
+          }
+        ],
+        "internalType": "struct VerusObjectsNotarization.NotarizationForks",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "deletebestFork",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "bestForkLength",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1151,30 +1276,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_address",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "fees",
-        "type": "uint256"
-      }
-    ],
-    "name": "setClaimedFees",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
     "type": "function"
   }
 ]
