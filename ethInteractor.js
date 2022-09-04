@@ -942,8 +942,7 @@ exports.getNotarizationData = async() => {
 
             for (let i = 0; i < forksData.length; i++)
             {
-                let lasttxid = await verusNotorizerStorage.methods.lastNotarizationTxid().call();
-                let returnedNotarization = await verusNotorizerStorage.methods.PBaaSNotarization(forksData[i].txid.hash).call();
+                let returnedNotarization = await verusNotorizerStorage.methods.getNotarization(forksData[i].txid.hash).call();
                 let tempNotarization = notarizationFuncs.createNotarization(returnedNotarization);
                 notarizations.push(tempNotarization);
             }
@@ -1388,7 +1387,7 @@ exports.getLastImportFrom = async() => {
         if (globaltimedelta + globalgetlastimport < timenow) {
             globalgetlastimport = timenow;
             block = await web3.eth.getBlock("latest");
-            let lastimportheight = await verusBridgeMaster.methods.getLastimportHeight().call();
+            let lastimportheight = await verusBridgeStorage.methods.lastTxImportHeight().call();
 
             let lastImportInfo =  await verusBridgeStorage.methods.lastImportInfo(lastimportheight).call();
 

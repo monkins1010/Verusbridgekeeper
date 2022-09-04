@@ -1,8 +1,10 @@
 const BigNumber = require('bignumber.js');
 const bitGoUTXO = require('bitgo-utxo-lib');
 const Long = require('long');
-const { addHexPrefix } = require('ethereumjs-util');
+const { addHexPrefix} = require('ethereumjs-util');
 var constants = require('./constants');
+const Web3 = require('web3');
+
 
 const uint64ToVerusFloat = (number) => {
     var inter = (BigInt(number) / BigInt(100000000)) + '.';
@@ -149,6 +151,12 @@ const removeHexLeader = (hexString) => {
 }
 
 const uint160ToVAddress = (number, version) => {
+
+    if(number.slice(0,2) != '0x' && (number.length != 40)) 
+    {
+        let temphex = Web3.utils.toHex(number);
+        return (bitGoUTXO.address.toBase58Check(Buffer.from(removeHexLeader(temphex), 'hex'), version));
+    }
     return (bitGoUTXO.address.toBase58Check(Buffer.from(removeHexLeader(number), 'hex'), version));
 }
 

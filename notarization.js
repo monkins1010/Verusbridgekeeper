@@ -86,9 +86,19 @@ const completeCurrencyStateToVerus = function (currencyState) {
 
 const createNotarization = function (input) {
 
-    let notarization = {};
+    let tempnotarization = {};
 
-    notarization = notarizationFlags(input);
+    notKEys = Object.keys(input);
+
+    for (const vals of notKEys)
+    {
+        if(isNaN(vals))
+        {
+        tempnotarization[vals] = input[vals];
+        }
+    }
+
+    let notarization = notarizationFlags(tempnotarization);
 
     notarization.proposer.type = notarization.proposer.destinationtype;
 
