@@ -363,10 +363,10 @@ const createNotarization = function (input) {
 
     notarization.currencyid = util.uint160ToVAddress(notarization.currencyid, constants.IADDRESS);
     notarization.currencystate = completeCurrencyStateToVerus(notarization.currencystate);
-    notarization.hashprevnotarizationobject = notarization.hashprevnotarization.slice(3);
+    notarization.hashprevnotarizationobject = notarization.hashprevnotarization.slice(2);
     delete notarization.hashprevnotarization;
 
-    notarization.prevnotarizationtxid = notarization.prevnotarization.hash.slice(3);
+    notarization.prevnotarizationtxid = notarization.prevnotarization.hash.slice(2);
     notarization.prevnotarizationout = notarization.prevnotarization.n;
     delete notarization.prevnotarization;
 
@@ -382,9 +382,9 @@ const createNotarization = function (input) {
     for (let i = 0; i < notarization.proofroots.length; i++)
     {
         notarization.proofroots[i].systemid = util.uint160ToVAddress(notarization.proofroots[i].systemid, constants.IADDRESS);
-        notarization.proofroots[i].stateroot = notarization.proofroots[i].stateroot.slice(3);
-        notarization.proofroots[i].blockhash = notarization.proofroots[i].blockhash.slice(3);
-        notarization.proofroots[i].compactpower = notarization.proofroots[i].compactpower.slice(3);
+        notarization.proofroots[i].stateroot = notarization.proofroots[i].stateroot.slice(2);
+        notarization.proofroots[i].blockhash = notarization.proofroots[i].blockhash.slice(2);
+        notarization.proofroots[i].compactpower = notarization.proofroots[i].compactpower.slice(2);
         notarization.proofroots[i].type = notarization.proofroots[i].cprtype;
         notarization.proofroots[i].height = notarization.proofroots[i].rootheight;
         delete notarization.proofroots[i].cprtype;

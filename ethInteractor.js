@@ -944,9 +944,8 @@ exports.getNotarizationData = async() => {
             {
                 let returnedNotarization = await verusNotorizerStorage.methods.getNotarization(forksData[i].txid.hash).call();
                 let tempNotarization = notarizationFuncs.createNotarization(returnedNotarization);
-                notarizations.push(tempNotarization);
+                Notarization.notarizations.push({index: i, txid: util.removeHexLeader(forksData[i].txid.hash), vout: forksData[i].txid.n, notarization: tempNotarization});
             }
-
         }
         
         Notarization.version = 1;
@@ -1164,8 +1163,8 @@ exports.submitAcceptedNotarization = async(params) => {
         } 
 
         let lastNotarizationTxid = await verusNotorizerStorage.methods.lastNotarizationTxid().call();
-        if (txidObj.txid == lastNotarizationTxid.slice(3)) {
-            setCachedApi(lastNotarizationTxid.slice(3), 'lastNotarizationTxid');
+        if (txidObj.txid == lastNotarizationTxid.slice(2)) {
+            setCachedApi(lastNotarizationTxid.slice(2), 'lastNotarizationTxid');
             return { "result": "0" };  
         } 
 

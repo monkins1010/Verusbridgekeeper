@@ -27,8 +27,19 @@ const notarizationFlags = function (notarization) {
     return notarization;
 }
 
-const completeCurrencyStateToVerus = function (currencyState) {
+const completeCurrencyStateToVerus = function (input) {
 
+    let currencyState = {};
+
+    notKEys = Object.keys(input);
+
+    for (const vals of notKEys)
+    {
+        if(isNaN(vals))
+        {
+            currencyState[vals] = input[vals];
+        }
+    }
 
     currencyState.currencyid = util.uint160ToVAddress(currencyState.currencyid, constants.IADDRESS);
 
@@ -100,42 +111,47 @@ const createNotarization = function (input) {
 
     let notarization = notarizationFlags(tempnotarization);
 
-    notarization.proposer.type = notarization.proposer.destinationtype;
+    let tempPropser = {};
+    tempPropser.type = notarization.proposer.destinationtype;
+    tempPropser.address = util.hexAddressToBase58(notarization.proposer.destinationtype, notarization.proposer.destinationaddress);
 
-    notarization.proposer.address = util.hexAddressToBase58(notarization.proposer.type, notarization.proposer.destinationaddress);
-    delete notarization.proposer.destinationtype;
-    delete notarization.proposer.destinationaddress;
+    notarization.proposer = tempPropser;
 
     notarization.currencyid = util.uint160ToVAddress(notarization.currencyid, constants.IADDRESS);
     notarization.currencystate = completeCurrencyStateToVerus(notarization.currencystate);
-    notarization.hashprevnotarizationobject = notarization.hashprevnotarization.slice(3);
+    notarization.hashprevnotarizationobject = notarization.hashprevnotarization.slice(2);
     delete notarization.hashprevnotarization;
 
-    notarization.prevnotarizationtxid = notarization.prevnotarization.hash.slice(3);
+    notarization.prevnotarizationtxid = notarization.prevnotarization.hash.slice(2);
     notarization.prevnotarizationout = notarization.prevnotarization.n;
     delete notarization.prevnotarization;
 
-    let tempcurr = {}
+    let tempcurr = []
     for (let i = 0; i < notarization.currencystates.length; i++)
     {
         let tempcurrname = util.uint160ToVAddress(notarization.currencystates[i].currencyid, constants.IADDRESS);
-        tempcurr[tempcurrname] = {}
-        tempcurr[tempcurrname] = completeCurrencyStateToVerus(notarization.currencystates[i].currencystate);
+        let currencyItem = {};
+        currencyItem[tempcurrname] = completeCurrencyStateToVerus(notarization.currencystates[i].currencystate);
+        tempcurr.push(currencyItem);
     }
     notarization.currencystates = tempcurr;
 
+    let tempProofRoots = [];
+
     for (let i = 0; i < notarization.proofroots.length; i++)
     {
-        notarization.proofroots[i].systemid = util.uint160ToVAddress(notarization.proofroots[i].systemid, constants.IADDRESS);
-        notarization.proofroots[i].stateroot = notarization.proofroots[i].stateroot.slice(3);
-        notarization.proofroots[i].blockhash = notarization.proofroots[i].blockhash.slice(3);
-        notarization.proofroots[i].compactpower = notarization.proofroots[i].compactpower.slice(3);
-        notarization.proofroots[i].type = notarization.proofroots[i].cprtype;
-        notarization.proofroots[i].height = notarization.proofroots[i].rootheight;
-        delete notarization.proofroots[i].cprtype;
-        delete notarization.proofroots[i].rootheight;
+        let tempProofRoot = {};
+        tempProofRoot.version = notarization.proofroots[i].version;
+        tempProofRoot.systemid = util.uint160ToVAddress(notarization.proofroots[i].systemid, constants.IADDRESS);
+        tempProofRoot.stateroot = notarization.proofroots[i].stateroot.slice(2);
+        tempProofRoot.blockhash = notarization.proofroots[i].blockhash.slice(2);
+        tempProofRoot.power = notarization.proofroots[i].compactpower.slice(2);
+        tempProofRoot.type = notarization.proofroots[i].cprtype;
+        tempProofRoot.height = notarization.proofroots[i].rootheight;
+        tempProofRoots.push(tempProofRoot);
 
     }
+    notarization.proofroots = tempProofRoots;
 
     return notarization;
 
