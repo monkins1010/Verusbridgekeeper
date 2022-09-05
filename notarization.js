@@ -24,6 +24,13 @@ const notarizationFlags = function (notarization) {
         notarization.launchcomplete = false;
     }
 
+    if (parseInt(notarization.flags & constants.FLAG_ACCEPTED_MIRROR) == constants.FLAG_ACCEPTED_MIRROR) {
+        notarization.ismirror = true;
+    }
+    else {
+        notarization.ismirror = false;
+    }
+
     return notarization;
 }
 

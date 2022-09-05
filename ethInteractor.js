@@ -13,6 +13,7 @@ const {initApiCache, setCachedApi, getCachedApi} = require('./cache/apicalls')
 
 const ticker = process.argv.indexOf('-production') > -1 ? "VRSC" : "VRSCTEST";
 const logging = (process.argv.indexOf('-log') > -1);
+const debug = (process.argv.indexOf('-debug') > -1);
 let settings = undefined;
 const verusBridgeStartBlock = 1;
 
@@ -949,6 +950,12 @@ exports.getNotarizationData = async() => {
         }
         
         Notarization.version = 1;
+
+        if (debug)
+        {
+            console.log(JSON.stringify(Notarization.notarizations, null, 2))
+            console.log(JSON.stringify(forksData, null, 2))
+        }
         
         return { "result": Notarization };
         
@@ -1149,7 +1156,11 @@ function IsLaunchComplete(pBaasNotarization) {
 
 exports.submitAcceptedNotarization = async(params) => {
 
-    
+    if (debug)
+    {
+        console.log(params[0]);
+        console.log(JSON.stringify(params[1], null, 2));
+    }
     let pBaasNotarization = params[0];
     let signatures = params[1].evidence.chainobjects[0].value.signatures; 
     let txidObj = params[1].output; 
@@ -1385,13 +1396,14 @@ exports.getLastImportFrom = async() => {
         var timenow = d.getTime();
         if (globaltimedelta + globalgetlastimport < timenow) {
             globalgetlastimport = timenow;
+
             block = await web3.eth.getBlock("latest");
             let lastimportheight = await verusBridgeStorage.methods.lastTxImportHeight().call();
 
             let lastImportInfo =  await verusBridgeStorage.methods.lastImportInfo(lastimportheight).call();
 
             let lastimport = {};
-            //TODO: get lastimport from contract.
+
             lastimport.version = 1;
             lastimport.flags = 68;
             lastimport.sourcesystemid = ETHSystemID;
@@ -1404,69 +1416,28 @@ exports.getLastImportFrom = async() => {
             lastimport.exporttxid = lastImportInfo.exporttxid;
             lastimport.exporttxout = lastImportInfo.exporttxoutnum;
 
+            let forksData = {};
             let lastconfirmednotarization = {};
+            let lastconfirmedutxo = {};
+            try
+            {
+                forksData = await verusNotorizerStorage.methods.bestForks(0).call();
+                let returnedNotarization = await verusNotorizerStorage.methods.getNotarization(forksData.txid.hash).call();
 
-            lastconfirmednotarization.version = 1;
+                lastconfirmednotarization = notarizationFuncs.createNotarization(returnedNotarization);
 
-            //possibly check the contract exists?
-            lastconfirmednotarization.launchconfirmed = true;
-            lastconfirmednotarization.launchcomplete = true;
-            lastconfirmednotarization.ismirror = true;
-
-            //proposer should be set to something else this is just sample data
-            lastconfirmednotarization.proposer = {
-                "type": 4,
-                "address": "iPveXFAHwModR7LrvgzxxHvdkKH84evYvT" //TODO: [EB-6] Confirm the proposer address
-            };
-
-            lastconfirmednotarization.currencyid = ETHSystemID;
-            lastconfirmednotarization.notarizationheight = block.number;
-            lastconfirmednotarization.currencystate = {
-                "flags": 0,
-                "version": 1,
-                "currencyid": ETHSystemID,
-                "launchcurrencies": [],
-                "initialsupply": 0.00000000,
-                "emitted": 0.00000000,
-                "supply": 0.00000000,
-                "currencies": {},
-                "primarycurrencyfees": 0.00000000,
-                "primarycurrencyconversionfees": 0.00000000,
-                "primarycurrencyout": 0.00000000,
-                "preconvertedout": 0.00000000
-            };
-            lastconfirmednotarization.currencystates = [];
-            lastconfirmednotarization.prevnotarizationtxid = "0";
-            lastconfirmednotarization.prevnotarizationout = 0;
-            lastconfirmednotarization.prevheight = 0;
-            let latestProofRoot = await getProofRoot();
-
-            let lastProof = await getLastProofRoot();
-
-
-            if (logging)
-                console.log("latestProofRoot / lastProof:\n", latestProofRoot, lastProof);
-
-            lastconfirmednotarization.proofroots = [];
-            lastconfirmednotarization.proofroots.push(latestProofRoot);
-
-            if (lastProof.version && lastProof.version != 0)
-                lastconfirmednotarization.proofroots.push(lastProof);
-
-            lastconfirmednotarization.lastconfirmedheight = 0;
-            lastconfirmednotarization.lastconfirmed = 0;
-            
-            //TODO: get txid from evidence of notarization
-            let lastconfirmedutxo = {
-                "txid": "16736c05a8a28201a3680a4cc0bb7f1d8ac2ca878c358bcde52501328722ebb1", // TODO: [EB-5] Confirm the UTXO to go here
-                "voutnum": 0 }
-
+                lastconfirmedutxo = {
+                    txid: util.removeHexLeader(forksData.txid.hash),
+                    voutnum: forksData.txid.n }
+            } catch (e) {
+                console.log("\x1b[41m%s\x1b[0m", "No Notarizations recieved yet");
+            }
             globallastimport = { "result": { lastimport, lastconfirmednotarization, lastconfirmedutxo } }
         }
 
         return globallastimport;
     } catch (error) {
-        console.log("\x1b[41m%s\x1b[0m", "web3.eth.getBlock error:" + error);
+        console.log("\x1b[41m%s\x1b[0m", "getLastImportFrom:" + error);
         return { "result": { "error": true, "message": error } };
     }
 
