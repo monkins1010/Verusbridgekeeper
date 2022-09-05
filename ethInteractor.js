@@ -1163,8 +1163,8 @@ exports.submitAcceptedNotarization = async(params) => {
         } 
 
         let lastNotarizationTxid = await verusNotorizerStorage.methods.lastNotarizationTxid().call();
-        if (txidObj.txid == lastNotarizationTxid.slice(2)) {
-            setCachedApi(lastNotarizationTxid.slice(2), 'lastNotarizationTxid');
+        if (txidObj.txid == util.removeHexLeader(lastNotarizationTxid)) {
+            setCachedApi(util.removeHexLeader(lastNotarizationTxid), 'lastNotarizationTxid');
             return { "result": "0" };  
         } 
 
