@@ -28,10 +28,10 @@ let globalgetcurrency = {};
 let globallastimport = {};
 let globalsubmitimports = { "transactionHash": "" };
 
-let globaltimedelta = 60000; //10s
-let globallastinfo = d.getTime() - globaltimedelta;
-let globallastcurrency = d.getTime() - globaltimedelta;
-let globalgetlastimport = d.getTime() - globaltimedelta;
+let globaltimedelta = 60000; //60s
+let globallastinfo = d.valueOf() - globaltimedelta;
+let globallastcurrency = d.valueOf() - globaltimedelta;
+let globalgetlastimport = d.valueOf() - globaltimedelta;
 
 const IAddress = 102;
 const RAddressBaseConst = 60;
@@ -112,7 +112,7 @@ async function eventListener(notarizerAddress) {
         },
         address: notarizerAddress,
         topics: [
-            '0xc9736e50581107bfa480a96311c69439859109d190da814a525c46e2b3c567ad'
+            '0x8d1d9676a2c636da682623d5ab7a7e6e9b5637dc940873176573d7fe68b96680'
         ]
     };
 
@@ -120,10 +120,10 @@ async function eventListener(notarizerAddress) {
         if (!error) console.log('got result');
         else console.log(error);
     }).on("data", function(log){
-        console.log('Got new Notarization');
+        console.log('***** EVENT: Got new Notarization**********');
       //  setCachedApi(log?.blockNumber, 'lastNotarizationHeight');
     }).on("changed", function(log){
-        console.log('changed');
+        console.log('***** EVENT: Got new Notarization**********');
     });
 }
 
@@ -299,7 +299,7 @@ function serializeEthFullProof(ethProof) {
     let balanceBuffer = Buffer.alloc(8);
     let balancehex = util.removeHexLeader(web3.utils.numberToHex(ethProof.balance));
     let isBigBalance = balancehex.length > 16 || balancehex === "ffffffffffffffff";
-
+    //TODO: remove 
     if (isBigBalance) {
         balanceBuffer = Buffer.from("ffffffffffffffff", 'hex')
     } else {
@@ -567,7 +567,7 @@ exports.getInfo = async() => {
     try {
 
         var d = new Date();
-        var timenow = d.getTime();
+        var timenow = d.valueOf();
         
         if (globaltimedelta + globallastinfo < timenow) {
             globallastinfo = timenow;
@@ -602,7 +602,7 @@ exports.getCurrency = async(input) => {
         let currency = input[0];
         //convert i address to an eth address
         var d = new Date();
-        var timenow = d.getTime();
+        var timenow = d.valueOf();
 
         if (globaltimedelta + globallastcurrency < timenow) {
             globallastcurrency = timenow;
@@ -772,6 +772,14 @@ exports.getBestProofRoot = async(input) => {
     let latestproofroot = {};
 
     // new notarization scheme as of July 2022 adds lastconfirmed notarizations
+   
+    const lastinput = await getCachedApi('lastgetBestProofinput');
+
+    if (input == lastinput ) {
+        return await getCachedApi('lastgetBestProofRoot'); 
+    } 
+
+    await setCachedApi(input, 'lastgetBestProofinput');
 
     try {
         if (input.length && proofroots) {
@@ -809,7 +817,7 @@ exports.getBestProofRoot = async(input) => {
         if (logging) {
             console.log("getbestproofroot result:", { bestindex, validindexes, latestproofroot, laststableproofroot });
         }
-
+        setCachedApi({ "result": { bestindex, validindexes, latestproofroot, laststableproofroot} }, 'lastgetBestProofRoot');
         return { "result": { bestindex, validindexes, latestproofroot, laststableproofroot} };
 
     } catch (error) {
@@ -916,12 +924,22 @@ exports.getNotarizationData = async() => {
 
     let Notarization = {};
 
+    var d = new Date();
+    var timenow = d.valueOf();
+
+    const lastTime = await getCachedApi('lastgetNotarizationDatatime');
+
+        if (lastTime && (lastTime + globaltimedelta) < timenow ) {
+            return await getCachedApi('lastgetNotarizationData'); 
+        } 
+
+        setCachedApi(timenow, 'lastgetNotarizationDatatime');
+
     try {
        let forksLength = await verusNotorizerStorage.methods.bestForkLength().call();
        
        let forksData = [];
        let forks =[];
-       let notarizations = [];
        
        for (let i = 0; i < parseInt(forksLength); i++)
        {
@@ -956,6 +974,8 @@ exports.getNotarizationData = async() => {
             console.log(JSON.stringify(Notarization.notarizations, null, 2))
             console.log(JSON.stringify(forksData, null, 2))
         }
+
+        setCachedApi({ "result": Notarization }, 'lastgetNotarizationData');
         
         return { "result": Notarization };
         
@@ -1173,11 +1193,10 @@ exports.submitAcceptedNotarization = async(params) => {
             return { "result": "0" };  
         } 
 
-        let lastNotarizationTxid = await verusNotorizerStorage.methods.lastNotarizationTxid().call();
-        if (txidObj.txid == util.removeHexLeader(lastNotarizationTxid)) {
-            setCachedApi(util.removeHexLeader(lastNotarizationTxid), 'lastNotarizationTxid');
+        if (txidObj.txid == lastTxid) {
             return { "result": "0" };  
         } 
+        setCachedApi(txidObj, 'lastNotarizationTxid');
 
     } catch (error) {
         console.log("submitAcceptedNotarization Error:\n", error);
@@ -1199,8 +1218,8 @@ exports.submitAcceptedNotarization = async(params) => {
     pBaasNotarization.prevnotarization.n = pBaasNotarization.prevnotarizationout;
     delete pBaasNotarization.prevnotarizationout;
     delete pBaasNotarization.prevnotarizationtxid;
-    pBaasNotarization.hashprevnotarization = addHexPrefix(pBaasNotarization.hashprevnotarizationobject);
-    delete pBaasNotarization.hashprevnotarizationobject;
+    pBaasNotarization.hashprevnotarization = addHexPrefix(pBaasNotarization.hashprevcrossnotarization);
+    delete pBaasNotarization.hashprevcrossnotarization;
 
     // complete currencystate
     //loop through currencystates and update the addresses
@@ -1426,9 +1445,13 @@ exports.getLastImportFrom = async() => {
 
                 lastconfirmednotarization = notarizationFuncs.createNotarization(returnedNotarization);
 
-                lastconfirmedutxo = {
-                    txid: util.removeHexLeader(forksData.txid.hash),
-                    voutnum: forksData.txid.n }
+                lastconfirmedutxo = { txid: util.removeHexLeader(forksData.txid.hash),voutnum: forksData.txid.n }
+
+                let gasPrice = await web3.eth.getGasPrice();
+                //lastconfirmednotarization.currencystate.weights = [gasPrice, 0, 0];
+                if(logging)
+                    console.log("GAS PRICE:", gasPrice)
+
             } catch (e) {
                 console.log("\x1b[41m%s\x1b[0m", "No Notarizations recieved yet");
             }

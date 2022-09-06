@@ -126,7 +126,7 @@ const createNotarization = function (input) {
 
     notarization.currencyid = util.uint160ToVAddress(notarization.currencyid, constants.IADDRESS);
     notarization.currencystate = completeCurrencyStateToVerus(notarization.currencystate);
-    notarization.hashprevnotarizationobject = util.removeHexLeader(notarization.hashprevnotarization);
+    notarization.hashprevcrossnotarization = util.removeHexLeader(notarization.hashprevnotarization);
     delete notarization.hashprevnotarization;
 
     notarization.prevnotarizationtxid = util.removeHexLeader(notarization.prevnotarization.hash);
