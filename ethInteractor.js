@@ -1196,7 +1196,7 @@ exports.submitAcceptedNotarization = async(params) => {
         if (txidObj.txid == lastTxid) {
             return { "result": "0" };  
         } 
-        setCachedApi(txidObj, 'lastNotarizationTxid');
+        
 
     } catch (error) {
         console.log("submitAcceptedNotarization Error:\n", error);
@@ -1314,6 +1314,8 @@ exports.submitAcceptedNotarization = async(params) => {
             txhash = await verusBridgeMaster.methods.setLatestData(pBaasNotarization, data).send({ from: account.address, gas: maxGas });
             transactioncount = firstNonce;
         }
+
+        setCachedApi(txidObj, 'lastNotarizationTxid');
         return { "result": txhash };
 
     } catch (error) {
