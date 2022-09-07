@@ -17,6 +17,7 @@ module.exports = Object.freeze({
     FLAG_BLOCKONE_NOTARIZATION : 0x40,  // block 1 notarizations are auto-finalized, the blockchain itself will be worthless if it is wrong
     FLAG_SAME_CHAIN : 0x80,             // set if all currency information is verifiable on this chain
     FLAG_LAUNCH_COMPLETE : 0x100,        // set if all currency information is verifiable on this chain
+    FLAG_FRACTIONAL : 1,
     DEST_FULLID : 5,
     DEST_REGISTERCURRENCY : 6,
     UINT160_LENGTH: 20,
@@ -33,7 +34,12 @@ module.exports = Object.freeze({
         VerusNotarizerStorage: 9,
         VerusBridgeMaster: 10,
         LastIndex: 11
-    }
+    },
+    IADDRESS: 102,
+    RADDRESS: 60,
+    ADDRESS_TYPE_MASK: 127,
+    R_ADDRESS_TYPE: 2,
+    I_ADDRESS_TYPE: 4
 
 
 });
