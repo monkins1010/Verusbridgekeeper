@@ -1,11 +1,14 @@
 const BigNumber = require('bignumber.js');
 const bitGoUTXO = require('bitgo-utxo-lib');
 const Long = require('long');
+var constants = require('./constants');
+const Web3 = require('web3');
 
 const addHexPrefix = (string) => {
-  if (string.startsWith("0x")) return string;
-  else return "0x" + string;
-};
+    if (string.startsWith("0x")) return string;
+    else return "0x" + string;
+  };
+
 
 const uint64ToVerusFloat = (number) => {
     var inter = (BigInt(number) / BigInt(100000000)) + '.';
@@ -152,7 +155,29 @@ const removeHexLeader = (hexString) => {
 }
 
 const uint160ToVAddress = (number, version) => {
+
+    if(number.slice(0,2) != '0x' && (number.length != 40)) 
+    {
+        let temphex = Web3.utils.toHex(number);
+        return (bitGoUTXO.address.toBase58Check(Buffer.from(removeHexLeader(temphex), 'hex'), version));
+    }
     return (bitGoUTXO.address.toBase58Check(Buffer.from(removeHexLeader(number), 'hex'), version));
+}
+
+const hexAddressToBase58 = (type, address) => {
+
+    let retval = {};
+    if ((parseInt(type & constants.ADDRESS_TYPE_MASK)) == constants.R_ADDRESS_TYPE) 
+    {
+        retval = uint160ToVAddress(address, constants.RADDRESS);
+    } 
+    else if ((parseInt(type & constants.ADDRESS_TYPE_MASK)) == constants.I_ADDRESS_TYPE) 
+    {
+        retval = uint160ToVAddress(address, constants.IADDRESS);
+    } 
+
+    return retval;
+
 }
 
 const writeUInt160LE = (uint160le) => {
@@ -316,6 +341,7 @@ exports.readVarInt = readVarInt;
 exports.writeCompactSize = writeCompactSize;
 exports.uint160ToVAddress = uint160ToVAddress;
 exports.ethAddressToVAddress = uint160ToVAddress;
+exports.hexAddressToBase58 = hexAddressToBase58;
 exports.writeUInt160LE = writeUInt160LE;
 exports.writeUInt256LE = writeUInt256LE;
 exports.writeUInt = writeUInt;
