@@ -775,8 +775,9 @@ exports.getBestProofRoot = async(input) => {
    
     const lastinput = await getCachedApi('lastgetBestProofinput');
 
-    if (input == lastinput ) {
-        return await getCachedApi('lastgetBestProofRoot'); 
+    if (JSON.stringify(input) == lastinput ) {
+        let tempReturn = await getCachedApi('lastgetBestProofRoot')
+        return JSON.parse(tempReturn); 
     } 
 
     await setCachedApi(input, 'lastgetBestProofinput');
@@ -929,8 +930,9 @@ exports.getNotarizationData = async() => {
 
     const lastTime = await getCachedApi('lastgetNotarizationDatatime');
 
-        if (lastTime && (lastTime + globaltimedelta) < timenow ) {
-            return await getCachedApi('lastgetNotarizationData'); 
+        if (lastTime && (JSON.parse(lastTime) + globaltimedelta) < timenow ) {
+            let tempNotData = JSON.parse(await getCachedApi('lastgetNotarizationData'))
+            return tempNotData; 
         } 
 
         setCachedApi(timenow, 'lastgetNotarizationDatatime');
