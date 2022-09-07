@@ -1182,21 +1182,28 @@ exports.submitAcceptedNotarization = async(params) => {
         console.log(JSON.stringify(params[1], null, 2));
     }
     let pBaasNotarization = params[0];
-    let signatures = params[1].evidence.chainobjects[0].value.signatures; 
+    let signatures = {};
+    
+    for (const sigObj of params[1].evidence.chainobjects)
+    {
+        let sigKeys = Object.keys(sigObj.value.signatures);
+        for (let i = 0; i < sigKeys.length; i++) 
+        {
+            signatures[sigKeys[i]] = sigObj.value.signatures[sigKeys[i]]
+        }
+
+    }
+    
     let txidObj = params[1].output; 
 
     //  console.log(JSON.stringify(params));
-    const lastTxid = await getCachedApi('lastNotarizationTxid');
+    const lastTxid =  JSON.parse(await getCachedApi('lastNotarizationTxid'));
     try {
 
         if (lastTxid && lastTxid == txidObj.txid) {
             return { "result": "0" };  
         } 
-
-        if (txidObj.txid == lastTxid) {
-            return { "result": "0" };  
-        } 
-        
+       
 
     } catch (error) {
         console.log("submitAcceptedNotarization Error:\n", error);
@@ -1314,13 +1321,18 @@ exports.submitAcceptedNotarization = async(params) => {
             txhash = await verusBridgeMaster.methods.setLatestData(pBaasNotarization, data).send({ from: account.address, gas: maxGas });
             transactioncount = firstNonce;
         }
-
-        setCachedApi(txidObj, 'lastNotarizationTxid');
+        let test = await web3.eth.getTransaction(txhash.transactionHash);
+        
+        setCachedApi(txidObj.txid, 'lastNotarizationTxid');
         return { "result": txhash };
 
     } catch (error) {
         if(error?.message == "already known")
             console.log("Notarization already Submitted");
+        else if (error?.message =="Your request got reverted with the following reason string: Hash of notarization not found")
+        {
+            return { "result": { "txid": error } };
+        }    
         else
         {
             console.log(error?.message);
