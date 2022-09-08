@@ -755,7 +755,7 @@ exports.getExports = async(input) => {
             output.push(outputSet);
         }
 
-        // console.log(JSON.stringify(output));
+        // console.log(JSON.stringify(output, null, 2));
         await setCachedApi(input, 'lastgetExports');
         return { "result": output };
     } catch (error) {

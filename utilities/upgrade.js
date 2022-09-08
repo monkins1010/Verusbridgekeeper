@@ -74,7 +74,7 @@ const maxGas = 6000000;
 
 
 const getSig = async(sigParams) => {
-    return await verusClient["vrsctest"].post('', {
+    return await verusClient["vrsctest"].post("http://localhost:25779/", {
         jsonrpc: '2.0',
         method: 'signmessage',
         params: [
@@ -84,6 +84,8 @@ const getSig = async(sigParams) => {
     }).then(result => {
         console.log(result.data.result);
         return result.data.result.signature;
+    }).catch((e) => {
+        console.log(e);
     })
 
 }
@@ -91,12 +93,13 @@ const getSig = async(sigParams) => {
 const updatecontract = async() => {
     try {
         let randomBuf = randomBytes(32);
+        const ISDNOTARY = ["0x429c5f2039f259c02885972852438731f21fc949","0xcc86752da0c3629b7478c2b542d8b5055efee861","0x9ea954a6086ba4693af454be3bfa34c9af27b6b4"]
         const verusNotariserIDSHEX = ["0xb26820ee0c9b1276aac834cf457026a575dfce84", "0x51f9f5f053ce16cb7ca070f5c68a1cb0616ba624", "0x65374d6a8b853a5f61070ad7d774ee54621f9638"];
         const verusNotarizerIDs = ["RH7h8p9LN2Yb48SkxzNQ29c1Ltfju8Cd5i", "RLXCv2dQPB4NPqKUweFx4Ua5ZRPFfN2F6D" ,"REXBEDfAz9eJMCxdexa5GnWQBAax8hwuiu"]
         
         // Choose notarizer to sign upgrade
-        let notarizerID = verusNotariserIDSHEX[0];
-        const signatureAddress = verusNotarizerIDs[0];
+        let notarizerID = ISDNOTARY[1];
+        const signatureAddress = verusNotarizerIDs[1];
 
         let outBuffer = Buffer.alloc(1);
         outBuffer.writeUInt8(TYPE_CONTRACT);
@@ -111,7 +114,7 @@ const updatecontract = async() => {
         }
 
          //replace existing contract with new contract address
-        contracts[ContractType.VerusBridge] = "0x109e8Ad9562b15420cf38062B714bd27ECEafC24"; 
+        contracts[ContractType.VerusBridge] = "0xaD1f3667bfb5993098Ca69e45Ae77AD71E1F190f"; 
 
         for (let i = 0; i < 12; i++) 
         {
@@ -237,6 +240,6 @@ else if(recover)
 }
 else
 {
-    console.log("Please use the flags -contacts, -revoke or -recover");
+    console.log("Please use the flags -contracts, -revoke or -recover");
     exit(0);
 }
