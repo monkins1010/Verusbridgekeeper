@@ -3,9 +3,13 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 var ini = require('ini');
-const VETH = "000b090bec6c9ff28586eb7ed24e77562f0c4667";
+const CONSTANTS = require('./constants');
 
-const rootPath = function (pbaasFolder, pbaasRoot) {
+const rootPath = function (chainName, currency) {
+
+    let chaintc = chainName.toUpperCase();
+    const pbaasFolder = settings.pbaas[currency]; //TODO: Make modular
+    const pbaasRoot = settings.pbaasRoot[chaintc];
     let confPath;
 
     let homeDir = os.homedir();
@@ -25,18 +29,21 @@ const rootPath = function (pbaasFolder, pbaasRoot) {
     return confPath;
 }
 
-exports.loadConfFile = (chainName) => {
+const checkConfFileExists = function (chainName) {
+    
+    const ID = (chaintc == "VRSCTEST") ? CONSTANTS.VETHIDHEXREVERSED : CONSTANTS.MAINNETVETH
+    let confPath = rootPath(chainName, ID);
+
+    return fs.existsSync(confPath);
+}
+
+const loadConfFile = (chainName) => {
 
     let chaintc = chainName.toUpperCase();
-    //const coinDir = settings.coin[chaintc]; // NOT USED
+    const ID = (chaintc == "VRSCTEST") ? CONSTANTS.VETHIDHEXREVERSED : CONSTANTS.MAINNETVETH;
     let Config = settings.INIKeys;
-    const pbaasFolder = settings.pbaas[VETH]; //TODO: Make modular
-    const pbaasRoot = settings.pbaasRoot[chaintc];
     let rpcconf = {};
-
-    let confPath;
-
-    confPath = rootPath(pbaasFolder, pbaasRoot);
+    let confPath = rootPath(chainName, ID);
 
     if (!fs.existsSync(confPath)) {
         fs.mkdirSync(confPath, { recursive: true });
@@ -44,15 +51,14 @@ exports.loadConfFile = (chainName) => {
 
     let _data = {};
     try {
-        _data = fs.readFileSync(confPath + '/' + VETH + '.conf', 'utf8');
+        _data = fs.readFileSync(confPath + '/' + ID + '.conf', 'utf8');
     } catch (error) {
         if (error.code != 'ENOENT') {
-            console.log("Quitting....\n\nError reading file at: ", confPath + "\nError: " + error.message);
-            process.exit();
+            console.log("Error reading file at: ", confPath + "\nError: " + error.message);
         }
     }
 
-    if (_data.length && fs.existsSync(confPath + '/' + VETH + '.conf')) {
+    if (_data.length && fs.existsSync(confPath + '/' + ID + '.conf')) {
         let _match;
 
         console.log("(veth.conf) file found at: ", confPath);
@@ -63,44 +69,48 @@ exports.loadConfFile = (chainName) => {
                 if (_match[1] != "empty") {
                     Config[key] = _match[1];
                 } else {
-                    console.log("Quitting....\n\nEmpty veth.conf file value: ", `${key}:"empty" `);
-                    process.exit();
+                    console.log("Empty veth.conf file value: ", `${key}:"empty" `);
+
                 }
             }
         }
         rpcconf = Config;
     } else {
 
-        let err = fs.writeFileSync(confPath + '/' + VETH + '.conf', "", 'utf8');
+        let err = fs.writeFileSync(confPath + '/' + ID + '.conf', "", 'utf8');
 
         if (err) {
             console.log(err, 'Errror writing veth.conf', err.message);
-            process.exit();
+
         }
 
         for (const [key, value] of Object.entries(settings.RPCDefault[chaintc])) {
-            fs.appendFileSync(confPath + '/' + VETH + '.conf', `${key}=${value}` + "\n");
+            fs.appendFileSync(confPath + '/' + ID + '.conf', `${key}=${value}` + "\n");
         }
 
-        let tempvalues = fs.readFileSync(confPath + '/' + VETH + '.conf', 'utf8');
-        console.log("Quitting....\n\nPlease check veth.conf file located at: ", path.normalize(confPath + '/' + VETH + '.conf'));
+        let tempvalues = fs.readFileSync(confPath + '/' + ID + '.conf', 'utf8');
+        console.log("Quitting....\n\nPlease check veth.conf file located at: ", path.normalize(confPath + '/' + ID + '.conf'));
         console.log("Default Values:\n", ini.parse(tempvalues, 'utf-8'))
-        process.exit();
+
     }
     return rpcconf;
 }
 
-exports.set_conf = (key, infuraLink, ethContract)=> {
+const set_conf = (key, infuraLink, ethContract, chainName)=> {
 
     if (!key && !infuraLink && !ethContract)
     {
         return new Error("No data set, please fill in a form");
     }
 
-    let chaintc = "VRSCTEST";
-    const pbaasFolder = settings.pbaas[VETH]; //TODO: Make modular
-    const pbaasRoot = settings.pbaasRoot[chaintc];
-    confPath = rootPath(pbaasFolder, pbaasRoot);
+    if (!checkConfFileExists(chainName))
+    {
+        loadConfFile(chainName);
+    }
+
+    let chaintc = chainName.toUpperCase();
+    const ID = (chaintc == "VRSCTEST") ? CONSTANTS.VETHIDHEXREVERSED : CONSTANTS.MAINNETVETH;
+    confPath = rootPath(chainName, ID);
 
     let confKeys = settings.RPCDefault[chaintc];
     let _data = {};
@@ -118,16 +128,16 @@ exports.set_conf = (key, infuraLink, ethContract)=> {
     }
 
     try {
-        _data = fs.readFileSync(confPath + '/' + VETH + '.conf', 'utf8');
+        _data = fs.readFileSync(confPath + '/' + ID + '.conf', 'utf8');
     } catch (error) {
         if (error.code === 'ENOENT') {
-            let err = fs.writeFileSync(confPath + '/' + VETH + '.conf', "", 'utf8');
+            let err = fs.writeFileSync(confPath + '/' + ID + '.conf', "", 'utf8');
         } else {
             throw (error);
         }
     }
 
-    if (_data.length && fs.existsSync(confPath + '/' + VETH + '.conf')) {
+    if (_data.length && fs.existsSync(confPath + '/' + ID + '.conf')) {
 
         var config = ini.parse(_data)
 
@@ -142,9 +152,9 @@ exports.set_conf = (key, infuraLink, ethContract)=> {
         if (ethContract) {
             config.upgrademanageraddress = ethContract;
         }
-        fs.truncateSync(confPath + '/' + VETH + '.conf', 0);
+        fs.truncateSync(confPath + '/' + ID + '.conf', 0);
         for (const [key, value] of Object.entries(config)) {
-            fs.appendFileSync(confPath + '/' + VETH + '.conf', `${key}=${value}` + "\n");
+            fs.appendFileSync(confPath + '/' + ID + '.conf', `${key}=${value}` + "\n");
         }
         return "Conf file updated";
     }
@@ -153,8 +163,11 @@ exports.set_conf = (key, infuraLink, ethContract)=> {
             throw new Error("Please fill in all fields");
         }
         for (const [key, value] of Object.entries(confKeys)) {
-            fs.appendFileSync(confPath + '/' + VETH + '.conf', `${key}=${value}` + "\n");
+            fs.appendFileSync(confPath + '/' + ID + '.conf', `${key}=${value}` + "\n");
         }
         return "Conf file created";
     }
 };
+
+exports.set_conf = set_conf;
+exports.loadConfFile = loadConfFile;

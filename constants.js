@@ -7,6 +7,8 @@ module.exports = Object.freeze({
     VERUSSYSTEMID:  "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq",
     BRIDGEIDHEX: "0xffece948b8a38bbcc813411d2597f7f8485a0689",
     BRIDGEID: "iSojYsotVzXz4wh2eJriASGo6UidJDDhL2",
+    VETHIDHEXREVERSED: "000b090bec6c9ff28586eb7ed24e77562f0c4667",
+    MAINNETVETH: "", //TODO: FIND OUT
 
     FLAG_DEFINITION_NOTARIZATION : 1,   // initial notarization on definition of currency/system/chain
     FLAG_PRE_LAUNCH : 2,                // pre-launch notarization

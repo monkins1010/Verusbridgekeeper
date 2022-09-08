@@ -2,11 +2,12 @@ const Web3 = require('web3');
 const bitGoUTXO = require('bitgo-utxo-lib');
 const confFile = require('./confFile.js')
 var constants = require('./constants');
-const { keccak256, addHexPrefix } = require('ethereumjs-util');
+const ethersUtils = require('ethers').utils
+const { addHexPrefix } = require('./utils');
 
 const util = require('./utils.js');
 const notarizationFuncs = require('./notarization.js');
-const abi = require('web3-eth-abi');
+const abi = new Web3().eth.abi
 const deserializer = require('./deserializer.js');
 
 const {initApiCache, setCachedApi, getCachedApi} = require('./cache/apicalls')
@@ -447,13 +448,13 @@ function createOutboundTransfers(transfers) {
 
 function createCrossChainExport(transfers, blockHeight, jsonready = false, poolavailable) {
     let cce = {};
-    let hash = keccak256(serializeCReserveTransfers(transfers));
+    let hash = ethersUtils.keccak256(serializeCReserveTransfers(transfers));
     // console.log("hash of transfers: ",hash.toString('Hex'));
     // console.log("Serialize: ",serializeCReserveTransfers(transfers).slice(1).toString('Hex'));
     cce.version = 1;
     cce.flags = 2;
     cce.sourcesystemid = ETHSystemID;
-    cce.hashtransfers = hash.toString('hex'); //hash the transfers
+    cce.hashtransfers = hash;
     cce.destinationsystemid = VerusSystemID;
 
     if (poolavailable) {
@@ -504,14 +505,14 @@ function createCrossChainExport(transfers, blockHeight, jsonready = false, poola
 
 function createCrossChainExportToETH(transfers, blockHeight, jsonready = false) {
     let cce = {};
-    let hash = keccak256(serializeCReserveTransfers(transfers));
+    let hash = ethersUtils.keccak256(serializeCReserveTransfers(transfers));
     //console.log("hash of transfers: ",hash.toString('Hex'));
 
     //console.log("Serialize: ",serializeCReserveTransfers(transfers).slice(1).toString('Hex'));
     cce.version = 1;
     cce.flags = 2;
     cce.sourcesystemid = util.convertVerusAddressToEthAddress(ETHSystemID);
-    cce.hashtransfers = "0x" + hash.toString('hex'); //hash the transfers
+    cce.hashtransfers = "0x" + hash;
     cce.destinationsystemid = util.convertVerusAddressToEthAddress(VerusSystemID);
 
     if (transfers[0].destcurrencyid.slice(0, 2) == "0x" && transfers[0].destcurrencyid.length == 42) {
@@ -777,7 +778,10 @@ exports.getBestProofRoot = async(input) => {
 
     if (JSON.stringify(input) == lastinput ) {
         let tempReturn = await getCachedApi('lastgetBestProofRoot')
-        return JSON.parse(tempReturn); 
+        if(tempReturn)
+            return JSON.parse(tempReturn); 
+        else
+            return { "result": { "error": true } };
     } 
 
     await setCachedApi(input, 'lastgetBestProofinput');
@@ -818,7 +822,7 @@ exports.getBestProofRoot = async(input) => {
         if (logging) {
             console.log("getbestproofroot result:", { bestindex, validindexes, latestproofroot, laststableproofroot });
         }
-        setCachedApi({ "result": { bestindex, validindexes, latestproofroot, laststableproofroot} }, 'lastgetBestProofRoot');
+        await setCachedApi({ "result": { bestindex, validindexes, latestproofroot, laststableproofroot} }, 'lastgetBestProofRoot');
         return { "result": { bestindex, validindexes, latestproofroot, laststableproofroot} };
 
     } catch (error) {
@@ -930,7 +934,7 @@ exports.getNotarizationData = async() => {
 
     const lastTime = await getCachedApi('lastgetNotarizationDatatime');
 
-        if (lastTime && (JSON.parse(lastTime) + globaltimedelta) < timenow ) {
+        if (lastTime && (JSON.parse(lastTime) + globaltimedelta) > timenow ) {
             let tempNotData = JSON.parse(await getCachedApi('lastgetNotarizationData'))
             return tempNotData; 
         } 
@@ -1185,17 +1189,38 @@ exports.submitAcceptedNotarization = async(params) => {
     }
     let pBaasNotarization = params[0];
     let signatures = {};
+
+    let sigArray = {}
     
     for (const sigObj of params[1].evidence.chainobjects)
     {
         let sigKeys = Object.keys(sigObj.value.signatures);
         for (let i = 0; i < sigKeys.length; i++) 
-        {
-            signatures[sigKeys[i]] = sigObj.value.signatures[sigKeys[i]]
+        {        
+            if (sigArray[sigObj.value.signatures[sigKeys[i]].blockheight] == undefined)
+            {
+                sigArray[sigObj.value.signatures[sigKeys[i]].blockheight] = [];
+            }
+            sigArray[sigObj.value.signatures[sigKeys[i]].blockheight].push({[sigKeys[i]] : sigObj.value.signatures[sigKeys[i]]});
         }
-
     }
     
+    let sigArrayKeys = Object.keys(sigArray);
+    let largestcount = 0;
+    
+    for (const heights of sigArrayKeys)
+    {
+        if (largestcount < parseInt(heights) )
+            largestcount = heights;
+    }
+
+    for (const items of sigArray[largestcount] )
+    {
+        let ID = Object.keys(items);
+        signatures[ID[0]] = items[ID[0]];
+    }
+    
+     
     let txidObj = params[1].output; 
 
     //  console.log(JSON.stringify(params));
@@ -1264,7 +1289,7 @@ exports.submitAcceptedNotarization = async(params) => {
     let sigKeys = Object.keys(signatures);
 
     if (signatures[sigKeys[0]].signatures.length == 0) throw "No Signatures present"; //what should i return if we get bad data
-    let splitSigs = util.splitSignatures(signatures[sigKeys[0]].signatures);
+    let splitSigs = {}
 
     let vsVals = [];
     let rsVals = [];
