@@ -778,7 +778,10 @@ exports.getBestProofRoot = async(input) => {
 
     if (JSON.stringify(input) == lastinput ) {
         let tempReturn = await getCachedApi('lastgetBestProofRoot')
-        return JSON.parse(tempReturn); 
+        if(tempReturn)
+            return JSON.parse(tempReturn); 
+        else
+            return { "result": { "error": true } };
     } 
 
     await setCachedApi(input, 'lastgetBestProofinput');
@@ -819,7 +822,7 @@ exports.getBestProofRoot = async(input) => {
         if (logging) {
             console.log("getbestproofroot result:", { bestindex, validindexes, latestproofroot, laststableproofroot });
         }
-        setCachedApi({ "result": { bestindex, validindexes, latestproofroot, laststableproofroot} }, 'lastgetBestProofRoot');
+        await setCachedApi({ "result": { bestindex, validindexes, latestproofroot, laststableproofroot} }, 'lastgetBestProofRoot');
         return { "result": { bestindex, validindexes, latestproofroot, laststableproofroot} };
 
     } catch (error) {
@@ -931,7 +934,7 @@ exports.getNotarizationData = async() => {
 
     const lastTime = await getCachedApi('lastgetNotarizationDatatime');
 
-        if (lastTime && (JSON.parse(lastTime) + globaltimedelta) < timenow ) {
+        if (lastTime && (JSON.parse(lastTime) + globaltimedelta) > timenow ) {
             let tempNotData = JSON.parse(await getCachedApi('lastgetNotarizationData'))
             return tempNotData; 
         } 
@@ -1186,17 +1189,38 @@ exports.submitAcceptedNotarization = async(params) => {
     }
     let pBaasNotarization = params[0];
     let signatures = {};
+
+    let sigArray = {}
     
     for (const sigObj of params[1].evidence.chainobjects)
     {
         let sigKeys = Object.keys(sigObj.value.signatures);
         for (let i = 0; i < sigKeys.length; i++) 
-        {
-            signatures[sigKeys[i]] = sigObj.value.signatures[sigKeys[i]]
+        {        
+            if (sigArray[sigObj.value.signatures[sigKeys[i]].blockheight] == undefined)
+            {
+                sigArray[sigObj.value.signatures[sigKeys[i]].blockheight] = [];
+            }
+            sigArray[sigObj.value.signatures[sigKeys[i]].blockheight].push({[sigKeys[i]] : sigObj.value.signatures[sigKeys[i]]});
         }
-
     }
     
+    let sigArrayKeys = Object.keys(sigArray);
+    let largestcount = 0;
+    
+    for (const heights of sigArrayKeys)
+    {
+        if (largestcount < parseInt(heights) )
+            largestcount = heights;
+    }
+
+    for (const items of sigArray[largestcount] )
+    {
+        let ID = Object.keys(items);
+        signatures[ID[0]] = items[ID[0]];
+    }
+    
+     
     let txidObj = params[1].output; 
 
     //  console.log(JSON.stringify(params));
@@ -1265,7 +1289,7 @@ exports.submitAcceptedNotarization = async(params) => {
     let sigKeys = Object.keys(signatures);
 
     if (signatures[sigKeys[0]].signatures.length == 0) throw "No Signatures present"; //what should i return if we get bad data
-    let splitSigs = util.splitSignatures(signatures[sigKeys[0]].signatures);
+    let splitSigs = {}
 
     let vsVals = [];
     let rsVals = [];

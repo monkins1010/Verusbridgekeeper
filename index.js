@@ -110,9 +110,9 @@ exports.stop = function() {
     }
 }
 
-exports.set_conf = function(key, infuraLink, ethContract) {
+exports.set_conf = function(key, infuraLink, ethContract, chainName) {
     try{
-        const reply = confFile.set_conf(key, infuraLink, ethContract);
+        const reply = confFile.set_conf(key, infuraLink, ethContract, chainName);
         return reply;
     } catch (error){
         throw (error);

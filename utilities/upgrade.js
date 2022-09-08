@@ -65,7 +65,7 @@ const ContractType = {
 const verusUpgradeAbi = require('../abi/VerusUpgrade.json');
 const { exit } = require('process');
 
-const verusUpgrade = new web3.eth.Contract(verusUpgradeAbi, "0xA9c4A0615b5E0Ed9F18933bcB7d9efcE11befB25");
+const verusUpgrade = new web3.eth.Contract(verusUpgradeAbi, "0xcD79EfE93a234604434d990407fBc5729d3389F6");
 
 let account = web3.eth.accounts.privateKeyToAccount(settings.privatekey);
 web3.eth.accounts.wallet.add(account);
@@ -111,7 +111,7 @@ const updatecontract = async() => {
         }
 
          //replace existing contract with new contract address
-        contracts[ContractType.VerusNotarizer] = "0x7b8a6b1394eFFB11E97b656358235EEF8A417252"; 
+        contracts[ContractType.VerusBridge] = "0x109e8Ad9562b15420cf38062B714bd27ECEafC24"; 
 
         for (let i = 0; i < 12; i++) 
         {
