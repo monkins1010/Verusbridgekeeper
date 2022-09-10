@@ -132,6 +132,7 @@ const createNotarization = function (input) {
     notarization.prevnotarizationtxid = util.removeHexLeader(notarization.prevnotarization.hash);
     notarization.prevnotarizationout = notarization.prevnotarization.n;
     delete notarization.prevnotarization;
+    delete notarization.txid;
 
     let tempcurr = []
     for (let i = 0; i < notarization.currencystates.length; i++)
@@ -158,6 +159,16 @@ const createNotarization = function (input) {
         tempProofRoots.push(tempProofRoot);
 
     }
+
+    let tempnodes = []
+
+    for (let i = 0; i < notarization.nodes.length; i++)
+    {
+        tempnodes.push({networkaddress: notarization.nodes[i].networkaddress, nodeidentity : util.uint160ToVAddress(notarization.nodes[i].nodeidentity, constants.IADDRESS)});
+    }
+
+    notarization.nodes = tempnodes;
+
     notarization.proofroots = tempProofRoots;
 
     return notarization;
