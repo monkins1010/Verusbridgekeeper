@@ -512,7 +512,7 @@ function createCrossChainExportToETH(transfers, blockHeight, jsonready = false) 
     cce.version = 1;
     cce.flags = 2;
     cce.sourcesystemid = util.convertVerusAddressToEthAddress(ETHSystemID);
-    cce.hashtransfers = "0x" + hash;
+    cce.hashtransfers = addHexPrefix(hash);
     cce.destinationsystemid = util.convertVerusAddressToEthAddress(VerusSystemID);
 
     if (transfers[0].destcurrencyid.slice(0, 2) == "0x" && transfers[0].destcurrencyid.length == 42) {
