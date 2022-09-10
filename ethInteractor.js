@@ -755,7 +755,7 @@ exports.getExports = async(input) => {
             output.push(outputSet);
         }
 
-        // console.log(JSON.stringify(output));
+        // console.log(JSON.stringify(output, null, 2));
         await setCachedApi(input, 'lastgetExports');
         return { "result": output };
     } catch (error) {
@@ -776,7 +776,12 @@ exports.getBestProofRoot = async(input) => {
    
     const lastinput = await getCachedApi('lastgetBestProofinput');
 
-    if (JSON.stringify(input) == lastinput ) {
+    var d = new Date();
+    var timenow = d.valueOf();
+
+    const lastTime = await getCachedApi('lastBestProofinputtime');
+
+    if (JSON.stringify(input) == lastinput && (lastTime && (JSON.parse(lastTime) + globaltimedelta) > timenow ) ) {
         let tempReturn = await getCachedApi('lastgetBestProofRoot')
         if(tempReturn)
             return JSON.parse(tempReturn); 
@@ -785,6 +790,7 @@ exports.getBestProofRoot = async(input) => {
     } 
 
     await setCachedApi(input, 'lastgetBestProofinput');
+    await setCachedApi(timenow, 'lastBestProofinputtime');
 
     try {
         if (input.length && proofroots) {
@@ -822,6 +828,12 @@ exports.getBestProofRoot = async(input) => {
         if (logging) {
             console.log("getbestproofroot result:", { bestindex, validindexes, latestproofroot, laststableproofroot });
         }
+
+        let gasPrice = await web3.eth.getGasPrice();
+        // let currencies = [gasPrice, 0, 0]; // TODO: Enable gas price truncate to 
+        if(logging)
+            console.log("GAS PRICE:", util.uint64ToVerusFloat(gasPrice))
+
         await setCachedApi({ "result": { bestindex, validindexes, latestproofroot, laststableproofroot} }, 'lastgetBestProofRoot');
         return { "result": { bestindex, validindexes, latestproofroot, laststableproofroot} };
 
@@ -1487,11 +1499,6 @@ exports.getLastImportFrom = async() => {
                 lastconfirmednotarization = notarizationFuncs.createNotarization(returnedNotarization);
 
                 lastconfirmedutxo = { txid: util.removeHexLeader(forksData.txid.hash),voutnum: forksData.txid.n }
-
-                let gasPrice = await web3.eth.getGasPrice();
-                //lastconfirmednotarization.currencystate.weights = [gasPrice, 0, 0];
-                if(logging)
-                    console.log("GAS PRICE:", gasPrice)
 
             } catch (e) {
                 console.log("\x1b[41m%s\x1b[0m", "No Notarizations recieved yet");
