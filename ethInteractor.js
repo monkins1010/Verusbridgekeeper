@@ -975,6 +975,7 @@ exports.getNotarizationData = async() => {
         {
             Notarization.forks = [forks];
             Notarization.bestchain = 0;
+            Notarization.lastconfirmed = 0;
             Notarization.notarizations = [];
 
             for (let i = 0; i < forksData.length; i++)
