@@ -10,7 +10,7 @@ const notarizationFuncs = require('./notarization.js');
 const abi = new Web3().eth.abi
 const deserializer = require('./deserializer.js');
 
-const {initApiCache, setCachedApi, getCachedApi} = require('./cache/apicalls')
+const {initApiCache, setCachedApi, getCachedApi, checkCachedApiTwo, setCachedApiTwo} = require('./cache/apicalls')
 
 const ticker = process.argv.indexOf('-production') > -1 ? "VRSC" : "VRSCTEST";
 const logging = (process.argv.indexOf('-log') > -1);
@@ -771,27 +771,25 @@ exports.getBestProofRoot = async(input) => {
     let bestindex = 0;
     let validindexes = [];
     let latestproofroot = {};
+    var d = new Date();
+    var timenow = d.valueOf();
+    const lastTime = await getCachedApi('lastBestProofinputtime');
 
     // new notarization scheme as of July 2022 adds lastconfirmed notarizations
    
-    const lastinput = await getCachedApi('lastgetBestProofinput');
+    let cachedValue = await checkCachedApiTwo('lastgetBestProofRoot', input);
 
-    var d = new Date();
-    var timenow = d.valueOf();
+    if (cachedValue && lastTime && (JSON.parse(lastTime) + globaltimedelta) > timenow  )
+    {
+        cachedValue = null;
+        await setCachedApi(timenow, 'lastBestProofinputtime');
+    }
 
-    const lastTime = await getCachedApi('lastBestProofinputtime');
-
-    if (JSON.stringify(input) == lastinput && (lastTime && (JSON.parse(lastTime) + globaltimedelta) > timenow ) ) {
-        let tempReturn = await getCachedApi('lastgetBestProofRoot')
-        if(tempReturn)
-            return JSON.parse(tempReturn); 
-        else
-            return { "result": { "error": true } };
-    } 
-
-    await setCachedApi(input, 'lastgetBestProofinput');
-    await setCachedApi(timenow, 'lastBestProofinputtime');
-
+    if (cachedValue)
+    {
+        return cachedValue;
+    }
+    
     try {
         if (input.length && proofroots) {
             for (let i = 0; i < proofroots.length; i++) {
@@ -830,11 +828,12 @@ exports.getBestProofRoot = async(input) => {
         }
 
         let gasPrice = await web3.eth.getGasPrice();
-        // let currencies = [gasPrice, 0, 0]; // TODO: Enable gas price truncate to 
+        // let currencies = [gasPrice, 0, 0]; // TODO: Enable gas price truncated to  8 decminal places
         if(logging)
             console.log("GAS PRICE:", util.uint64ToVerusFloat(gasPrice))
 
-        await setCachedApi({ "result": { bestindex, validindexes, latestproofroot, laststableproofroot} }, 'lastgetBestProofRoot');
+        await setCachedApiTwo({ "result": { bestindex, validindexes, latestproofroot, laststableproofroot} }, input, 'lastgetBestProofRoot');
+
         return { "result": { bestindex, validindexes, latestproofroot, laststableproofroot} };
 
     } catch (error) {
@@ -947,8 +946,11 @@ exports.getNotarizationData = async() => {
     const lastTime = await getCachedApi('lastgetNotarizationDatatime');
 
         if (lastTime && (JSON.parse(lastTime) + globaltimedelta) > timenow ) {
-            let tempNotData = JSON.parse(await getCachedApi('lastgetNotarizationData'))
-            return tempNotData; 
+            let tempNotData = await getCachedApi('lastgetNotarizationData');
+            if (tempNotData)
+            {
+                return JSON.parse(tempNotData); 
+            }
         } 
 
         await setCachedApi(timenow, 'lastgetNotarizationDatatime');
@@ -1127,7 +1129,7 @@ function reshapeTransfers(CTransferArray) {
     return CTempArray;
 }
 
-exports.submitImports = async(CTransferArray) => {
+exports.submitImports = async (CTransferArray) => {
 
     const lastCTransferArray = await getCachedApi('lastsubmitImports');
 
@@ -1237,10 +1239,10 @@ exports.submitAcceptedNotarization = async(params) => {
     let txidObj = params[1].output; 
 
     //  console.log(JSON.stringify(params));
-    const lastTxid =  JSON.parse(await getCachedApi('lastNotarizationTxid'));
+    const lastTxid = await getCachedApi('lastNotarizationTxid');
     try {
 
-        if (lastTxid && lastTxid == txidObj.txid) {
+        if (lastTxid && lastTxid == JSON.stringify(txidObj.txid)) {
             return { "result": "0" };  
         } 
        
