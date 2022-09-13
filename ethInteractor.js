@@ -660,7 +660,8 @@ exports.getExports = async(input) => {
     let heightstart = input[1];
     let heightend = input[2];
 
-    if (lastCTransferArray == JSON.stringify(input)) {
+    let srtInput = JSON.stringify(input);
+    if (lastCTransferArray == srtInput) {
         
         return { "result": null };
     }
