@@ -15,6 +15,45 @@ exports.initApiCache = () => {
       throw e
     })
 }
+// {input: inputQuery, value: outputoVerusAPI}
+exports.checkCachedApi = async (call, inputQuery) => {
+    let key = `${call}${JSON.stringify(inputQuery)}`
+
+    try 
+    {
+        let result =  await apiCache.getItem(key);
+
+        if (result)
+        {
+            return JSON.parse(result);
+        }
+        else
+        {
+            return null;
+        }    
+    } 
+    catch(e) 
+    {
+        console.log("Error while getting Api cache")
+        throw e
+    }
+}
+
+exports.setCachedApiValue = async (result, input, call) => {
+    let key = `${call}${JSON.stringify(input)}`
+
+    let newResult = JSON.stringify(result);
+
+    try 
+    {
+        await apiCache.setItem(key, newResult);
+    }
+    catch(e) 
+    {
+        console.log("Error while getting Api cache")
+        throw e
+    }
+}
 
 exports.getCachedApi = async (call) => {
     let key = `${call}`
