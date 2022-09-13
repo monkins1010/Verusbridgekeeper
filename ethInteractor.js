@@ -780,17 +780,17 @@ exports.getBestProofRoot = async(input) => {
    
     let cachedValue = await checkCachedApi('lastGetBestProofRoot', input);
 
-    if (cachedValue && lastTime && (JSON.parse(lastTime) + globaltimedelta) > timenow)
+    if (cachedValue && lastTime && (JSON.parse(lastTime) + globaltimedelta) < timenow)
     {
         cachedValue = null;
-        await setCachedApi(timenow, 'lastBestProofinputtime');
     }
-
+    
     if (cachedValue)
     {
         return cachedValue;
     }
     
+    await setCachedApi(timenow, 'lastBestProofinputtime');
     try {
         if (input.length && proofroots) {
             for (let i = 0; i < proofroots.length; i++) {
