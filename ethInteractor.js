@@ -122,7 +122,7 @@ async function eventListener(notarizerAddress) {
         else console.log(error);
     }).on("data", function(log){
         console.log('***** EVENT: Got new Notarization**********');
-      //  setCachedApi(log?.blockNumber, 'lastNotarizationHeight');
+        // await setCachedApi(log?.blockNumber, 'lastNotarizationHeight');
     }).on("changed", function(log){
         console.log('***** EVENT: Got new Notarization**********');
     });
@@ -951,7 +951,7 @@ exports.getNotarizationData = async() => {
             return tempNotData; 
         } 
 
-        setCachedApi(timenow, 'lastgetNotarizationDatatime');
+        await setCachedApi(timenow, 'lastgetNotarizationDatatime');
 
     try {
        let forksLength = await verusNotorizerStorage.methods.bestForkLength().call();
@@ -975,6 +975,7 @@ exports.getNotarizationData = async() => {
         {
             Notarization.forks = [forks];
             Notarization.bestchain = 0;
+            Notarization.lastconfirmed = 0;
             Notarization.notarizations = [];
 
             for (let i = 0; i < forksData.length; i++)
@@ -993,7 +994,7 @@ exports.getNotarizationData = async() => {
             console.log(JSON.stringify(forksData, null, 2))
         }
 
-        setCachedApi({ "result": Notarization }, 'lastgetNotarizationData');
+        await setCachedApi({ "result": Notarization }, 'lastgetNotarizationData');
         
         return { "result": Notarization };
         
@@ -1362,7 +1363,7 @@ exports.submitAcceptedNotarization = async(params) => {
         }
         let test = await web3.eth.getTransaction(txhash.transactionHash);
         
-        setCachedApi(txidObj.txid, 'lastNotarizationTxid');
+        await setCachedApi(txidObj.txid, 'lastNotarizationTxid');
         return { "result": txhash };
 
     } catch (error) {
