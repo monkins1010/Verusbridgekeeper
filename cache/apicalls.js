@@ -16,31 +16,21 @@ exports.initApiCache = () => {
     })
 }
 // {input: inputQuery, value: outputoVerusAPI}
-exports.checkCachedApiTwo = async (call, inputQuery) => {
-    let key1 = `${call}1`
-    let key2 = `${call}2`
+exports.checkCachedApi = async (call, inputQuery) => {
+    let key = `${call}${JSON.stringify(inputQuery)}`
 
     try 
     {
-        let result1 =  await apiCache.getItem(key1);
-        let result2 =  await apiCache.getItem(key2);
-        let strResult1 = result1 ? JSON.stringify(JSON.parse(result1).input) : null
-        let strResult2 = result2 ? JSON.stringify(JSON.parse(result2).input) : null
-        let strInput = JSON.stringify(inputQuery)
+        let result =  await apiCache.getItem(key);
 
-        if (strInput == strResult1)
+        if (result)
         {
-            return JSON.parse(result1).value;
-        }
-        else if (strInput == strResult2)
-        {
-            return JSON.parse(result2).value;
+            return JSON.parse(result);
         }
         else
         {
             return null;
-        }
-       
+        }    
     } 
     catch(e) 
     {
@@ -49,33 +39,22 @@ exports.checkCachedApiTwo = async (call, inputQuery) => {
     }
 }
 
-exports.setCachedApiTwo = async (result, input, call) => {
-    let key1 = `${call}1`
-    let key2 = `${call}2`
+exports.setCachedApiValue = async (result, input, call) => {
+    let key = `${call}${JSON.stringify(input)}`
 
-    let result1 =  await apiCache.getItem(key1);
-    let result2 =  await apiCache.getItem(key2);
-    let newresult =  JSON.stringify({input: input, value: result});
+
+    let resultItem =  await apiCache.getItem(key);
+    let newResult = JSON.stringify(result);
+
     try 
     {
-        if (result1 == newresult)
+        if (resultItem == newResult)
         {
             return; 
         }
-        
-        else if  (result2 == newresult)
-        {
-            return; 
-        }
-
         else
         {
-            await apiCache.setItem(key1, newresult);
-
-            if (result1 != null)
-            {
-                await apiCache.setItem(key2, result2);
-            }
+            await apiCache.setItem(key, newResult);
         }    
     }
     catch(e) 

@@ -10,7 +10,7 @@ const notarizationFuncs = require('./notarization.js');
 const abi = new Web3().eth.abi
 const deserializer = require('./deserializer.js');
 
-const {initApiCache, setCachedApi, getCachedApi, checkCachedApiTwo, setCachedApiTwo} = require('./cache/apicalls')
+const {initApiCache, setCachedApi, getCachedApi, checkCachedApi, setCachedApiValue} = require('./cache/apicalls')
 
 const ticker = process.argv.indexOf('-production') > -1 ? "VRSC" : "VRSCTEST";
 const logging = (process.argv.indexOf('-log') > -1);
@@ -778,9 +778,9 @@ exports.getBestProofRoot = async(input) => {
 
     // new notarization scheme as of July 2022 adds lastconfirmed notarizations
    
-    let cachedValue = await checkCachedApiTwo('lastgetBestProofRoot', input);
+    let cachedValue = await checkCachedApi('lastgetBestProofRoot', input);
 
-    if (cachedValue && lastTime && (JSON.parse(lastTime) + globaltimedelta) > timenow  )
+    if (cachedValue && lastTime && (JSON.parse(lastTime) + globaltimedelta) > timenow)
     {
         cachedValue = null;
         await setCachedApi(timenow, 'lastBestProofinputtime');
@@ -833,9 +833,11 @@ exports.getBestProofRoot = async(input) => {
         if(logging)
             console.log("GAS PRICE:", util.uint64ToVerusFloat(gasPrice))
 
-        await setCachedApiTwo({ "result": { bestindex, validindexes, latestproofroot, laststableproofroot} }, input, 'lastgetBestProofRoot');
+        let retval = { "result": { bestindex, validindexes, latestproofroot, laststableproofroot} };
+        
+        await setCachedApiValue(retval, input, 'lastgetBestProofRoot');
 
-        return { "result": { bestindex, validindexes, latestproofroot, laststableproofroot} };
+        return retval;
 
     } catch (error) {
         console.log("\x1b[41m%s\x1b[0m", "getBestProofRoot error:" + error);
