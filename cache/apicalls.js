@@ -42,20 +42,11 @@ exports.checkCachedApi = async (call, inputQuery) => {
 exports.setCachedApiValue = async (result, input, call) => {
     let key = `${call}${JSON.stringify(input)}`
 
-
-    let resultItem =  await apiCache.getItem(key);
     let newResult = JSON.stringify(result);
 
     try 
     {
-        if (resultItem == newResult)
-        {
-            return; 
-        }
-        else
-        {
-            await apiCache.setItem(key, newResult);
-        }    
+        await apiCache.setItem(key, newResult);
     }
     catch(e) 
     {

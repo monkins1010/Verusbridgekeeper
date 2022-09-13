@@ -778,7 +778,7 @@ exports.getBestProofRoot = async(input) => {
 
     // new notarization scheme as of July 2022 adds lastconfirmed notarizations
    
-    let cachedValue = await checkCachedApi('lastgetBestProofRoot', input);
+    let cachedValue = await checkCachedApi('lastGetBestProofRoot', input);
 
     if (cachedValue && lastTime && (JSON.parse(lastTime) + globaltimedelta) > timenow)
     {
@@ -835,7 +835,7 @@ exports.getBestProofRoot = async(input) => {
 
         let retval = { "result": { bestindex, validindexes, latestproofroot, laststableproofroot} };
         
-        await setCachedApiValue(retval, input, 'lastgetBestProofRoot');
+        await setCachedApiValue(retval, input, 'lastGetBestProofRoot');
 
         return retval;
 
