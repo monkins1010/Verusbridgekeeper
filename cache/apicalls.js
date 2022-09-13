@@ -16,22 +16,32 @@ exports.initApiCache = () => {
     })
 }
 
-exports.getCachedApi = (call) => {
-    let key = `${call}`
-  
-    return apiCache.getItem(key).catch(e => {
-      console.log("Error while getting Api cache")
-      throw e
-    })
-  }
-
-exports.setCachedApi = (ApiObj, call) => {
+exports.getCachedApi = async (call) => {
     let key = `${call}`
 
-    return apiCache.setItem(key, JSON.stringify(ApiObj)).catch(e => {
-        console.log("Error while setting Api cache")
+    try 
+    {
+       return await apiCache.getItem(key);
+    } 
+    catch(e) 
+    {
+        console.log("Error while getting Api cache")
         throw e
-    })
+    }
+}
+
+exports.setCachedApi = async (ApiObj, call) => {
+    let key = `${call}`
+
+    try 
+    {
+        return await apiCache.setItem(key, JSON.stringify(ApiObj));
+    } 
+    catch(e) 
+    {
+         console.log("Error while setting Api cache")
+         throw e
+    }
 }
 
 exports.clearCachedApis = () => {
