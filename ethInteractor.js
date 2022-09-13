@@ -782,8 +782,8 @@ exports.getBestProofRoot = async(input) => {
 
     if (cachedValue && lastTime && (JSON.parse(lastTime) + globaltimedelta) < timenow)
     {
-        cachedValue = null;
     }
+    cachedValue = null;
     
     if (cachedValue)
     {
