@@ -122,11 +122,13 @@ async function eventListener(notarizerAddress) {
         else console.log(error);
     }).on("data", function(log) {
         console.log('***** EVENT: Got new Notarization, Clearing the cache*********');
-        clearCachedApis();  
+        clearCachedApis();
+        globallastimport = {};  
         // await setCachedApi(log?.blockNumber, 'lastNotarizationHeight');
     }).on("changed", function(log) {
         console.log('***** EVENT: Got new Notarization, Clearing the cache**********');
-        clearCachedApis(); 
+        clearCachedApis();
+        globallastimport = {}; 
     });
 }
 
