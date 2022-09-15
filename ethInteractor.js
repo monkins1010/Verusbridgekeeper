@@ -1461,8 +1461,8 @@ exports.getLastImportFrom = async() => {
             lastimport.valuein = {};
             lastimport.tokensout = {};
             lastimport.numoutputs = {};
-            lastimport.hashtransfers = lastImportInfo.hashOfTransfers;
-            lastimport.exporttxid = lastImportInfo.exporttxid;
+            lastimport.hashtransfers = util.removeHexLeader(lastImportInfo.hashOfTransfers).match(/[a-fA-F0-9]{2}/g).reverse().join('');
+            lastimport.exporttxid = util.removeHexLeader(lastImportInfo.exporttxid).match(/[a-fA-F0-9]{2}/g).reverse().join('');
             lastimport.exporttxout = lastImportInfo.exporttxoutnum;
 
             let forksData = {};
