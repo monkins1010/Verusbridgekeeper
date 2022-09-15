@@ -113,13 +113,14 @@ function readCMMRNodeBranch(memory) {
     memory = temp.memory;
     let nSize = temp.retval
 
-    let extrahashes = 0;
+    let extraHashes = 0;
 
     if (CMerkleBranchBase == 3) {
-        extrahashes = 1;
+        extraHashes = 1;
     }
     let txHeight = nIndex; //this is the height of the transaction put it into a global
-    nIndex = util.GetMMRProofIndex(nIndex, nSize, extrahashes)
+    //TODO: remove MMR function and pass in nIndex untouched
+    nIndex = util.GetMMRProofIndex(nIndex, nSize, extraHashes)
 
     temp = readtype(memory, 'uint', 8);
     memory = temp.memory;
@@ -134,7 +135,7 @@ function readCMMRNodeBranch(memory) {
 
     }
 
-    return { retval: { CMerkleBranchBase, nIndex, nSize, branch, txHeight }, memory }
+    return { retval: { CMerkleBranchBase, nIndex, nSize, extraHashes, branch, txHeight }, memory }
 }
 
 

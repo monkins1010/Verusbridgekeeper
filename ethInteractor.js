@@ -15,6 +15,7 @@ const { initApiCache, setCachedApi, getCachedApi, checkCachedApi, setCachedApiVa
 const ticker = process.argv.indexOf('-production') > -1 ? "VRSC" : "VRSCTEST";
 const logging = (process.argv.indexOf('-log') > -1);
 const debug = (process.argv.indexOf('-debug') > -1);
+const debugsubmit = (process.argv.indexOf('-debugsubmit') > -1);
 let settings = undefined;
 const verusBridgeStartBlock = 1;
 
@@ -120,10 +121,12 @@ async function eventListener(notarizerAddress) {
         if (!error) console.log('got result');
         else console.log(error);
     }).on("data", function(log) {
-        console.log('***** EVENT: Got new Notarization**********');
+        console.log('***** EVENT: Got new Notarization, Clearing the cache*********');
+        clearCachedApis();  
         // await setCachedApi(log?.blockNumber, 'lastNotarizationHeight');
     }).on("changed", function(log) {
-        console.log('***** EVENT: Got new Notarization**********');
+        console.log('***** EVENT: Got new Notarization, Clearing the cache**********');
+        clearCachedApis(); 
     });
 }
 
@@ -1131,7 +1134,8 @@ exports.submitImports = async(CTransferArray) => {
     CTempArray = deserializer.insertHeights(CTempArray);
 
     let submitArray = [];
-    //  console.log(JSON.stringify(CTempArray))
+    if (debugsubmit)
+        console.log(JSON.stringify(CTempArray, null, 2))
 
     try {
 
@@ -1156,8 +1160,8 @@ exports.submitImports = async(CTransferArray) => {
             console.log("\x1b[41m%s\x1b[0m", "submitImports:" + error.reason);
         else {
             if (error.receipt)
-
                 console.log("\x1b[41m%s\x1b[0m", "submitImports:" + error.receipt);
+
             console.log("\x1b[41m%s\x1b[0m", "submitImports:" + error);
         }
         return { result: { result: error.message } };
