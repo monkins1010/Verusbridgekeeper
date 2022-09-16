@@ -17,6 +17,7 @@ const logging = (process.argv.indexOf('-log') > -1);
 const debug = (process.argv.indexOf('-debug') > -1);
 const debugsubmit = (process.argv.indexOf('-debugsubmit') > -1);
 let settings = undefined;
+let noaccount = false;
 const verusBridgeStartBlock = 1;
 
 //Main coin ID's
@@ -76,9 +77,13 @@ function setupConf() {
             onTimeout: false,
         }
     }));
-    account = web3.eth.accounts.privateKeyToAccount(settings.privatekey);
-    web3.eth.accounts.wallet.add(account);
-    web3.eth.handleRevert = true
+    if (settings.privatekey.length == 64) {
+        account = web3.eth.accounts.privateKeyToAccount(settings.privatekey);
+        web3.eth.accounts.wallet.add(account);
+    } else {
+        noaccount = true;
+    }
+    web3.eth.handleRevert = true;
     upgradeManager = new web3.eth.Contract(verusUpgradeManagerAbi, settings.upgrademanageraddress);
 
 }
@@ -123,12 +128,12 @@ async function eventListener(notarizerAddress) {
     }).on("data", function(log) {
         console.log('***** EVENT: Got new Notarization, Clearing the cache*********');
         clearCachedApis();
-        globallastimport = {};  
+        globallastimport = {};
         // await setCachedApi(log?.blockNumber, 'lastNotarizationHeight');
     }).on("changed", function(log) {
         console.log('***** EVENT: Got new Notarization, Clearing the cache**********');
         clearCachedApis();
-        globallastimport = {}; 
+        globallastimport = {};
     });
 }
 
@@ -775,15 +780,15 @@ exports.getBestProofRoot = async(input) => {
     let cachedValue = await checkCachedApi('lastGetBestProofRoot', input);
 
     if (cachedValue) {
-    
+
         if (lastTime && (JSON.parse(lastTime) + globaltimedelta) < timenow) {
-        
-        clearCachedApis();        
-        cachedValue = null;
+
+            clearCachedApis();
+            cachedValue = null;
         }
 
     }
-    
+
 
     if (cachedValue) {
         return cachedValue;
@@ -1120,6 +1125,10 @@ function reshapeTransfers(CTransferArray) {
 
 exports.submitImports = async(CTransferArray) => {
 
+    if (noaccount) {
+        return { result: { error: true } };
+    }
+
     const lastCTransferArray = await getCachedApi('lastsubmitImports');
 
     CTransferArray = conditionSubmitImports(CTransferArray);
@@ -1187,6 +1196,9 @@ function IsLaunchComplete(pBaasNotarization) {
 
 exports.submitAcceptedNotarization = async(params) => {
 
+    if (noaccount) {
+        return { result: { error: true } };
+    }
     if (debug) {
         console.log(params[0]);
         console.log(JSON.stringify(params[1], null, 2));
@@ -1352,12 +1364,12 @@ exports.submitAcceptedNotarization = async(params) => {
         return { "result": txhash };
 
     } catch (error) {
-        if (error?.message == "already known")
+        if (error.message && error.message == "already known")
             console.log("Notarization already Submitted");
-        else if (error?.message == "Your request got reverted with the following reason string: Hash of notarization not found") {
+        else if (error.message && error.message == "Your request got reverted with the following reason string: Hash of notarization not found") {
             return { "result": { "txid": error } };
         } else {
-            console.log(error?.message);
+            console.log(error);
         }
         //locknotorization = false;
         return { "result": { "txid": error } };
