@@ -1127,7 +1127,7 @@ function reshapeTransfers(CTransferArray) {
 exports.submitImports = async(CTransferArray) => {
 
     if (noaccount || errorcounter > 10) {
-        console.log("************** " + errorcounter + " Errors counted , Wallet will not spend ********************8");
+        console.log("************** " + errorcounter + " Errors counted , Wallet will not spend ********************");
         return { result: { error: true } };
     }
 
@@ -1168,6 +1168,7 @@ exports.submitImports = async(CTransferArray) => {
         }
     } catch (error) {
         // console.log("Error in\n", JSON.stringify(CTempArray));
+        console.log("Error Counter incremented in submitimports" + error);
         errorcounter++;
         if (error.reason)
             console.log("\x1b[41m%s\x1b[0m", "submitImports:" + error.reason);
@@ -1199,7 +1200,7 @@ function IsLaunchComplete(pBaasNotarization) {
 exports.submitAcceptedNotarization = async(params) => {
 
     if (noaccount || errorcounter > 10) {
-        console.log("************** " + errorcounter + " Errors counted , Wallet will not spend ********************8");
+        console.log("************** " + errorcounter + " Errors counted , Wallet will not spend ********************");
         return { result: { error: true } };
     }
     if (debug) {
@@ -1367,13 +1368,11 @@ exports.submitAcceptedNotarization = async(params) => {
         return { "result": txhash };
 
     } catch (error) {
-        errorcounter++;
-        if (error.message && error.message == "already known")
+        if (error.message && error.message == "already known") {
             console.log("Notarization already Submitted");
-        else if (error.message && error.message == "Your request got reverted with the following reason string: Hash of notarization not found") {
-            return { "result": { "txid": error } };
         } else {
-            console.log(error);
+            console.log("Error Counter incremented in submitacceptednotarization" + error);
+            errorcounter++;
         }
         //locknotorization = false;
         return { "result": { "txid": error } };
