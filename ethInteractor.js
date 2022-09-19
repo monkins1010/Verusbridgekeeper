@@ -16,6 +16,7 @@ const ticker = process.argv.indexOf('-production') > -1 ? "VRSC" : "VRSCTEST";
 const logging = (process.argv.indexOf('-log') > -1);
 const debug = (process.argv.indexOf('-debug') > -1);
 const debugsubmit = (process.argv.indexOf('-debugsubmit') > -1);
+const noimports = (process.argv.indexOf('-noimports') > -1);
 let settings = undefined;
 let noaccount = false;
 const verusBridgeStartBlock = 1;
@@ -1126,8 +1127,8 @@ function reshapeTransfers(CTransferArray) {
 
 exports.submitImports = async(CTransferArray) => {
 
-    if (noaccount || errorcounter > 10) {
-        console.log("************** " + errorcounter + " Errors counted , Wallet will not spend ********************");
+    if (noaccount || errorcounter > 10 || noimports) {
+        console.log("************** Submitimports:" + errorcounter + " Errors counted , Wallet will not spend ********************");
         return { result: { error: true } };
     }
 
@@ -1200,7 +1201,7 @@ function IsLaunchComplete(pBaasNotarization) {
 exports.submitAcceptedNotarization = async(params) => {
 
     if (noaccount || errorcounter > 10) {
-        console.log("************** " + errorcounter + " Errors counted , Wallet will not spend ********************");
+        console.log("************** submitAcceptedNotarization" + errorcounter + " Errors counted , Wallet will not spend ********************");
         return { result: { error: true } };
     }
     if (debug) {
