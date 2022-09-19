@@ -19,6 +19,7 @@ const debugsubmit = (process.argv.indexOf('-debugsubmit') > -1);
 let settings = undefined;
 let noaccount = false;
 const verusBridgeStartBlock = 1;
+let errorcounter = 0;
 
 //Main coin ID's
 const ETHSystemID = constants.VETHCURRENCYID;
@@ -1125,7 +1126,8 @@ function reshapeTransfers(CTransferArray) {
 
 exports.submitImports = async(CTransferArray) => {
 
-    if (noaccount) {
+    if (noaccount || errorcounter > 10) {
+        console.log("************** " + errorcounter + " Errors counted , Wallet will not spend ********************8");
         return { result: { error: true } };
     }
 
@@ -1150,10 +1152,10 @@ exports.submitImports = async(CTransferArray) => {
 
     try {
 
-        for (let i = 0; i < CTempArray.length; i++) {
-            let processed = await verusBridgeMaster.methods.checkImport(CTempArray[i].txid).call();
+        if (CTempArray.length > 0) {
+            let processed = await verusBridgeMaster.methods.checkImport(CTempArray[0].txid).call();
             if (!processed) {
-                submitArray.push(CTempArray[i])
+                submitArray.push(CTempArray[0])
             }
         }
 
@@ -1166,7 +1168,7 @@ exports.submitImports = async(CTransferArray) => {
         }
     } catch (error) {
         // console.log("Error in\n", JSON.stringify(CTempArray));
-
+        errorcounter++;
         if (error.reason)
             console.log("\x1b[41m%s\x1b[0m", "submitImports:" + error.reason);
         else {
@@ -1196,7 +1198,8 @@ function IsLaunchComplete(pBaasNotarization) {
 
 exports.submitAcceptedNotarization = async(params) => {
 
-    if (noaccount) {
+    if (noaccount || errorcounter > 10) {
+        console.log("************** " + errorcounter + " Errors counted , Wallet will not spend ********************8");
         return { result: { error: true } };
     }
     if (debug) {
@@ -1364,6 +1367,7 @@ exports.submitAcceptedNotarization = async(params) => {
         return { "result": txhash };
 
     } catch (error) {
+        errorcounter++;
         if (error.message && error.message == "already known")
             console.log("Notarization already Submitted");
         else if (error.message && error.message == "Your request got reverted with the following reason string: Hash of notarization not found") {
