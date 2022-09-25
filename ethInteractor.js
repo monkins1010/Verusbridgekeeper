@@ -4,6 +4,7 @@ const confFile = require('./confFile.js')
 var constants = require('./constants');
 const ethersUtils = require('ethers').utils
 const { addHexPrefix } = require('./utils');
+const BigNumber = require('bignumber.js');
 
 const util = require('./utils.js');
 const notarizationFuncs = require('./notarization.js');
@@ -865,7 +866,7 @@ async function getProofRoot(height = "latest") {
     return latestproofroot;
 
 }
-
+//TODO: REMOVE
 async function getLastProofRoot() {
     let lastProof = {};
     try {
@@ -1323,6 +1324,9 @@ exports.submitAcceptedNotarization = async(params) => {
         blockheights.push(signatures[sigKeys[i]].blockheight);
         notaryAddresses.push(util.convertVerusAddressToEthAddress(sigKeys[i]));
     }
+
+    // Sort signatures in address accending order to assure uniqueness
+    // TODO: BigNumber.from("0xCA6b8EaB76F76B458b1c43c0C5f500b33f63F475").toBigInt()
 
     //process nodes
 
