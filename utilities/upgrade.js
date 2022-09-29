@@ -65,7 +65,7 @@ const ContractType = {
 const verusUpgradeAbi = require('../abi/VerusUpgrade.json');
 const { exit } = require('process');
 
-const verusUpgrade = new web3.eth.Contract(verusUpgradeAbi, "0xcD79EfE93a234604434d990407fBc5729d3389F6");
+const verusUpgrade = new web3.eth.Contract(verusUpgradeAbi, "0x9ab2624B7e55E0B2B7FD99676c9308Ea83E94c36");
 
 let account = web3.eth.accounts.privateKeyToAccount(settings.privatekey);
 web3.eth.accounts.wallet.add(account);
@@ -93,7 +93,7 @@ const getSig = async(sigParams) => {
 const updatecontract = async() => {
     try {
         let randomBuf = randomBytes(32);
-        const ISDNOTARY = ["0x429c5f2039f259c02885972852438731f21fc949","0xcc86752da0c3629b7478c2b542d8b5055efee861","0x9ea954a6086ba4693af454be3bfa34c9af27b6b4"]
+        const ISDNOTARY = ["0xb26820ee0c9b1276aac834cf457026a575dfce84", "0x51f9f5f053ce16cb7ca070f5c68a1cb0616ba624", "0x65374d6a8b853a5f61070ad7d774ee54621f9638"]
         const verusNotariserIDSHEX = ["0xb26820ee0c9b1276aac834cf457026a575dfce84", "0x51f9f5f053ce16cb7ca070f5c68a1cb0616ba624", "0x65374d6a8b853a5f61070ad7d774ee54621f9638"];
         const verusNotarizerIDs = ["RH7h8p9LN2Yb48SkxzNQ29c1Ltfju8Cd5i", "RLXCv2dQPB4NPqKUweFx4Ua5ZRPFfN2F6D" ,"REXBEDfAz9eJMCxdexa5GnWQBAax8hwuiu"]
         
@@ -114,7 +114,7 @@ const updatecontract = async() => {
         }
 
          //replace existing contract with new contract address
-        contracts[ContractType.VerusBridge] = "0xaD1f3667bfb5993098Ca69e45Ae77AD71E1F190f"; 
+        contracts[ContractType.VerusNotarizer] = "0x7F2E8cC87fE90Cd2D713aA0A62002fD1B58c06e2"; 
 
         for (let i = 0; i < 12; i++) 
         {

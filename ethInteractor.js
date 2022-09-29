@@ -50,11 +50,15 @@ const verusBridgeMasterAbi = require('./abi/VerusBridgeMaster.json');
 const verusNotarizerStorageAbi = require('./abi/VerusNotarizerStorage.json');
 const verusUpgradeManagerAbi = require('./abi/VerusUpgradeManager.json');
 const verusBridgeStorageAbi = require('./abi/VerusBridgeStorage.json');
+const verusNotarizerAbi = require('./abi/VerusNotarizer.json');
+const verusSerializerAbi = require('./abi/VerusSerializer.json');
 
 var verusBridgeMaster = undefined;
 var verusNotorizerStorage = undefined;
 var verusBridgeStorage = undefined;
 var storageAddress = undefined;
+var verusNotarizer = undefined;
+var verusSerializer = undefined;
 let GLOBAL_FIRST_BLOCK = undefined;
 
 let transactioncount = 0;
@@ -101,6 +105,8 @@ exports.init = async() => {
     verusBridgeMaster = new web3.eth.Contract(verusBridgeMasterAbi, contracts[constants.CONTRACT_TYPE.VerusBridgeMaster]);
     verusNotorizerStorage = new web3.eth.Contract(verusNotarizerStorageAbi, contracts[constants.CONTRACT_TYPE.VerusNotarizerStorage]);
     verusBridgeStorage = new web3.eth.Contract(verusBridgeStorageAbi, contracts[constants.CONTRACT_TYPE.VerusBridgeStorage]);
+    verusNotarizer = new web3.eth.Contract(verusNotarizerAbi, contracts[constants.CONTRACT_TYPE.VerusNotarizer]);
+    verusSerializer = new web3.eth.Contract(verusSerializerAbi, contracts[constants.CONTRACT_TYPE.VerusSerializer]);
     storageAddress = contracts[constants.CONTRACT_TYPE.VerusBridgeStorage];
 
     //GLOBAL_FIRST_BLOCK = await verusNotorizerStorage.methods.firstBlock().call();
@@ -959,36 +965,72 @@ exports.getNotarizationData = async() => {
     await setCachedApi(timenow, 'lastgetNotarizationDatatime');
 
     try {
-        let forksLength = await verusNotorizerStorage.methods.bestForkLength().call();
 
+        let forksLength = 0;
+        
         let forksData = [];
         let forks = [];
+        let j = 0
+        let notarizations = {};
 
-        for (let i = 0; i < parseInt(forksLength); i++) {
-            forksData.push(await verusNotorizerStorage.methods.bestForks(i).call());
-            forks.push(i);
+        try 
+        {
+            while(true)
+            {
+                let notarization = await verusNotarizer.methods.bestForks(j).call();
+                if (notarization && notarization.length >= 322)
+                {
+                    let length =  notarization.slice(64, 66)
+
+                    for (let i = 0; parseInt(length, 16) > i; i++)
+                    {
+                        let indexPos = 320 + (i*256);
+                        let hashPos = 66 + (i*256);
+                        let txidPos = 194 + (i*256);
+                        let nPos = 264 + (i*256);
+                        notarizations[parseInt(notarization.slice(indexPos, indexPos + 2), 16)] = 
+                            {txid:"0x" + notarization.substring(txidPos, txidPos + 64), 
+                            n: parseInt(notarization.slice(nPos, nPos + 2), 16),
+                            //TODO: remove reverse when contract stores by reversed hash
+                            hash: "0x" + notarization.substring(hashPos, hashPos + 64).match(/[a-fA-F0-9]{2}/g).reverse().join('')}; 
+                        forksData.push(parseInt(notarization.slice(indexPos, indexPos + 2), 16));
+                    }
+                    forks.push(forksData);
+                    j++;
+                }
+                else
+                    break;
+            }
+        } catch (e)
+        {
+           
         }
 
-        if (forksLength == 0) {
+        if (forks.length == 0) {
             Notarization.forks = [];
             Notarization.lastconfirmed = -1;
             Notarization.bestchain = 0;
         } else {
-            Notarization.forks = [forks];
+            Notarization.forks = forks;
             Notarization.bestchain = 0;
             Notarization.lastconfirmed = 0;
             Notarization.notarizations = [];
 
-            for (let i = 0; i < forksData.length; i++) {
-                let returnedNotarization = await verusNotorizerStorage.methods.getNotarization(forksData[i].txid.hash).call();
+
+            for (const index in notarizations) {
+                let returnedNotarization = await verusNotorizerStorage.methods.getNotarization(notarizations[index].hash).call();
+        
                 let tempNotarization = notarizationFuncs.createNotarization(returnedNotarization);
-                Notarization.notarizations.push({ index: i, txid: util.removeHexLeader(forksData[i].txid.hash), vout: forksData[i].txid.n, notarization: tempNotarization });
+                Notarization.notarizations.push({ index: parseInt(index), 
+                    txid: util.removeHexLeader(notarizations[index].txid), 
+                    vout: notarizations[index].n, notarization: tempNotarization });
             }
         }
 
         Notarization.version = 1;
 
         if (debug) {
+            console.log("NOTARIZATION CONTRACT INFO \n" + JSON.stringify(notarizations, null, 2))
             console.log(JSON.stringify(Notarization.notarizations, null, 2))
             console.log(JSON.stringify(forksData, null, 2))
         }
@@ -998,7 +1040,7 @@ exports.getNotarizationData = async() => {
         return { "result": Notarization };
 
     } catch (error) {
-        console.log("\x1b[41m%s\x1b[0m", "getNotarizationData:" + error);
+        console.log("\x1b[41m%s\x1b[0m", "getNotarizationData: (No spend tx) S" + error);
         return { "result": { "error": true, "message": error } };
     }
 }
@@ -1162,7 +1204,7 @@ exports.submitImports = async(CTransferArray) => {
         }
 
         await setCachedApi(CTransferArray, 'lastsubmitImports');
-
+        let testcall = await verusBridgeMaster.methods.submitImports(submitArray).call(); //test call
         if (submitArray.length > 0) {
             globalsubmitimports = await verusBridgeMaster.methods.submitImports(submitArray).send({ from: account.address, gas: maxGas });
         } else {
@@ -1205,8 +1247,8 @@ exports.submitAcceptedNotarization = async(params) => {
         console.log("************** submitAcceptedNotarization" + errorcounter + " Errors counted , Wallet will not spend ********************");
         return { result: { error: true } };
     }
-    if (debug) {
-        console.log(params[0]);
+    if (debugsubmit) {
+        console.log(JSON.stringify(params[0], null, 2));
         console.log(JSON.stringify(params[1], null, 2));
     }
     let pBaasNotarization = params[0];
@@ -1360,14 +1402,18 @@ exports.submitAcceptedNotarization = async(params) => {
         });
 
         data = "0x" + data.slice(66); //remove first 32bytes from hex array.
-
+        if (debugsubmit) {
+            console.log("********NOTARIZATION INPUT DATA********");
+            console.log(JSON.stringify(pBaasNotarization, null, 2));
+            console.log(JSON.stringify(data, null, 2));
+        }
+        let test4 = await verusSerializer.methods.serializeCPBaaSNotarization(pBaasNotarization).call();
         txhash = await verusBridgeMaster.methods.setLatestData(pBaasNotarization, data).call();
-        // console.log(JSON.stringify(txhash));
+        
         if (transactioncount != firstNonce) {
             txhash = await verusBridgeMaster.methods.setLatestData(pBaasNotarization, data).send({ from: account.address, gas: maxGas });
             transactioncount = firstNonce;
         }
-        let test = await web3.eth.getTransaction(txhash.transactionHash);
 
         await setCachedApi(txidObj.txid, 'lastNotarizationTxid');
         return { "result": txhash };
@@ -1377,7 +1423,7 @@ exports.submitAcceptedNotarization = async(params) => {
             console.log("Notarization already Submitted");
         } else {
             console.log("Error Counter incremented in submitacceptednotarization" + error);
-            errorcounter++;
+           // errorcounter++;
         }
         //locknotorization = false;
         return { "result": { "txid": error } };
@@ -1473,16 +1519,16 @@ exports.getLastImportFrom = async() => {
             globalgetlastimport = timenow;
 
             block = await web3.eth.getBlock("latest");
-            let lastimportheight = await verusBridgeStorage.methods.lastTxImportHeight().call();
+            let lastimporttxid = await verusBridgeStorage.methods.lastTxIdImport().call();
 
-            let lastImportInfo = await verusBridgeStorage.methods.lastImportInfo(lastimportheight).call();
+            let lastImportInfo = await verusBridgeStorage.methods.lastImportInfo(lastimporttxid).call();
 
             let lastimport = {};
 
             lastimport.version = 1;
             lastimport.flags = 68;
             lastimport.sourcesystemid = ETHSystemID;
-            lastimport.sourceheight = parseInt(lastimportheight);
+            lastimport.sourceheight = parseInt(lastImportInfo.height);
             lastimport.importcurrencyid = ETHSystemID;
             lastimport.valuein = {};
             lastimport.tokensout = {};
@@ -1495,12 +1541,20 @@ exports.getLastImportFrom = async() => {
             let lastconfirmednotarization = {};
             let lastconfirmedutxo = {};
             try {
-                forksData = await verusNotorizerStorage.methods.bestForks(0).call();
-                let returnedNotarization = await verusNotorizerStorage.methods.getNotarization(forksData.txid.hash).call();
+                forksData = await verusNotarizer.methods.bestForks(0).call();
+                let hashPos = 66;
+                let txidPos = 194;
+                let nPos = 264;
+
+                let txid = "0x" + forksData.substring(txidPos, txidPos + 64);
+                let n =  parseInt(forksData.substring(nPos, nPos + 2), 16);
+
+                let hash = "0x" + forksData.substring(hashPos, hashPos + 64).match(/[a-fA-F0-9]{2}/g).reverse().join('')
+                let returnedNotarization = await verusNotorizerStorage.methods.getNotarization(hash).call();
 
                 lastconfirmednotarization = notarizationFuncs.createNotarization(returnedNotarization);
 
-                lastconfirmedutxo = { txid: util.removeHexLeader(forksData.txid.hash), voutnum: forksData.txid.n }
+                lastconfirmedutxo = { txid: util.removeHexLeader(txid), voutnum: n }
 
             } catch (e) {
                 console.log("\x1b[41m%s\x1b[0m", "No Notarizations recieved yet");

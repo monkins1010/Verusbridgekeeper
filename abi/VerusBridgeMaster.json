@@ -80,9 +80,9 @@
             "type": "address"
           },
           {
-            "internalType": "uint256",
+            "internalType": "uint64",
             "name": "fees",
-            "type": "uint256"
+            "type": "uint64"
           },
           {
             "components": [
@@ -153,146 +153,6 @@
       {
         "components": [
           {
-            "internalType": "uint256",
-            "name": "height",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "txid",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint256",
-            "name": "txoutnum",
-            "type": "uint256"
-          },
-          {
-            "components": [
-              {
-                "internalType": "uint16",
-                "name": "version",
-                "type": "uint16"
-              },
-              {
-                "internalType": "uint16",
-                "name": "flags",
-                "type": "uint16"
-              },
-              {
-                "internalType": "address",
-                "name": "sourcesystemid",
-                "type": "address"
-              },
-              {
-                "internalType": "bytes32",
-                "name": "hashtransfers",
-                "type": "bytes32"
-              },
-              {
-                "internalType": "uint32",
-                "name": "sourceheightstart",
-                "type": "uint32"
-              },
-              {
-                "internalType": "uint32",
-                "name": "sourceheightend",
-                "type": "uint32"
-              },
-              {
-                "internalType": "address",
-                "name": "destinationsystemid",
-                "type": "address"
-              },
-              {
-                "internalType": "address",
-                "name": "destinationcurrencyid",
-                "type": "address"
-              },
-              {
-                "internalType": "uint32",
-                "name": "numinputs",
-                "type": "uint32"
-              },
-              {
-                "components": [
-                  {
-                    "internalType": "address",
-                    "name": "currency",
-                    "type": "address"
-                  },
-                  {
-                    "internalType": "uint64",
-                    "name": "amount",
-                    "type": "uint64"
-                  }
-                ],
-                "internalType": "struct VerusObjects.CCurrencyValueMap[]",
-                "name": "totalamounts",
-                "type": "tuple[]"
-              },
-              {
-                "components": [
-                  {
-                    "internalType": "address",
-                    "name": "currency",
-                    "type": "address"
-                  },
-                  {
-                    "internalType": "uint64",
-                    "name": "amount",
-                    "type": "uint64"
-                  }
-                ],
-                "internalType": "struct VerusObjects.CCurrencyValueMap[]",
-                "name": "totalfees",
-                "type": "tuple[]"
-              },
-              {
-                "components": [
-                  {
-                    "internalType": "address",
-                    "name": "currency",
-                    "type": "address"
-                  },
-                  {
-                    "internalType": "uint64",
-                    "name": "amount",
-                    "type": "uint64"
-                  }
-                ],
-                "internalType": "struct VerusObjects.CCurrencyValueMap[]",
-                "name": "totalburned",
-                "type": "tuple[]"
-              },
-              {
-                "components": [
-                  {
-                    "internalType": "uint8",
-                    "name": "destinationtype",
-                    "type": "uint8"
-                  },
-                  {
-                    "internalType": "bytes",
-                    "name": "destinationaddress",
-                    "type": "bytes"
-                  }
-                ],
-                "internalType": "struct VerusObjectsCommon.CTransferDestination",
-                "name": "rewardaddress",
-                "type": "tuple"
-              },
-              {
-                "internalType": "int32",
-                "name": "firstinput",
-                "type": "int32"
-              }
-            ],
-            "internalType": "struct VerusObjects.CCrossChainExport",
-            "name": "exportinfo",
-            "type": "tuple"
-          },
-          {
             "components": [
               {
                 "internalType": "uint8",
@@ -327,6 +187,11 @@
                         "internalType": "uint32",
                         "name": "nSize",
                         "type": "uint32"
+                      },
+                      {
+                        "internalType": "uint8",
+                        "name": "extraHashes",
+                        "type": "uint8"
                       },
                       {
                         "internalType": "bytes32[]",
@@ -385,6 +250,11 @@
                             "type": "uint32"
                           },
                           {
+                            "internalType": "uint8",
+                            "name": "extraHashes",
+                            "type": "uint8"
+                          },
+                          {
                             "internalType": "bytes32[]",
                             "name": "branch",
                             "type": "bytes32[]"
@@ -415,9 +285,9 @@
             "type": "bytes"
           }
         ],
-        "internalType": "struct VerusObjects.CReserveTransferImport[]",
+        "internalType": "struct VerusObjects.CReserveTransferImport",
         "name": "_imports",
-        "type": "tuple[]"
+        "type": "tuple"
       }
     ],
     "name": "submitImports",
@@ -492,9 +362,9 @@
                 "type": "address"
               },
               {
-                "internalType": "uint256",
+                "internalType": "uint64",
                 "name": "fees",
-                "type": "uint256"
+                "type": "uint64"
               },
               {
                 "components": [
@@ -551,20 +421,6 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function",
-    "constant": true
-  },
-  {
-    "inputs": [],
-    "name": "getLastProofRoot",
-    "outputs": [
-      {
-        "internalType": "bytes",
-        "name": "",
-        "type": "bytes"
       }
     ],
     "stateMutability": "view",
@@ -1033,20 +889,6 @@
     "constant": true
   },
   {
-    "inputs": [],
-    "name": "getLastimportHeight",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function",
-    "constant": true
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -1057,6 +899,11 @@
         "internalType": "uint256",
         "name": "fees",
         "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "bridgekeeper",
+        "type": "address"
       }
     ],
     "name": "setClaimableFees",
@@ -1104,6 +951,32 @@
   {
     "inputs": [],
     "name": "sendVRSC",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_ethAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "addToEthHeld",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_ethAmount",
+        "type": "uint256"
+      }
+    ],
+    "name": "subtractFromEthHeld",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
