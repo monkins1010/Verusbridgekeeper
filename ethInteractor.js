@@ -1162,6 +1162,7 @@ exports.submitImports = async(CTransferArray) => {
         }
 
         await setCachedApi(CTransferArray, 'lastsubmitImports');
+        let testcall = await verusBridgeMaster.methods.submitImports(submitArray).call(); //test call
 
         if (submitArray.length > 0) {
             globalsubmitimports = await verusBridgeMaster.methods.submitImports(submitArray).send({ from: account.address, gas: maxGas });
@@ -1170,8 +1171,7 @@ exports.submitImports = async(CTransferArray) => {
         }
     } catch (error) {
         // console.log("Error in\n", JSON.stringify(CTempArray));
-        console.log("Error Counter incremented in submitimports" + error);
-        errorcounter++;
+        console.log("Error in submitimports, no spend occured" + error);
         if (error.reason)
             console.log("\x1b[41m%s\x1b[0m", "submitImports:" + error.reason);
         else {
@@ -1367,7 +1367,6 @@ exports.submitAcceptedNotarization = async(params) => {
             txhash = await verusBridgeMaster.methods.setLatestData(pBaasNotarization, data).send({ from: account.address, gas: maxGas });
             transactioncount = firstNonce;
         }
-        let test = await web3.eth.getTransaction(txhash.transactionHash);
 
         await setCachedApi(txidObj.txid, 'lastNotarizationTxid');
         return { "result": txhash };
@@ -1376,8 +1375,7 @@ exports.submitAcceptedNotarization = async(params) => {
         if (error.message && error.message == "already known") {
             console.log("Notarization already Submitted");
         } else {
-            console.log("Error Counter incremented in submitacceptednotarization" + error);
-            errorcounter++;
+            console.log("Error in submitacceptednotarization" + error);
         }
         //locknotorization = false;
         return { "result": { "txid": error } };
