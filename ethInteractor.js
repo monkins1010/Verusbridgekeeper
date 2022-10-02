@@ -214,25 +214,19 @@ function serializeCrossChainExport(cce) {
     encodedOutput = Buffer.concat([encodedOutput, Buffer.from(util.removeHexLeader(cce.hashtransfers), 'hex')]);
     encodedOutput = Buffer.concat([encodedOutput, bitGoUTXO.address.fromBase58Check(cce.destinationsystemid, 160).hash]);
     encodedOutput = Buffer.concat([encodedOutput, bitGoUTXO.address.fromBase58Check(cce.destinationcurrencyid, 160).hash]);
+    encodedOutput = Buffer.concat([encodedOutput, Buffer.from('0000', 'hex')]); //exporter set to type 00 and address length 00
+    encodedOutput = Buffer.concat([encodedOutput, util.writeUInt(cce.firstinput, 32)]);
+    encodedOutput = Buffer.concat([encodedOutput, util.writeUInt(cce.numinputs, 32)]);
     encodedOutput = Buffer.concat([encodedOutput, util.writeVarInt(cce.sourceheightstart)]);
     encodedOutput = Buffer.concat([encodedOutput, util.writeVarInt(cce.sourceheightend)]);
-    encodedOutput = Buffer.concat([encodedOutput, util.writeUInt(cce.numinputs, 32)]);
-    //totalamounts CCurrencyValueMap
-    encodedOutput = Buffer.concat([encodedOutput, serializeCCurrencyValueMapArray(cce.totalamounts)]);
     //totalfees CCurrencyValueMap
     encodedOutput = Buffer.concat([encodedOutput, serializeCCurrencyValueMapArray(cce.totalfees)]);
+    //totalamounts CCurrencyValueMap
+    encodedOutput = Buffer.concat([encodedOutput, serializeCCurrencyValueMapArray(cce.totalamounts)]);
     //totalburned CCurrencyValueMap
     encodedOutput = Buffer.concat([encodedOutput, util.writeCompactSize(1), serializeCCurrencyValueMap(cce.totalburned[0])]); //fees always blank value map 0
     //CTransfer DEstionation for Reward Address
-    let typeETH = Buffer.alloc(1);
-    typeETH.writeUInt8(4); //eth type
-
-    encodedOutput = Buffer.concat([encodedOutput, typeETH]);
-    let destination = Buffer.from(bitGoUTXO.address.fromBase58Check(cce.rewardaddress, 160).hash); // TODO: [EB-3] Daemon expects vector not uint160
-
-    encodedOutput = Buffer.concat([encodedOutput, util.writeVarInt(destination.length), destination]);
-
-    encodedOutput = Buffer.concat([encodedOutput, util.writeUInt(cce.firstinput, 32)]);
+    
 
     let reserveTransfers = Buffer.alloc(1);
     reserveTransfers.writeUInt8(0); //empty reserve transfers
@@ -315,16 +309,11 @@ function serializeEthFullProof(ethProof) {
     encodedOutput = Buffer.concat([encodedOutput, serializeEthProof(ethProof.accountProof)]);
     //serialize address bytes 20
     encodedOutput = Buffer.concat([encodedOutput, Buffer.from(util.removeHexLeader(ethProof.address), 'hex')]);
-    let balanceBuffer = Buffer.alloc(8);
     let balancehex = util.removeHexLeader(web3.utils.numberToHex(ethProof.balance));
-    let isBigBalance = balancehex.length > 16 || balancehex === "ffffffffffffffff";
-    //TODO: remove 
-    if (isBigBalance) {
-        balanceBuffer = Buffer.from("ffffffffffffffff", 'hex')
-    } else {
-        balanceBuffer.writeBigUInt64LE(BigInt(ethProof.balance));
-    }
-    encodedOutput = Buffer.concat([encodedOutput, balanceBuffer]);
+    let temphexreversed = web3.utils.padLeft(balancehex, 64).match(/[a-fA-F0-9]{2}/g).reverse().join('');
+    let tempbuf = Buffer.from(temphexreversed, 'hex');
+    encodedOutput = Buffer.concat([encodedOutput, tempbuf]);
+
     //serialize codehash bytes 32
     encodedOutput = Buffer.concat([encodedOutput, Buffer.from(util.removeHexLeader(ethProof.codeHash), 'hex')]);
     //serialize nonce as uint32
@@ -339,20 +328,6 @@ function serializeEthFullProof(ethProof) {
     // if(key.length % 2 != 0) key = '0'.concat(key);
     encodedOutput = Buffer.concat([encodedOutput, Buffer.from(key, 'hex')]);
     encodedOutput = Buffer.concat([encodedOutput, serializeEthProof(ethProof.storageProof[0].proof)]);
-
-    let proof = util.removeHexLeader(ethProof.storageProof[0].value);
-
-    //if(proof.length % 2 != 0) proof = '0'.concat(proof);
-    proof = web3.utils.padLeft(proof, 64);
-    let proofval = Buffer.alloc(32);
-    Buffer.from(proof, 'hex').copy(proofval);
-    encodedOutput = Buffer.concat([encodedOutput, proofval]);
-    if (isBigBalance) {
-        let temphexreversed = web3.utils.padLeft(balancehex, 64).match(/[a-fA-F0-9]{2}/g).reverse().join('');
-        let tempbuf = Buffer.from(temphexreversed, 'hex');
-        encodedOutput = Buffer.concat([encodedOutput, tempbuf]);
-    }
-    //append 12 0s to the end of the buffer to override the component part of the Proof
     return encodedOutput;
 }
 
@@ -515,7 +490,7 @@ function createCrossChainExport(transfers, blockHeight, jsonready = false, poola
 
     //  console.log(JSON.stringify(cce.totalamounts));
     cce.totalburned = [{ "currency": '0x0000000000000000000000000000000000000000', "amount": 0 }]; // serialiser doesnt like empty strings or non BIgints
-    cce.rewardaddress = "iKjrTCwoPFRk44fAi2nYNbPG16ZUQjv1NB"; //  TODO: what should this be?
+    cce.rewardaddress = ""; //  blank
     cce.firstinput = 1;
     //console.log("cce", JSON.stringify(cce));
     return cce;
@@ -573,7 +548,7 @@ function createCrossChainExportToETH(transfers, blockHeight, jsonready = false) 
     }
     //  console.log(JSON.stringify(cce.totalamounts));
     cce.totalburned = [{ "currency": '0x0000000000000000000000000000000000000000', "amount": 0 }];
-    cce.rewardaddress = { destinationtype: 9, destinationaddress: util.convertVerusAddressToEthAddress("iKjrTCwoPFRk44fAi2nYNbPG16ZUQjv1NB") }; //  TODO: what should this be
+    cce.rewardaddress = {};
     cce.firstinput = 1;
     return cce;
 }
@@ -702,7 +677,7 @@ exports.getExports = async(input) => {
 
         let exportSets = [];
         let tempExportset = [];
-        if (heightstart == 0 || heightstart == '0') {
+        if (parseInt(heightstart) == 0) {
             exportSets = await verusBridgeMaster.methods.getReadyExportsByRange(heightstart, heightend).call();
         } else {
             let range = parseInt(heightend) - parseInt(heightstart);
@@ -715,11 +690,11 @@ exports.getExports = async(input) => {
 
                 for (let i = 0; i < tempfloor; i++) {
                     tempstartheight = parseInt(heightstart) + (i * DELTA);
-                    tempendheight = parseInt(heightstart) + ((i + 1) * DELTA);
+                    tempendheight = parseInt(heightstart) + ((i + 1) * DELTA) - 1;
                     tempExportset.push(await verusBridgeMaster.methods.getReadyExportsByRange(tempstartheight, tempendheight).call());
                 }
                 if (tempremaind > 0) {
-                    tempExportset.push(await verusBridgeMaster.methods.getReadyExportsByRange(parseInt(heightend) - tempremaind, heightend).call());
+                    tempExportset.push(await verusBridgeMaster.methods.getReadyExportsByRange(tempendheight + 1, heightend).call());
                 }
 
                 for (let j = 0; j < tempExportset.length; j++) {
@@ -967,43 +942,47 @@ exports.getNotarizationData = async() => {
     try {
 
         let forksLength = 0;
-        
+
         let forksData = [];
         let forks = [];
         let j = 0
         let notarizations = {};
+        let largestIndex = 0;
 
-        try 
-        {
-            while(true)
-            {
+        try {
+            while (true) {
                 let notarization = await verusNotarizer.methods.bestForks(j).call();
-                if (notarization && notarization.length >= 322)
-                {
-                    let length =  notarization.slice(64, 66)
+                if (notarization && notarization.length >= 322) {
+                    let length = notarization.slice(64, 66)
 
-                    for (let i = 0; parseInt(length, 16) > i; i++)
-                    {
-                        let indexPos = 320 + (i*256);
-                        let hashPos = 66 + (i*256);
-                        let txidPos = 194 + (i*256);
-                        let nPos = 264 + (i*256);
-                        notarizations[parseInt(notarization.slice(indexPos, indexPos + 2), 16)] = 
-                            {txid:"0x" + notarization.substring(txidPos, txidPos + 64), 
+                    for (let i = 0; parseInt(length, 16) > i; i++) {
+                        let indexPos = 320 + (i * 256);
+                        let hashPos = 66 + (i * 256);
+                        let txidPos = 194 + (i * 256);
+                        let nPos = 264 + (i * 256);
+                        let index = parseInt(notarization.slice(indexPos, indexPos + 2), 16);
+
+                        notarizations[index] = {
+                            txid: "0x" + notarization.substring(txidPos, txidPos + 64),
                             n: parseInt(notarization.slice(nPos, nPos + 2), 16),
                             //TODO: remove reverse when contract stores by reversed hash
-                            hash: "0x" + notarization.substring(hashPos, hashPos + 64).match(/[a-fA-F0-9]{2}/g).reverse().join('')}; 
-                        forksData.push(parseInt(notarization.slice(indexPos, indexPos + 2), 16));
+                            hash: "0x" + notarization.substring(hashPos, hashPos + 64).match(/[a-fA-F0-9]{2}/g).reverse().join('')
+                        };
+                        if (largestIndex < index)
+                        {
+                            largestIndex = index;
+                            Notarization.bestchain = j;
+                        }
+                        forksData.push(index);
                     }
                     forks.push(forksData);
+                    forksData = [];
                     j++;
-                }
-                else
+                } else
                     break;
             }
-        } catch (e)
-        {
-           
+        } catch (e) {
+
         }
 
         if (forks.length == 0) {
@@ -1012,27 +991,30 @@ exports.getNotarizationData = async() => {
             Notarization.bestchain = 0;
         } else {
             Notarization.forks = forks;
-            Notarization.bestchain = 0;
             Notarization.lastconfirmed = 0;
             Notarization.notarizations = [];
 
 
             for (const index in notarizations) {
                 let returnedNotarization = await verusNotorizerStorage.methods.getNotarization(notarizations[index].hash).call();
-        
+
                 let tempNotarization = notarizationFuncs.createNotarization(returnedNotarization);
-                Notarization.notarizations.push({ index: parseInt(index), 
-                    txid: util.removeHexLeader(notarizations[index].txid), 
-                    vout: notarizations[index].n, notarization: tempNotarization });
+                Notarization.notarizations.push({
+                    index: parseInt(index),
+                    txid: util.removeHexLeader(notarizations[index].txid),
+                    vout: notarizations[index].n,
+                    notarization: tempNotarization
+                });
             }
         }
 
         Notarization.version = 1;
 
         if (debug) {
-            console.log("NOTARIZATION CONTRACT INFO \n" + JSON.stringify(notarizations, null, 2))
-            console.log(JSON.stringify(Notarization.notarizations, null, 2))
-            console.log(JSON.stringify(forksData, null, 2))
+          //  console.log("NOTARIZATION CONTRACT INFO \n" + JSON.stringify(notarizations, null, 2))
+         //   console.log(JSON.stringify(Notarization.notarizations, null, 2))
+            console.log(JSON.stringify(forks, null, 2))
+            console.log(JSON.stringify("Best Chain: " + Notarization.bestchain, null, 2))
         }
 
         await setCachedApi({ "result": Notarization }, 'lastgetNotarizationData');
@@ -1409,7 +1391,7 @@ exports.submitAcceptedNotarization = async(params) => {
         }
         let test4 = await verusSerializer.methods.serializeCPBaaSNotarization(pBaasNotarization).call();
         txhash = await verusBridgeMaster.methods.setLatestData(pBaasNotarization, data).call();
-        
+
         if (transactioncount != firstNonce) {
             txhash = await verusBridgeMaster.methods.setLatestData(pBaasNotarization, data).send({ from: account.address, gas: maxGas });
             transactioncount = firstNonce;
@@ -1423,7 +1405,7 @@ exports.submitAcceptedNotarization = async(params) => {
             console.log("Notarization already Submitted");
         } else {
             console.log("Error Counter incremented in submitacceptednotarization" + error);
-           // errorcounter++;
+            // errorcounter++;
         }
         //locknotorization = false;
         return { "result": { "txid": error } };
@@ -1547,7 +1529,7 @@ exports.getLastImportFrom = async() => {
                 let nPos = 264;
 
                 let txid = "0x" + forksData.substring(txidPos, txidPos + 64);
-                let n =  parseInt(forksData.substring(nPos, nPos + 2), 16);
+                let n = parseInt(forksData.substring(nPos, nPos + 2), 16);
 
                 let hash = "0x" + forksData.substring(hashPos, hashPos + 64).match(/[a-fA-F0-9]{2}/g).reverse().join('')
                 let returnedNotarization = await verusNotorizerStorage.methods.getNotarization(hash).call();
