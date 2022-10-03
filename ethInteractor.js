@@ -1,51 +1,30 @@
 const Web3 = require('web3');
 const bitGoUTXO = require('bitgo-utxo-lib');
 const confFile = require('./confFile.js')
-var constants = require('./constants');
+const constants = require('./constants');
 const ethersUtils = require('ethers').utils
 const { addHexPrefix } = require('./utils');
-const BigNumber = require('bignumber.js');
-
 const util = require('./utils.js');
 const notarizationFuncs = require('./notarization.js');
 const abi = new Web3().eth.abi
 const deserializer = require('./deserializer.js');
-
 const { initApiCache, setCachedApi, getCachedApi, checkCachedApi, setCachedApiValue, clearCachedApis } = require('./cache/apicalls')
 
+// command line arguments
 const ticker = process.argv.indexOf('-production') > -1 ? "VRSC" : "VRSCTEST";
 const logging = (process.argv.indexOf('-log') > -1);
 const debug = (process.argv.indexOf('-debug') > -1);
 const debugsubmit = (process.argv.indexOf('-debugsubmit') > -1);
 const noimports = (process.argv.indexOf('-noimports') > -1);
-let settings = undefined;
-let noaccount = false;
-const verusBridgeStartBlock = 1;
-let errorcounter = 0;
+const CHECKHASH = (process.argv.indexOf('-checkhash') > -1);
 
 //Main coin ID's
 const ETHSystemID = constants.VETHCURRENCYID;
 const VerusSystemID = constants.VERUSSYSTEMID
 const BridgeID = constants.BRIDGEID
-
-var d = new Date();
-let globalgetinfo = {};
-let globalgetcurrency = {};
-let globallastimport = {};
-let globalsubmitimports = { "transactionHash": "" };
-
-let globaltimedelta = 60000; //60s
-let globallastinfo = d.valueOf() - globaltimedelta;
-let globallastcurrency = d.valueOf() - globaltimedelta;
-let globalgetlastimport = d.valueOf() - globaltimedelta;
-
-const IAddress = 102;
-const RAddressBaseConst = 60;
-
-let maxGas = 6000000;
-
-let web3 = undefined;
-
+const IAddressBaseConst = constants.IAddressBaseConst;
+const RAddressBaseConst = constants.RAddressBaseConst;
+const maxGas = constants.maxGas;
 const verusBridgeMasterAbi = require('./abi/VerusBridgeMaster.json');
 const verusNotarizerStorageAbi = require('./abi/VerusNotarizerStorage.json');
 const verusUpgradeManagerAbi = require('./abi/VerusUpgradeManager.json');
@@ -53,20 +32,26 @@ const verusBridgeStorageAbi = require('./abi/VerusBridgeStorage.json');
 const verusNotarizerAbi = require('./abi/VerusNotarizer.json');
 const verusSerializerAbi = require('./abi/VerusSerializer.json');
 
-var verusBridgeMaster = undefined;
-var verusNotorizerStorage = undefined;
-var verusBridgeStorage = undefined;
-var storageAddress = undefined;
-var verusNotarizer = undefined;
-var verusSerializer = undefined;
-let GLOBAL_FIRST_BLOCK = undefined;
-
+// Global settings
+let settings = undefined;
+let noaccount = false;
+let web3 = undefined;
+let d = new Date();
+let globalsubmitimports = { "transactionHash": "" };
+let globaltimedelta = constants.globaltimedelta; //60s
+let globallastinfo = d.valueOf() - globaltimedelta;
+let globallastcurrency = d.valueOf() - globaltimedelta;
+let globalgetlastimport = d.valueOf() - globaltimedelta;
+let verusBridgeMaster = undefined;
+let verusNotorizerStorage = undefined;
+let verusBridgeStorage = undefined;
+let storageAddress = undefined;
+let verusNotarizer = undefined;
+let verusSerializer = undefined;
 let transactioncount = 0;
-
 let account = undefined;
-
 let upgradeManager = undefined;
-var contracts = [];
+let contracts = [];
 
 function setupConf() {
     settings = confFile.loadConfFile(ticker);
@@ -92,7 +77,6 @@ function setupConf() {
     }
     web3.eth.handleRevert = true;
     upgradeManager = new web3.eth.Contract(verusUpgradeManagerAbi, settings.upgrademanageraddress);
-
 }
 
 exports.init = async() => {
@@ -108,8 +92,6 @@ exports.init = async() => {
     verusNotarizer = new web3.eth.Contract(verusNotarizerAbi, contracts[constants.CONTRACT_TYPE.VerusNotarizer]);
     verusSerializer = new web3.eth.Contract(verusSerializerAbi, contracts[constants.CONTRACT_TYPE.VerusSerializer]);
     storageAddress = contracts[constants.CONTRACT_TYPE.VerusBridgeStorage];
-
-    //GLOBAL_FIRST_BLOCK = await verusNotorizerStorage.methods.firstBlock().call();
 
     initApiCache();
     eventListener(contracts[constants.CONTRACT_TYPE.VerusNotarizer]);
@@ -131,24 +113,21 @@ async function eventListener(notarizerAddress) {
         ]
     };
 
-    var subscription = web3.eth.subscribe('logs', options, function(error, result) {
-        if (!error) console.log('got result');
+    web3.eth.subscribe('logs', options, function(error, result) {
+        if (!error) console.log('got result' +  result);
         else console.log(error);
     }).on("data", function(log) {
         console.log('***** EVENT: Got new Notarization, Clearing the cache*********');
         clearCachedApis();
-        globallastimport = {};
         // await setCachedApi(log?.blockNumber, 'lastNotarizationHeight');
     }).on("changed", function(log) {
         console.log('***** EVENT: Got new Notarization, Clearing the cache**********');
         clearCachedApis();
-        globallastimport = {};
     });
 }
 
 function amountFromValue(incoming) {
     if (incoming == 0) return 0;
-    //use toFixed to stop floating point behaviour
     return (incoming * 100000000).toFixed(0);
 }
 
@@ -170,7 +149,7 @@ function serializeCCurrencyValueMapVarInt(ccvm) {
 
 function serializeCCurrencyValueMapArray(ccvm) {
     let encodedOutput = util.writeCompactSize(ccvm.length);
-    //loop through the array
+
     for (let i = 0; i < ccvm.length; i++) {
         //  console.log("ccvm:",ccvm[i]);  [encodedOutput,bitGoUTXO.address.fromBase58Check(ccvm[i].currency,160).hash]
         encodedOutput = Buffer.concat([encodedOutput, bitGoUTXO.address.fromBase58Check(ccvm[i].currency, 160).hash]);
@@ -182,7 +161,7 @@ function serializeCCurrencyValueMapArray(ccvm) {
 }
 
 function serializeCTransferDestination(ctd) {
-    // Buffer.concat([encodedOutput,writeUInt(ctd.destinationaddress,160)]);
+
     let encodedOutput = Buffer.alloc(1);
     encodedOutput.writeUInt8(ctd.destinationtype);
 
@@ -227,7 +206,6 @@ function serializeCrossChainExport(cce) {
     encodedOutput = Buffer.concat([encodedOutput, util.writeCompactSize(1), serializeCCurrencyValueMap(cce.totalburned[0])]); //fees always blank value map 0
     //CTransfer DEstionation for Reward Address
     
-
     let reserveTransfers = Buffer.alloc(1);
     reserveTransfers.writeUInt8(0); //empty reserve transfers
 
@@ -238,7 +216,7 @@ function serializeCrossChainExport(cce) {
 
 function serializeCReserveTransfers(crts) {
 
-    let encodedOutput = Buffer.from(''); //util.writeCompactSize(crts.length);
+    let encodedOutput = Buffer.from(''); 
     for (let i = 0; i < crts.length; i++) {
         encodedOutput = Buffer.concat([encodedOutput, util.writeVarInt(crts[i].version)]); // should be 1 for single transfer
         if (crts[i].currencyvalue)
@@ -261,18 +239,17 @@ function serializeCReserveTransfers(crts) {
             encodedOutput = Buffer.concat([encodedOutput, Buffer.from(util.removeHexLeader(crts[i].destsystemid), 'hex')]);
         else if ((crts[i].flags & 0x40) == 0x40 && crts[i].exportto)
             encodedOutput = Buffer.concat([encodedOutput, Buffer.from(util.removeHexLeader(crts[i].exportto), 'hex')]);
-        // if(logging)
-        //  console.log("log of CReserve: ",JSON.stringify(crts[i]));
+
     }
 
-    return encodedOutput; //Buffer.from(removeHexLeader(
+    return encodedOutput; 
 }
 
 //takes in an array of proof strings and serializes
 function serializeEthProof(proofArray) {
     if (proofArray === undefined) return null;
     let encodedOutput = util.writeVarInt(proofArray.length);
-    //loop through the array and add each string length and the sstring
+    //loop through the array and add each string length and the string
     //serialize account proof
     for (let i = 0; i < proofArray.length; i++) {
         //remove the 0x at the start of the string
@@ -288,13 +265,12 @@ function serializeEthFullProof(ethProof) {
     let version = 1;
     encodedOutput.writeUInt8(version);
 
-    let type = 3; //type eth
+    let type = constants.TRANSFER_TYPE_ETH; 
     let typeBuffer = Buffer.alloc(1);
     typeBuffer.writeUInt8(type);
     encodedOutput = Buffer.concat([encodedOutput, typeBuffer]);
 
     //write accountProof length
-    //proof size as an int 32
     let sizeBuffer = Buffer.alloc(4);
     sizeBuffer.writeUInt32LE(1);
     encodedOutput = Buffer.concat([encodedOutput, sizeBuffer]);
@@ -325,13 +301,11 @@ function serializeEthFullProof(ethProof) {
     //loop through storage proofs
     let key = util.removeHexLeader(ethProof.storageProof[0].key);
     key = web3.utils.padLeft(key, 64);
-    // if(key.length % 2 != 0) key = '0'.concat(key);
     encodedOutput = Buffer.concat([encodedOutput, Buffer.from(key, 'hex')]);
     encodedOutput = Buffer.concat([encodedOutput, serializeEthProof(ethProof.storageProof[0].proof)]);
     return encodedOutput;
 }
 
-/** get Proof for **/
 async function getProof(eIndex, blockHeight) {
     let index = "0000000000000000000000000000000000000000000000000000000000000000";
 
@@ -375,10 +349,12 @@ function createComponents(transfers, blockHeight, previousExportHash, poolavaila
 
     serialized = Buffer.concat([serialized, prevhash]);
 
-    //let hashofcce_reserves = keccak256(serialized);
-    // let serialization = Buffer.concat([serializeCrossChainExport(cce),serializeCReserveTransfers(transfers).slice(1)]);
-    //console.log("Hash of cce+reservet: \n", hashofcce_reserves.toString('hex'));
-    //console.log("serialization of ccx + prevhash: \n", serialized.toString('hex'));
+    if (CHECKHASH) {
+        let hashofcce_reserves = keccak256(serialized);
+        let serialization = Buffer.concat([serializeCrossChainExport(cce),serializeCReserveTransfers(transfers).slice(1)]);
+        console.log("Hash of cce+reservet: \n", hashofcce_reserves.toString('hex'));
+        console.log("serialization of ccx + prevhash: \n", serialization.toString('hex'));
+    }
 
     serialized = Buffer.concat([util.writeCompactSize(serialized.length), serialized]);
 
@@ -399,20 +375,18 @@ function createOutboundTransfers(transfers) {
         let outTransfer = {};
         outTransfer.version = 1;
         outTransfer.currencyvalues = {
-            [util.ethAddressToVAddress(transfer.currencyvalue.currency, IAddress)]: util.uint64ToVerusFloat(transfer.currencyvalue.amount)
+            [util.ethAddressToVAddress(transfer.currencyvalue.currency, IAddressBaseConst)]: util.uint64ToVerusFloat(transfer.currencyvalue.amount)
         };
         outTransfer.flags = transfer.flags;
-        //outTransfer.crosssystem = true;
-        outTransfer.exportto = util.ethAddressToVAddress(transfer.destsystemid, IAddress);
-        //outTransfer.convert = true;
-        outTransfer.feecurrencyid = util.ethAddressToVAddress(transfer.feecurrencyid, IAddress);
+        outTransfer.exportto = util.ethAddressToVAddress(transfer.destsystemid, IAddressBaseConst);
+        outTransfer.feecurrencyid = util.ethAddressToVAddress(transfer.feecurrencyid, IAddressBaseConst);
         outTransfer.fees = util.uint64ToVerusFloat(transfer.fees);
 
-        if ((parseInt(transfer.flags) & 1024) == 1024) { // RESERVETORESERVE FLAG
-            outTransfer.destinationcurrencyid = util.ethAddressToVAddress(transfer.secondreserveid, IAddress);
-            outTransfer.via = util.ethAddressToVAddress(transfer.destcurrencyid, IAddress);
+        if ((parseInt(transfer.flags) & constants.RESERVETORESERVE) == constants.RESERVETORESERVE) { // RESERVETORESERVE FLAG
+            outTransfer.destinationcurrencyid = util.ethAddressToVAddress(transfer.secondreserveid, IAddressBaseConst);
+            outTransfer.via = util.ethAddressToVAddress(transfer.destcurrencyid, IAddressBaseConst);
         } else {
-            outTransfer.destinationcurrencyid = util.ethAddressToVAddress(transfer.destcurrencyid, IAddress);
+            outTransfer.destinationcurrencyid = util.ethAddressToVAddress(transfer.destcurrencyid, IAddressBaseConst);
         }
 
         let address = {};
@@ -422,7 +396,7 @@ function createOutboundTransfers(transfers) {
             address = util.ethAddressToVAddress(transfer.destination.destinationaddress.slice(0, 42), RAddressBaseConst);
         } else if ((parseInt(transfer.destination.destinationtype) & 127) == 4) {
 
-            address = util.ethAddressToVAddress(transfer.destination.destinationaddress.slice(0, 42), IAddress);
+            address = util.ethAddressToVAddress(transfer.destination.destinationaddress.slice(0, 42), IAddressBaseConst);
         } else {
             address = transfer.destination.destinationaddress.slice(0, 42);
 
@@ -431,7 +405,7 @@ function createOutboundTransfers(transfers) {
         outTransfer.destination = {
             "type": transfer.destination.destinationtype,
             "address": address,
-            "gateway": transfer.destination.destinationaddress.length > 42 ? util.ethAddressToVAddress(transfer.destination.destinationaddress.slice(42, 82), IAddress) : "",
+            "gateway": transfer.destination.destinationaddress.length > 42 ? util.ethAddressToVAddress(transfer.destination.destinationaddress.slice(42, 82), IAddressBaseConst) : "",
             "fees": transfer.destination.destinationaddress.length > 42 ? parseInt(transfer.destination.destinationaddress.slice(transfer.destination.destinationaddress.length - 16, transfer.destination.destinationaddress.length - 1).match(/[a-fA-F0-9]{2}/g).reverse().join(''), 16) / 100000000 : ""
         }
         outTransfers.push(outTransfer);
@@ -442,8 +416,10 @@ function createOutboundTransfers(transfers) {
 function createCrossChainExport(transfers, blockHeight, jsonready = false, poolavailable) {
     let cce = {};
     let hash = ethersUtils.keccak256(serializeCReserveTransfers(transfers));
-    // console.log("hash of transfers: ",hash.toString('Hex'));
-    // console.log("Serialize: ",serializeCReserveTransfers(transfers).slice(1).toString('Hex'));
+    if (CHECKHASH) {
+        console.log("hash of transfers: ",hash.toString('Hex'));
+        console.log("Serialize: ",serializeCReserveTransfers(transfers).slice(1).toString('Hex'));
+    }
     cce.version = 1;
     cce.flags = 2;
     cce.sourcesystemid = ETHSystemID;
@@ -465,21 +441,21 @@ function createCrossChainExport(transfers, blockHeight, jsonready = false, poola
     let totalfees = [];
     for (let i = 0; i < transfers.length; i++) {
         //sum up all the currencies 
-        if (util.uint160ToVAddress(transfers[i].currencyvalue.currency, IAddress) in totalamounts)
-            totalamounts[util.uint160ToVAddress(transfers[i].currencyvalue.currency, IAddress)] += parseInt(transfers[i].currencyvalue.amount);
+        if (util.uint160ToVAddress(transfers[i].currencyvalue.currency, IAddressBaseConst) in totalamounts)
+            totalamounts[util.uint160ToVAddress(transfers[i].currencyvalue.currency, IAddressBaseConst)] += parseInt(transfers[i].currencyvalue.amount);
         else
-            totalamounts[util.uint160ToVAddress(transfers[i].currencyvalue.currency, IAddress)] = parseInt(transfers[i].currencyvalue.amount);
+            totalamounts[util.uint160ToVAddress(transfers[i].currencyvalue.currency, IAddressBaseConst)] = parseInt(transfers[i].currencyvalue.amount);
         //add fees to the total amounts
-        if (util.uint160ToVAddress(transfers[i].feecurrencyid, IAddress) in totalamounts)
-            totalamounts[util.uint160ToVAddress(transfers[i].feecurrencyid, IAddress)] += parseInt(transfers[i].fees);
+        if (util.uint160ToVAddress(transfers[i].feecurrencyid, IAddressBaseConst) in totalamounts)
+            totalamounts[util.uint160ToVAddress(transfers[i].feecurrencyid, IAddressBaseConst)] += parseInt(transfers[i].fees);
         else
-            totalamounts[util.uint160ToVAddress(transfers[i].feecurrencyid, IAddress)] = parseInt(transfers[i].fees);
+            totalamounts[util.uint160ToVAddress(transfers[i].feecurrencyid, IAddressBaseConst)] = parseInt(transfers[i].fees);
 
 
-        if (util.uint160ToVAddress(transfers[i].feecurrencyid, IAddress) in totalfees)
-            totalfees[util.uint160ToVAddress(transfers[i].feecurrencyid, IAddress)] += parseInt(transfers[i].fees);
+        if (util.uint160ToVAddress(transfers[i].feecurrencyid, IAddressBaseConst) in totalfees)
+            totalfees[util.uint160ToVAddress(transfers[i].feecurrencyid, IAddressBaseConst)] += parseInt(transfers[i].fees);
         else
-            totalfees[util.uint160ToVAddress(transfers[i].feecurrencyid, IAddress)] = parseInt(transfers[i].fees);
+            totalfees[util.uint160ToVAddress(transfers[i].feecurrencyid, IAddressBaseConst)] = parseInt(transfers[i].fees);
     }
     for (let key in totalamounts) {
         cce.totalamounts.push({ "currency": key, "amount": (jsonready ? util.uint64ToVerusFloat(totalamounts[key]) : totalamounts[key]) });
@@ -488,20 +464,23 @@ function createCrossChainExport(transfers, blockHeight, jsonready = false, poola
         cce.totalfees.push({ "currency": key, "amount": (jsonready ? util.uint64ToVerusFloat(totalfees[key]) : totalfees[key]) });
     }
 
-    //  console.log(JSON.stringify(cce.totalamounts));
     cce.totalburned = [{ "currency": '0x0000000000000000000000000000000000000000', "amount": 0 }]; // serialiser doesnt like empty strings or non BIgints
     cce.rewardaddress = ""; //  blank
     cce.firstinput = 1;
-    //console.log("cce", JSON.stringify(cce));
+    if (debug) {
+        console.log(JSON.stringify(cce.totalamounts),null,2);
+        console.log("cce", JSON.stringify(cce),null,2);
+    }
     return cce;
 }
 
 function createCrossChainExportToETH(transfers, blockHeight, jsonready = false) {
     let cce = {};
     let hash = ethersUtils.keccak256(serializeCReserveTransfers(transfers));
-    //console.log("hash of transfers: ",hash.toString('Hex'));
-
-    //console.log("Serialize: ",serializeCReserveTransfers(transfers).slice(1).toString('Hex'));
+    if (CHECKHASH) {
+        console.log("hash of transfers: ",hash.toString('Hex'));
+        console.log("Serialize: ",serializeCReserveTransfers(transfers).slice(1).toString('Hex'));
+    }
     cce.version = 1;
     cce.flags = 2;
     cce.sourcesystemid = util.convertVerusAddressToEthAddress(ETHSystemID);
@@ -546,7 +525,7 @@ function createCrossChainExportToETH(transfers, blockHeight, jsonready = false) 
     for (let key in totalfees) {
         cce.totalfees.push({ "currency": key, "amount": (jsonready ? util.uint64ToVerusFloat(totalfees[key]) : totalfees[key]) });
     }
-    //  console.log(JSON.stringify(cce.totalamounts));
+
     cce.totalburned = [{ "currency": '0x0000000000000000000000000000000000000000', "amount": 0 }];
     cce.rewardaddress = {};
     cce.firstinput = 1;
@@ -562,8 +541,9 @@ exports.getInfo = async() => {
 
         var d = new Date();
         var timenow = d.valueOf();
+        let getInfo = await getCachedApi('getInfo');
 
-        if (globaltimedelta + globallastinfo < timenow) {
+        if (globaltimedelta + globallastinfo < timenow || !getInfo) {
             globallastinfo = timenow;
             let info = await verusBridgeMaster.methods.getinfo().call();
 
@@ -571,7 +551,7 @@ exports.getInfo = async() => {
                 ['uint256', 'string', 'uint256', 'uint256', 'string', 'bool'],
                 "0x" + info.slice(66));
 
-            globalgetinfo = {
+            getinfo = {
                 "version": decodedParams[0],
                 "name": decodedParams[4],
                 "VRSCversion": decodedParams[1],
@@ -580,65 +560,65 @@ exports.getInfo = async() => {
                 "testnet": decodedParams[5],
             }
             console.log("Command: getinfo");
+            await setCachedApi(getinfo, 'getInfo');
         }
-        return { "result": globalgetinfo };
+
+        return { "result": getinfo };
     } catch (error) {
         console.log("\x1b[41m%s\x1b[0m", "Error getInfo:" + error);
         return { "result": { "error": true, "message": error } };
     }
-
-
 }
 
 exports.getCurrency = async(input) => {
 
     try {
         let currency = input[0];
-        //convert i address to an eth address
         var d = new Date();
         var timenow = d.valueOf();
+        let getCurrency = await getCachedApi('getCurrency');
 
-        if (globaltimedelta + globallastcurrency < timenow) {
+        if (globaltimedelta + globallastcurrency < timenow || !getCurrency) {
+
             globallastcurrency = timenow;
             let info = await verusBridgeMaster.methods.getcurrency(util.convertVerusAddressToEthAddress(currency)).call();
-            //complete tiptime with the time of a block
-            //convert the CTransferDestination
-            //convert notary adddresses
             let notaries = [];
-            let jime = ['uint', 'string', 'address', 'address', 'address', 'uint8', 'uint8', [
+            let abiPattern = ['uint', 'string', 'address', 'address', 'address', 'uint8', 'uint8', [
                 ['uint8', 'bytes']
             ], 'address', 'uint', 'uint', 'uint256', 'uint256', 'address', 'address[]', 'uint']
-            let decodedParams = abi.decodeParameters(jime,
+
+            let decodedParams = abi.decodeParameters(abiPattern,
                 "0x" + info.slice(66));
 
             for (let i = 0; i < decodedParams[14].length; i++) {
-                notaries[i] = util.ethAddressToVAddress(decodedParams[14][i], IAddress);
+                notaries[i] = util.ethAddressToVAddress(decodedParams[14][i], IAddressBaseConst);
             }
 
-            globalgetcurrency = {
+            getcurrency = {
                 "version": decodedParams[0],
                 "name": decodedParams[1],
                 "options": (decodedParams[1] === "VETH") ? 172 : 96,
-                "currencyid": util.uint160ToVAddress(decodedParams[2], IAddress),
-                "parent": util.uint160ToVAddress(decodedParams[3], IAddress),
-                "systemid": util.uint160ToVAddress(decodedParams[4], IAddress),
+                "currencyid": util.uint160ToVAddress(decodedParams[2], IAddressBaseConst),
+                "parent": util.uint160ToVAddress(decodedParams[3], IAddressBaseConst),
+                "systemid": util.uint160ToVAddress(decodedParams[4], IAddressBaseConst),
                 "notarizationprotocol": decodedParams[5],
                 "proofprotocol": decodedParams[6],
-                "nativecurrencyid": { "address": '0x' + BigInt(decodedParams[7][1], IAddress).toString(16), "type": decodedParams[7][0] },
-                "launchsystemid": util.uint160ToVAddress(decodedParams[8], IAddress),
+                "nativecurrencyid": { "address": '0x' + BigInt(decodedParams[7][1], IAddressBaseConst).toString(16), "type": decodedParams[7][0] },
+                "launchsystemid": util.uint160ToVAddress(decodedParams[8], IAddressBaseConst),
                 "startblock": decodedParams[9],
                 "endblock": decodedParams[10],
                 "initialsupply": decodedParams[11],
                 "prelaunchcarveout": decodedParams[12],
-                "gatewayid": util.uint160ToVAddress(decodedParams[13], IAddress),
+                "gatewayid": util.uint160ToVAddress(decodedParams[13], IAddressBaseConst),
                 "notaries": notaries,
                 "minnotariesconfirm": decodedParams[15],
-                "gatewayconvertername": (decodedParams[1] === "VETH") ? "Bridge" : ""
+                "gatewayconvertername": "Bridge"
             };
             console.log("Command: getcurrency");
+            await setCachedApi(getCurrency, 'getCurrency');
         }
 
-        return { "result": globalgetcurrency };
+        return { "result": getCurrency };
     } catch (error) {
         console.log("\x1b[41m%s\x1b[0m", "getCurrency:" + error);
         return { "result": { "error": true, "message": error } };
@@ -664,16 +644,6 @@ exports.getExports = async(input) => {
         let poolavailable = await verusBridgeMaster.methods.isPoolAvailable().call();
 
         if (chainname != VerusSystemID) throw "i-Address not VRSCTEST";
-        if (heightstart > 0 && heightstart < verusBridgeStartBlock || heightstart == 1)
-            heightstart = 0;
-
-        //if undefined default to the last block available - 20 and last block available (this might break the node as too many queries)
-        if (heightend == undefined) heightend = await web3.eth.getBlockNumber();
-        if (heightstart == undefined) heightstart = heightend;
-
-        //end block is after startblock
-        if (heightstart > 0 && heightend > 0 && heightend < heightstart) throw { message: "Start/End Height out of range: " };
-        //heightstart = heightend -200;
 
         let exportSets = [];
         let tempExportset = [];
@@ -708,10 +678,8 @@ exports.getExports = async(input) => {
             } else {
                 exportSets = await verusBridgeMaster.methods.getReadyExportsByRange(heightstart, heightend).call();
             }
-
-
         }
-        //exportSets = parseContractExports(exportSets);
+        
         console.log("Height end: ", heightend, "heightStart:", heightstart);
 
         for (let i = 0; i < exportSets.length; i++) {
@@ -729,7 +697,6 @@ exports.getExports = async(input) => {
             //serialize the prooflet index 
             let components = createComponents(exportSet.transfers, parseInt(exportSet.blockHeight, 10), exportSet.prevExportHash, poolavailable);
             outputSet.partialtransactionproof = serializeEthFullProof(outputSet.partialtransactionproof).toString('hex') + components;
-            // outputSet.txid = components.txid;
 
             //build transfer list
             //get the transactions at the index
@@ -739,7 +706,10 @@ exports.getExports = async(input) => {
             output.push(outputSet);
         }
 
-        // console.log(JSON.stringify(output, null, 2));
+        if (debug) {
+            console.log(JSON.stringify(output, null, 2));
+        }
+
         await setCachedApi(input, 'lastgetExports');
         return { "result": output };
     } catch (error) {
@@ -750,7 +720,7 @@ exports.getExports = async(input) => {
 
 exports.getBestProofRoot = async(input) => {
     //loop through the proofroots and check each one
-    //console.log(input);
+
     let proofroots = input[0].proofroots;
     let bestindex = 0;
     let validindexes = [];
@@ -758,8 +728,6 @@ exports.getBestProofRoot = async(input) => {
     var d = new Date();
     var timenow = d.valueOf();
     const lastTime = await getCachedApi('lastBestProofinputtime');
-
-    // new notarization scheme as of July 2022 adds lastconfirmed notarizations
 
     let cachedValue = await checkCachedApi('lastGetBestProofRoot', input);
 
@@ -770,9 +738,7 @@ exports.getBestProofRoot = async(input) => {
             clearCachedApis();
             cachedValue = null;
         }
-
     }
-
 
     if (cachedValue) {
         return cachedValue;
@@ -782,7 +748,6 @@ exports.getBestProofRoot = async(input) => {
     try {
         if (input.length && proofroots) {
             for (let i = 0; i < proofroots.length; i++) {
-                // console.log(proofroots[i]);
                 if (await checkProofRoot(proofroots[i].height, proofroots[i].stateroot, proofroots[i].blockhash, BigInt(util.addBytesIndicator(proofroots[i].power)))) {
                     validindexes.push(i);
                     if (proofroots[bestindex].height < proofroots[i].height) {
@@ -803,9 +768,7 @@ exports.getBestProofRoot = async(input) => {
 
         let laststableproofroot = null;
 
-
         laststableproofroot = await getProofRoot(parseInt(latestBlock) - 30);
-
 
         if (logging) {
             console.log("getbestproofroot result:", { bestindex, validindexes, latestproofroot, laststableproofroot });
@@ -831,11 +794,13 @@ exports.getBestProofRoot = async(input) => {
 async function getProofRoot(height = "latest") {
 
     let block;
+
     try {
         block = await web3.eth.getBlock(height);
     } catch (error) {
         throw "web3.eth.getBlock error:"
     }
+
     let latestproofroot = {};
     latestproofroot.version = 1;
     latestproofroot.type = 2;
@@ -894,25 +859,18 @@ async function checkProofRoot(height, stateroot, blockhash, power) {
 
     try {
         block = await web3.eth.getBlock(height);
-
     } catch (error) {
         console.log("\x1b[41m%s\x1b[0m", "web3.eth.getBlock error:" + error);
         throw "web3.eth.getBlock error:"
-
     }
-    // block.
-    //  console.log("retrieved block at height ", height);
-    //  console.log("block:", block.status, block.stateRoot, block.hash, block.totalDifficulty);
-    //  console.log("params:", height, stateroot, blockhash, BigInt(power).toString(16));
 
     if (!block.stateRoot) {
         return false;
-
     }
 
     block.stateRoot = util.removeHexLeader(block.stateRoot).match(/[a-fA-F0-9]{2}/g).reverse().join('');
     block.hash = util.removeHexLeader(block.hash).match(/[a-fA-F0-9]{2}/g).reverse().join('');
-    //  console.log(blockStateRoot, newBlockHash, BigInt(block.totalDifficulty).toString(16));
+
     if (block.stateRoot == stateroot && blockhash == block.hash && BigInt(block.totalDifficulty).toString(16) == BigInt(power).toString(16)) {
         return true;
     } else {
@@ -965,7 +923,6 @@ exports.getNotarizationData = async() => {
                         notarizations[index] = {
                             txid: "0x" + notarization.substring(txidPos, txidPos + 64),
                             n: parseInt(notarization.slice(nPos, nPos + 2), 16),
-                            //TODO: remove reverse when contract stores by reversed hash
                             hash: "0x" + notarization.substring(hashPos, hashPos + 64).match(/[a-fA-F0-9]{2}/g).reverse().join('')
                         };
                         if (largestIndex < index)
@@ -994,7 +951,6 @@ exports.getNotarizationData = async() => {
             Notarization.lastconfirmed = 0;
             Notarization.notarizations = [];
 
-
             for (const index in notarizations) {
                 let returnedNotarization = await verusNotorizerStorage.methods.getNotarization(notarizations[index].hash).call();
 
@@ -1011,8 +967,8 @@ exports.getNotarizationData = async() => {
         Notarization.version = 1;
 
         if (debug) {
-          //  console.log("NOTARIZATION CONTRACT INFO \n" + JSON.stringify(notarizations, null, 2))
-         //   console.log(JSON.stringify(Notarization.notarizations, null, 2))
+            // console.log("NOTARIZATION CONTRACT INFO \n" + JSON.stringify(notarizations, null, 2))
+            // console.log(JSON.stringify(Notarization.notarizations, null, 2))
             console.log(JSON.stringify(forks, null, 2))
             console.log(JSON.stringify("Best Chain: " + Notarization.bestchain, null, 2))
         }
@@ -1026,14 +982,6 @@ exports.getNotarizationData = async() => {
         return { "result": { "error": true, "message": error } };
     }
 }
-
-/** send transactions to ETH 
- * CTransferArray, an array of CTransfer
- * CTransferSet is a CTransferSet
- * proof is an array of bytes32
- * blockheight uint32
- * hashIndex uint32
- */
 
 function conditionSubmitImports(CTransferArray) {
 
@@ -1142,8 +1090,11 @@ function reshapeTransfers(CTransferArray) {
             };
 
             CTempArray.push(subarray);
-            //let hashtest = keccak256(serializedTransfers);
-            //console.log("TRanmsfers hash: ", hashtest.toString('hex'));
+
+            if (debug) {
+                //let hashtest = keccak256(serializedTransfers);
+                //console.log("Transfers hash: ", hashtest.toString('hex'));
+            }
         }
     }
 
@@ -1152,8 +1103,8 @@ function reshapeTransfers(CTransferArray) {
 
 exports.submitImports = async(CTransferArray) => {
 
-    if (noaccount || errorcounter > 10 || noimports) {
-        console.log("************** Submitimports:" + errorcounter + " Errors counted , Wallet will not spend ********************");
+    if (noaccount || noimports) {
+        console.log("************** Submitimports: Wallet will not spend ********************");
         return { result: { error: true } };
     }
 
@@ -1193,9 +1144,9 @@ exports.submitImports = async(CTransferArray) => {
             return { result: "false" };
         }
     } catch (error) {
-        // console.log("Error in\n", JSON.stringify(CTempArray));
+
         console.log("Error Counter incremented in submitimports" + error);
-        errorcounter++;
+
         if (error.reason)
             console.log("\x1b[41m%s\x1b[0m", "submitImports:" + error.reason);
         else {
@@ -1225,8 +1176,8 @@ function IsLaunchComplete(pBaasNotarization) {
 
 exports.submitAcceptedNotarization = async(params) => {
 
-    if (noaccount || errorcounter > 10) {
-        console.log("************** submitAcceptedNotarization" + errorcounter + " Errors counted , Wallet will not spend ********************");
+    if (noaccount ) {
+        console.log("************** submitAcceptedNotarization: Wallet will not spend ********************");
         return { result: { error: true } };
     }
     if (debugsubmit) {
@@ -1273,7 +1224,6 @@ exports.submitAcceptedNotarization = async(params) => {
         if (lastTxid && lastTxid == JSON.stringify(txidObj.txid)) {
             return { "result": "0" };
         }
-
 
     } catch (error) {
         console.log("submitAcceptedNotarization Error:\n", error);
@@ -1325,10 +1275,6 @@ exports.submitAcceptedNotarization = async(params) => {
         delete pBaasNotarization.proofroots[i].power;
     }
     delete pBaasNotarization.launchcurrencies
-        //build signature parameters
-        //console.log("signatures:");
-        //console.log(signatures);
-
     let sigKeys = Object.keys(signatures);
 
     if (signatures[sigKeys[0]].signatures.length == 0) throw "No Signatures present"; //what should i return if we get bad data
@@ -1362,9 +1308,6 @@ exports.submitAcceptedNotarization = async(params) => {
 
     try {
         let txhash = {}
-            // let test4 = await verusSerializer.methods.serializeCPBaaSNotarization(pBaasNotarization).call();
-
-        //  console.log("result from serializeCPBaaSNotarization:\n", (test4));
         var firstNonce = await web3.eth.getTransactionCount(account.address);
 
         let data = abi.encodeParameter({
@@ -1389,7 +1332,6 @@ exports.submitAcceptedNotarization = async(params) => {
             console.log(JSON.stringify(pBaasNotarization, null, 2));
             console.log(JSON.stringify(data, null, 2));
         }
-        let test4 = await verusSerializer.methods.serializeCPBaaSNotarization(pBaasNotarization).call();
         txhash = await verusBridgeMaster.methods.setLatestData(pBaasNotarization, data).call();
 
         if (transactioncount != firstNonce) {
@@ -1405,9 +1347,7 @@ exports.submitAcceptedNotarization = async(params) => {
             console.log("Notarization already Submitted");
         } else {
             console.log("Error Counter incremented in submitacceptednotarization" + error);
-            // errorcounter++;
         }
-        //locknotorization = false;
         return { "result": { "txid": error } };
     }
 
@@ -1415,11 +1355,7 @@ exports.submitAcceptedNotarization = async(params) => {
 
 function completeCurrencyState(currencyState) {
 
-    //currencyState.systemid = convertVerusAddressToEthAddress(currencyState.systemid);
     currencyState.currencyid = util.convertVerusAddressToEthAddress(currencyState.currencyid);
-    //currencyState.stateroot = addHexPrefix(currencyState.stateroot);
-    //currencyState.blockhash = addHexPrefix(currencyState.blockhash);
-    //currencyState.power = addHexPrefix(currencyState.power);
 
     if (currencyState.weights == undefined) currencyState.weights = [];
     if (currencyState.reserves == undefined) currencyState.reserves = [];
@@ -1492,12 +1428,12 @@ function completeCurrencyState(currencyState) {
 exports.getLastImportFrom = async() => {
 
     //create a CProofRoot from the block data
-    let block;
+    let lastImportFrom = await getCachedApi('lastImportFrom');
 
     try {
         var d = new Date();
         var timenow = d.getTime();
-        if (globaltimedelta + globalgetlastimport < timenow) {
+        if (globaltimedelta + globalgetlastimport < timenow || !lastImportFrom) {
             globalgetlastimport = timenow;
 
             block = await web3.eth.getBlock("latest");
@@ -1527,10 +1463,8 @@ exports.getLastImportFrom = async() => {
                 let hashPos = 66;
                 let txidPos = 194;
                 let nPos = 264;
-
                 let txid = "0x" + forksData.substring(txidPos, txidPos + 64);
                 let n = parseInt(forksData.substring(nPos, nPos + 2), 16);
-
                 let hash = "0x" + forksData.substring(hashPos, hashPos + 64).match(/[a-fA-F0-9]{2}/g).reverse().join('')
                 let returnedNotarization = await verusNotorizerStorage.methods.getNotarization(hash).call();
 
@@ -1541,10 +1475,11 @@ exports.getLastImportFrom = async() => {
             } catch (e) {
                 console.log("\x1b[41m%s\x1b[0m", "No Notarizations recieved yet");
             }
-            globallastimport = { "result": { lastimport, lastconfirmednotarization, lastconfirmedutxo } }
+            lastImportFrom = { "result": { lastimport, lastconfirmednotarization, lastconfirmedutxo } }
+            await setCachedApi(lastImportFrom, 'lastImportFrom');
         }
 
-        return globallastimport;
+        return lastImportFrom;
     } catch (error) {
         console.log("\x1b[41m%s\x1b[0m", "getLastImportFrom:" + error);
         return { "result": { "error": true, "message": error } };

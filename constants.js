@@ -41,7 +41,13 @@ module.exports = Object.freeze({
     RADDRESS: 60,
     ADDRESS_TYPE_MASK: 127,
     R_ADDRESS_TYPE: 2,
-    I_ADDRESS_TYPE: 4
+    I_ADDRESS_TYPE: 4,
+    IAddressBaseConst: 102,
+    RAddressBaseConst: 60,
+    maxGas: 6000000,
+    globaltimedelta: 60000,
+    TRANSFER_TYPE_ETH: 3,
+    RESERVETORESERVE: 1024
 
 
 });
