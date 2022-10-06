@@ -49,7 +49,18 @@ module.exports = Object.freeze({
     maxGas: 6000000,
     globaltimedelta: 60000,
     TRANSFER_TYPE_ETH: 3,
-    RESERVETORESERVE: 1024
+    RESERVETORESERVE: 1024,
+    LIF: {
+        HASHPOS: 66,
+        TXIDPOS: 194,
+        NPOS: 264,
+        BYTES32SIZE: 64,
+        HEX: 16,
+        FLAGS: 68,
+        VERSION: 1
+    },
+    RESERVE_TO_RESERVE: 0x400,
+    CROSS_SYSTEM: 0x40
 
 
 });

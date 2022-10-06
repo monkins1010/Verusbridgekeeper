@@ -65,7 +65,7 @@ const ContractType = {
 const verusUpgradeAbi = require('../abi/VerusUpgrade.json');
 const { exit } = require('process');
 
-const verusUpgrade = new web3.eth.Contract(verusUpgradeAbi, "0x9ab2624B7e55E0B2B7FD99676c9308Ea83E94c36");
+const verusUpgrade = new web3.eth.Contract(verusUpgradeAbi, "0x695F6B620f82f0DFe9eAC42BB172328F12889A40");
 
 let account = web3.eth.accounts.privateKeyToAccount(settings.privatekey);
 web3.eth.accounts.wallet.add(account);
@@ -98,8 +98,8 @@ const updatecontract = async() => {
         const verusNotarizerIDs = ["RH7h8p9LN2Yb48SkxzNQ29c1Ltfju8Cd5i", "RLXCv2dQPB4NPqKUweFx4Ua5ZRPFfN2F6D" ,"REXBEDfAz9eJMCxdexa5GnWQBAax8hwuiu"]
         
         // Choose notarizer to sign upgrade
-        let notarizerID = ISDNOTARY[1];
-        const signatureAddress = verusNotarizerIDs[1];
+        let notarizerID = ISDNOTARY[2];
+        const signatureAddress = verusNotarizerIDs[2];
 
         let outBuffer = Buffer.alloc(1);
         outBuffer.writeUInt8(TYPE_CONTRACT);
@@ -114,7 +114,7 @@ const updatecontract = async() => {
         }
 
          //replace existing contract with new contract address
-        contracts[ContractType.VerusNotarizer] = "0x7F2E8cC87fE90Cd2D713aA0A62002fD1B58c06e2"; 
+        contracts[ContractType.VerusBridge] = "0xb226900f2588915B04332275A5E0DF57c2aBcFcC"; 
 
         for (let i = 0; i < 12; i++) 
         {
@@ -133,6 +133,7 @@ const updatecontract = async() => {
         let submission = { _vs: vVal, _rs: rVal, _ss: sVal, contracts, upgradeType: TYPE_CONTRACT , salt: "0x" + randomBuf.toString('Hex'), notarizerID };
         
         const revv1 = await verusUpgrade.methods.upgradeContracts(submission).call();
+        console.log("Call replied with: " + revv1);
         const revv2 = await verusUpgrade.methods.upgradeContracts(submission).send({ from: account.address, gas: maxGas });
 
         console.log("\nsignature: ", /* signature,*/ revv2);

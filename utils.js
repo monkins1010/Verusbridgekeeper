@@ -7,12 +7,19 @@ const Web3 = require('web3');
 const addHexPrefix = (string) => {
     if (string.startsWith("0x")) return string;
     else return "0x" + string;
-  };
-
+};
 
 const uint64ToVerusFloat = (number) => {
-    var inter = (BigInt(number) / BigInt(100000000)) + '.';
-    var decimalp = "" + (BigInt(number) % BigInt(100000000));
+   
+    var input = BigInt(number);
+    var inter = (input / BigInt(100000000)) + '.';
+    var decimalp = "" + (input % BigInt(100000000));
+
+    if(input < 0)
+    {
+        inter = "-" + inter;
+        decimalp = decimalp.slice(1);
+    }
 
     while (decimalp.length < 8) {
         decimalp = "0" + decimalp;
@@ -35,12 +42,12 @@ const convertVerusAddressToEthAddress = (verusAddress) => {
 }
 
 const serializeCCurrencyValueMapArray = (ccvm) => {
-    let encodedOutput = util.writeCompactSize(ccvm.length);
+    let encodedOutput = writeCompactSize(ccvm.length);
 
     for (let i = 0; i < ccvm.length; i++) {
 
         encodedOutput = Buffer.concat([encodedOutput, bitGoUTXO.address.fromBase58Check(ccvm[i].currency, 160).hash]);
-        encodedOutput = Buffer.concat([encodedOutput, util.writeUInt((ccvm[i].amount), 64)]);
+        encodedOutput = Buffer.concat([encodedOutput, writeUInt((ccvm[i].amount), 64)]);
 
     }
     return encodedOutput

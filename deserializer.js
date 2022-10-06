@@ -120,7 +120,7 @@ function readCMMRNodeBranch(memory) {
     }
     let txHeight = nIndex; //this is the height of the transaction put it into a global
     //TODO: remove MMR function and pass in nIndex untouched
-    nIndex = util.GetMMRProofIndex(nIndex, nSize, extraHashes)
+    //nIndex = util.GetMMRProofIndex(nIndex, nSize, extraHashes)
 
     temp = readtype(memory, 'uint', 8);
     memory = temp.memory;

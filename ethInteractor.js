@@ -222,12 +222,12 @@ function serializeCReserveTransfers(crts) {
             encodedOutput = Buffer.concat([encodedOutput, Buffer.from(util.removeHexLeader(crts[i].destcurrencyid), 'hex')]);
         else
             encodedOutput = Buffer.concat([encodedOutput, Buffer.from(util.removeHexLeader(crts[i].destinationcurrencyid), 'hex')]);
-        if ((crts[i].flags & 0x400) == 0x400)
+        if ((crts[i].flags & constants.RESERVE_TO_RESERVE) == constants.RESERVE_TO_RESERVE)
             encodedOutput = Buffer.concat([encodedOutput, Buffer.from(util.removeHexLeader(crts[i].secondreserveid), 'hex')]);
 
-        if ((crts[i].flags & 0x40) == 0x40 && crts[i].destsystemid)
+        if ((crts[i].flags & constants.CROSS_SYSTEM) == constants.CROSS_SYSTEM && crts[i].destsystemid)
             encodedOutput = Buffer.concat([encodedOutput, Buffer.from(util.removeHexLeader(crts[i].destsystemid), 'hex')]);
-        else if ((crts[i].flags & 0x40) == 0x40 && crts[i].exportto)
+        else if ((crts[i].flags & constants.CROSS_SYSTEM) == constants.CROSS_SYSTEM && crts[i].exportto)
             encodedOutput = Buffer.concat([encodedOutput, Buffer.from(util.removeHexLeader(crts[i].exportto), 'hex')]);
 
     }
@@ -532,7 +532,8 @@ exports.getInfo = async() => {
 
         var d = new Date();
         var timenow = d.valueOf();
-        let getInfo = await getCachedApi('getInfo');
+        let cacheGetInfo = await getCachedApi('getInfo');
+        let getInfo = cacheGetInfo ? JSON.parse(cacheGetInfo) : null;
 
         if (globaltimedelta + globallastinfo < timenow || !getInfo) {
             globallastinfo = timenow;
@@ -567,7 +568,8 @@ exports.getCurrency = async(input) => {
         let currency = input[0];
         var d = new Date();
         var timenow = d.valueOf();
-        let getCurrency = await getCachedApi('getCurrency');
+        let cacheGetCurrency = await getCachedApi('getCurrency');
+        let getCurrency = cacheGetCurrency ? JSON.parse(cacheGetCurrency) : null;
 
         if (globaltimedelta + globallastcurrency < timenow || !getCurrency) {
 
@@ -644,7 +646,7 @@ exports.getExports = async(input) => {
             exportSets = await verusBridgeMaster.methods.getReadyExportsByRange(heightstart, heightend).call();
         } else {
             let range = parseInt(heightend) - parseInt(heightstart);
-            const DELTA = 1000;
+            const DELTA = 200;
             if (range > DELTA) {
                 let tempstartheight = undefined;
                 let tempendheight = undefined;
@@ -768,7 +770,7 @@ exports.getBestProofRoot = async(input) => {
         }
 
         let gasPrice = await web3.eth.getGasPrice();
-        let currencies = {[constants.VETHCURRENCYID]:  { weights: [gasPrice]}}; // TODO: Enable gas price truncated to  8 decminal places
+        let currencies = {[constants.VETHCURRENCYID]:  { weights: [gasPrice]}}; // TODO: Enable gas price
         if (logging)
             console.log("GAS PRICE:", util.uint64ToVerusFloat(gasPrice))
 
@@ -958,7 +960,7 @@ exports.getNotarizationData = async() => {
 
         if (debug) {
             // console.log("NOTARIZATION CONTRACT INFO \n" + JSON.stringify(notarizations, null, 2))
-            // console.log(JSON.stringify(Notarization.notarizations, null, 2))
+            console.log(JSON.stringify(Notarization?.notarizations && Notarization?.notarizations[0]?.notarization.proofroots, null, 2))
             console.log(JSON.stringify(forks, null, 2))
             console.log(JSON.stringify("Best Chain: " + Notarization.bestchain, null, 2))
         }
@@ -1126,10 +1128,12 @@ exports.submitImports = async(CTransferArray) => {
             }
         }
 
-        let testcall = await verusBridgeMaster.methods.submitImports(submitArray).call(); //test call
+        let testcall = await verusBridgeMaster.methods.submitImports(submitArray[0]).call(); //test call
+        console.log("Test submitimports" + testcall);
+
         await setCachedApi(CTransferArray, 'lastsubmitImports');
         if (submitArray.length > 0) {
-            globalsubmitimports = await verusBridgeMaster.methods.submitImports(submitArray).send({ from: account.address, gas: maxGas });
+            globalsubmitimports = await verusBridgeMaster.methods.submitImports(submitArray[0]).send({ from: account.address, gas: maxGas });
         } else {
             return { result: "false" };
         }
@@ -1418,7 +1422,8 @@ function completeCurrencyState(currencyState) {
 exports.getLastImportFrom = async() => {
 
     //create a CProofRoot from the block data
-    let lastImportFrom = await getCachedApi('lastImportFrom');
+    let cachelastImportFrom = await getCachedApi('lastImportFrom');
+    let lastImportFrom = cachelastImportFrom ? JSON.parse(cachelastImportFrom) : null;
 
     try {
         var d = new Date();
@@ -1433,15 +1438,16 @@ exports.getLastImportFrom = async() => {
 
             let lastimport = {};
 
-            lastimport.version = 1;
-            lastimport.flags = 68;
+            lastimport.version = constants.LIF.VERSION;
+            lastimport.flags = constants.LIF.FLAGS;
             lastimport.sourcesystemid = ETHSystemID;
             lastimport.sourceheight = parseInt(lastImportInfo.height);
             lastimport.importcurrencyid = ETHSystemID;
             lastimport.valuein = {};
             lastimport.tokensout = {};
             lastimport.numoutputs = {};
-            lastimport.hashtransfers = util.removeHexLeader(lastImportInfo.hashOfTransfers).match(/[a-fA-F0-9]{2}/g).reverse().join('');
+
+            lastimport.hashtransfers  = util.removeHexLeader(lastImportInfo.hashOfTransfers).match(/[a-fA-F0-9]{2}/g).reverse().join('');
             lastimport.exporttxid = util.removeHexLeader(lastImportInfo.exporttxid).match(/[a-fA-F0-9]{2}/g).reverse().join('');
             lastimport.exporttxout = lastImportInfo.exporttxoutnum;
 
@@ -1450,12 +1456,12 @@ exports.getLastImportFrom = async() => {
             let lastconfirmedutxo = {};
             try {
                 forksData = await verusNotarizer.methods.bestForks(0).call();
-                let hashPos = 66;
-                let txidPos = 194;
-                let nPos = 264;
-                let txid = "0x" + forksData.substring(txidPos, txidPos + 64);
-                let n = parseInt(forksData.substring(nPos, nPos + 2), 16);
-                let hash = "0x" + forksData.substring(hashPos, hashPos + 64).match(/[a-fA-F0-9]{2}/g).reverse().join('')
+                let hashPos = constants.LIF.HASHPOS;
+                let txidPos = constants.LIF.TXIDPOS;
+                let nPos = constants.LIF.NPOS;
+                let txid = "0x" + forksData.substring(txidPos, txidPos + constants.LIF.BYTES32SIZE);
+                let n = parseInt(forksData.substring(nPos, nPos + 2), constants.LIF.HEX);
+                let hash = "0x" + forksData.substring(hashPos, hashPos + constants.LIF.BYTES32SIZE).match(/[a-fA-F0-9]{2}/g).reverse().join('')
                 let returnedNotarization = await verusNotorizerStorage.methods.getNotarization(hash).call();
 
                 lastconfirmednotarization = notarizationFuncs.createNotarization(returnedNotarization);
