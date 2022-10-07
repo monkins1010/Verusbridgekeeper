@@ -664,6 +664,11 @@
                 "internalType": "bytes32",
                 "name": "compactpower",
                 "type": "bytes32"
+              },
+              {
+                "internalType": "int64",
+                "name": "gasprice",
+                "type": "int64"
               }
             ],
             "internalType": "struct VerusObjectsNotarization.CProofRoot[]",
@@ -1054,6 +1059,11 @@
                 "internalType": "bytes32",
                 "name": "compactpower",
                 "type": "bytes32"
+              },
+              {
+                "internalType": "int64",
+                "name": "gasprice",
+                "type": "int64"
               }
             ],
             "internalType": "struct VerusObjectsNotarization.CProofRoot[]",

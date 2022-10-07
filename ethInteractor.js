@@ -804,6 +804,7 @@ async function getProofRoot(height = "latest") {
     latestproofroot.stateroot = util.removeHexLeader(block.stateRoot).match(/[a-fA-F0-9]{2}/g).reverse().join('');
     latestproofroot.blockhash = util.removeHexLeader(block.hash).match(/[a-fA-F0-9]{2}/g).reverse().join('');
     latestproofroot.power = BigInt(block.totalDifficulty).toString(16);
+    latestproofroot.gasprice = null;
     return latestproofroot;
 
 }
@@ -821,7 +822,7 @@ async function getLastProofRoot() {
     let lastproofroot = {};
 
     if (lastProof.length > 130) {
-        let decodePattern = ['int16', 'int16', 'address', 'uint32', 'bytes32', 'bytes32', 'bytes32']
+        let decodePattern = ['int16', 'int16', 'address', 'uint32', 'bytes32', 'bytes32', 'bytes32','uint16']
 
         decodedParams = abi.decodeParameters(decodePattern, "0x" + lastProof.slice(578));
 
@@ -833,6 +834,7 @@ async function getLastProofRoot() {
             "stateroot": decodedParams[4],
             "blockhash": decodedParams[5],
             "compactpower": decodedParams[6],
+            "gasprice": decodedParams[7],
         }
 
         lastproofroot.version = parseInt(ETHLastProofRoot.version, 10);
@@ -1266,6 +1268,10 @@ exports.submitAcceptedNotarization = async(params) => {
         pBaasNotarization.proofroots[i].stateroot = addHexPrefix(pBaasNotarization.proofroots[i].stateroot);
         pBaasNotarization.proofroots[i].blockhash = addHexPrefix(pBaasNotarization.proofroots[i].blockhash);
         pBaasNotarization.proofroots[i].compactpower = addHexPrefix(pBaasNotarization.proofroots[i].power);
+        if (pBaasNotarization.proofroots[i].cprtype == 2)
+            pBaasNotarization.proofroots[i].gasprice = util.convertToInt64(pBaasNotarization.proofroots[i].gasprice);
+        else
+            pBaasNotarization.proofroots[i].gasprice = 0;
         delete pBaasNotarization.proofroots[i].power;
     }
     delete pBaasNotarization.launchcurrencies
@@ -1273,6 +1279,7 @@ exports.submitAcceptedNotarization = async(params) => {
 
     if (signatures[sigKeys[0]].signatures.length == 0) throw "No Signatures present"; //what should i return if we get bad data
     let splitSigs = {}
+
 
     let vsVals = [];
     let rsVals = [];
