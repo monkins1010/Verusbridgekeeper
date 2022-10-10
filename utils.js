@@ -167,7 +167,7 @@ const increaseHexByAmount = (hex, amount) => {
 
 const writeVarInt = (newNumber) => {
     //   console.log(newNumber);
-    if (!newNumber) return "error";
+    if (!newNumber) return Buffer.from('00', 'hex');
 
     let tmp = [];
     let len = 0;
@@ -251,7 +251,7 @@ const hexAddressToBase58 = (type, address) => {
         retval = uint160ToVAddress(address, constants.IADDRESS);
     }
     else if  ((parseInt(type & constants.ADDRESS_TYPE_MASK)) == constants.ETH_ADDRESS_TYPE) {
-        retval = removeHexLeader(address);
+        retval = address;
     }
     return retval;
 

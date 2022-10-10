@@ -340,7 +340,7 @@ function createComponents(transfers, blockHeight, previousExportHash, poolavaila
     serialized = Buffer.concat([serialized, prevhash]);
 
     if (CHECKHASH) {
-        let hashofcce_reserves = keccak256(serialized);
+        let hashofcce_reserves = ethersUtils.keccak256(serialized);
         let serialization = Buffer.concat([serializeCrossChainExport(cce),serializeCReserveTransfers(transfers).slice(1)]);
         console.log("Hash of cce+reservet: \n", hashofcce_reserves.toString('hex'));
         console.log("serialization of ccx + prevhash: \n", serialization.toString('hex'));
@@ -695,6 +695,7 @@ exports.getExports = async(input) => {
 
             //build transfer list
             //get the transactions at the index
+            let test = await verusBridgeStorage.methods._readyExports(outputSet.height).call();
             outputSet.transfers = createOutboundTransfers(exportSet.transfers);
             console.log("ETH Send to Verus: ", outputSet.transfers[0].currencyvalues, " to ", outputSet.transfers[0].destination);
             //loop through the 
@@ -1086,7 +1087,7 @@ function reshapeTransfers(CTransferArray) {
             CTempArray.push(subarray);
 
             if (debug) {
-                //let hashtest = keccak256(serializedTransfers);
+                //let hashtest = ethersUtils.keccak2566(serializedTransfers);
                 //console.log("Transfers hash: ", hashtest.toString('hex'));
             }
         }
@@ -1131,7 +1132,9 @@ exports.submitImports = async(CTransferArray) => {
         }
 
         let testcall = await verusBridgeMaster.methods.submitImports(submitArray[0]).call(); //test call
-        console.log("Test submitimports" + testcall);
+
+        if (CTempArray)
+        console.log("Transfer to ETH: " + JSON.stringify(CTempArray[0].transfers[0].currencyvalue, null,2) + "\nto: " + JSON.stringify(CTempArray[0].transfers[0].destination.destinationaddress, null, 2));
 
         await setCachedApi(CTransferArray, 'lastsubmitImports');
         if (submitArray.length > 0) {

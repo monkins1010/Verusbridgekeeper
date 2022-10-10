@@ -37,8 +37,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [],
@@ -51,8 +50,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [
@@ -86,8 +84,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [],
@@ -100,8 +97,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [
@@ -120,8 +116,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [
@@ -140,8 +135,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [
@@ -180,8 +174,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [
@@ -220,18 +213,23 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "getLastCceEndHeight",
-    "outputs": [
+    "inputs": [
       {
         "internalType": "uint32",
-        "name": "",
+        "name": "height",
         "type": "uint32"
       }
     ],
+    "name": "isLastCCEInOrder",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [
@@ -368,8 +366,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [
@@ -415,8 +412,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [
@@ -573,8 +569,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [],
@@ -587,20 +582,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "iaddress",
-        "type": "address"
-      }
-    ],
-    "name": "pushTokenList",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -620,8 +601,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [
@@ -705,8 +685,7 @@
     "name": "checkiaddresses",
     "outputs": [],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [
@@ -719,11 +698,6 @@
         "internalType": "string",
         "name": "ticker",
         "type": "string"
-      },
-      {
-        "internalType": "address",
-        "name": "_iaddress",
-        "type": "address"
       }
     ],
     "name": "emitNewToken",
@@ -750,21 +724,11 @@
             "internalType": "uint256",
             "name": "destinationAndFlags",
             "type": "uint256"
-          },
-          {
-            "internalType": "address",
-            "name": "nativeCurrency",
-            "type": "address"
           }
         ],
         "internalType": "struct VerusObjects.PackedSend[]",
         "name": "trans",
         "type": "tuple[]"
-      },
-      {
-        "internalType": "uint8[]",
-        "name": "transferLocations",
-        "type": "uint8[]"
       }
     ],
     "name": "importTransactions",
@@ -822,7 +786,6 @@
       }
     ],
     "stateMutability": "pure",
-    "type": "function",
-    "constant": true
+    "type": "function"
   }
 ]

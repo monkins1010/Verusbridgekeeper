@@ -60,9 +60,9 @@
                 "type": "address"
               },
               {
-                "internalType": "int64",
+                "internalType": "uint64",
                 "name": "amount",
-                "type": "int64"
+                "type": "uint64"
               }
             ],
             "internalType": "struct VerusObjects.CCurrencyValueMap",
@@ -80,9 +80,9 @@
             "type": "address"
           },
           {
-            "internalType": "int64",
+            "internalType": "uint64",
             "name": "fees",
-            "type": "int64"
+            "type": "uint64"
           },
           {
             "components": [
@@ -342,9 +342,9 @@
                     "type": "address"
                   },
                   {
-                    "internalType": "int64",
+                    "internalType": "uint64",
                     "name": "amount",
-                    "type": "int64"
+                    "type": "uint64"
                   }
                 ],
                 "internalType": "struct VerusObjects.CCurrencyValueMap",
@@ -362,9 +362,9 @@
                 "type": "address"
               },
               {
-                "internalType": "int64",
+                "internalType": "uint64",
                 "name": "fees",
-                "type": "int64"
+                "type": "uint64"
               },
               {
                 "components": [
@@ -969,19 +969,6 @@
       }
     ],
     "name": "addToEthHeld",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_ethAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "subtractFromEthHeld",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
