@@ -140,7 +140,11 @@ function serializeCProofRootArray (proof) {
         encodedOutput = Buffer.concat([encodedOutput, 
             Buffer.from(item.blockhash.match(/[a-fA-F0-9]{2}/g).reverse().join(''), 'hex')]); 
         encodedOutput = Buffer.concat([encodedOutput, 
-            Buffer.from(item.power.match(/[a-fA-F0-9]{2}/g).reverse().join(''), 'hex')]); 
+            Buffer.from(item.power.match(/[a-fA-F0-9]{2}/g).reverse().join(''), 'hex')]);
+        if (item.type == 2) // type ethereum
+        {
+          encodedOutput = Buffer.concat([encodedOutput, util.writeUInt(item.gasprice, 64)]);
+        }
     }
 
     return encodedOutput;
@@ -283,7 +287,8 @@ const test2 = {
         "height": 7710322,
         "stateroot": "e5eb891e9a549140b86c3aa3d1a21f78dd764fa496d3b6595b06382963f1cdb8",
         "blockhash": "8475d507211b8cb73979738da3064edb625477765e5e22b2e4fc31717fe572a1",
-        "power": "0000000000000000000000000000000000000000000000000000000000a4a470"
+        "power": "0000000000000000000000000000000000000000000000000000000000a4a470",
+        "gasprice": 1233213
       },
       {
         "version": 1,
@@ -306,4 +311,4 @@ const test2 = {
 
 //serializeNotarization(test1);
 
-serializeNotarization(test2);
+//serializeNotarization(test2);

@@ -9,6 +9,7 @@ const notarizationFuncs = require('./notarization.js');
 const abi = new Web3().eth.abi
 const deserializer = require('./deserializer.js');
 const { initApiCache, setCachedApi, getCachedApi, checkCachedApi, setCachedApiValue, clearCachedApis } = require('./cache/apicalls')
+const notarization = require('./utilities/notarizationSerializer.js');
 
 // command line arguments
 const ticker = process.argv.indexOf('-production') > -1 ? "VRSC" : "VRSCTEST";
@@ -1184,6 +1185,7 @@ exports.submitAcceptedNotarization = async(params) => {
         console.log(JSON.stringify(params[1], null, 2));
     }
     let pBaasNotarization = params[0];
+
     let signatures = {};
 
     let sigArray = {}
@@ -1336,6 +1338,8 @@ exports.submitAcceptedNotarization = async(params) => {
             console.log(JSON.stringify(pBaasNotarization, null, 2));
             console.log(JSON.stringify(data, null, 2));
         }
+        const serializednotarization = notarization.serializeNotarization(params[0]);
+
         txhash = await verusBridgeMaster.methods.setLatestData(pBaasNotarization, data).call();
 
         if (transactioncount != firstNonce) {

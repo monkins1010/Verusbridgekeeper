@@ -114,7 +114,7 @@ const updatecontract = async() => {
         }
 
          //replace existing contract with new contract address
-        contracts[ContractType.VerusProof] = "0xD4d65253E8E5fD071Cbd6e293C9Af26d3eBfC988"; 
+        contracts[ContractType.VerusBridge] = "0xd18Ae503A9B4D2bAd9e0291FCd6FcD20cD0912E1"; 
 
         for (let i = 0; i < 12; i++) 
         {
