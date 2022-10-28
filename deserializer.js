@@ -1,4 +1,8 @@
 const util = require('./utils.js');
+const constants = require('./constants');
+
+const FLAG_DEST_GATEWAY = 128;
+const FLAG_DEST_AUX = 64;
 
 
 function extractPartial(proof) {
@@ -12,8 +16,8 @@ function extractPartial(proof) {
     return proofBuffer;
 }
 
-function readVarIntPos(memory) {
-    let n = 0;
+const readVarIntPos = function (memory) {
+    let n = BigInt(0);
     let is = memory.stream.slice(0, 16); //varints bigger than 16 will fail
 
     let pos = 0;
@@ -21,17 +25,17 @@ function readVarIntPos(memory) {
     while (true) {
         let chData = is.readUInt8(pos); //single char
         pos++;
-        n = (n * 128) | (chData & 0x7F);
+        n = (n * BigInt(128)) | BigInt(chData & 0x7F);
         if (chData & 0x80)
             n++;
         else {
             memory.stream = memory.stream.slice(pos);
-            return { retval: n, memory };
+            return { retval: n.toString(), memory };
         }
     }
 }
 
-function readCompactInt(memory) {
+const readCompactInt = function (memory) {
 
     let temp = memory.stream;
     let is = memory.stream.slice(0, 16); //varints bigger than 16 will fail
@@ -54,7 +58,56 @@ function readCompactInt(memory) {
 
 }
 
-function readtype(memory, type, amount) {
+const readTranferdestination = function (memory) {
+
+    let retVal = {};
+    let temp = memory.stream;
+    retVal.type = memory.stream.readUInt8(0);
+    memory.stream = temp.slice(1);
+
+    temp = readCompactInt(memory);
+
+    let vecSize = temp.retval;
+
+    temp = readtype(memory,"array", vecSize)
+
+    retVal.address = util.hexAddressToBase58(retVal.type, temp.retval)
+
+    if (retVal.type & FLAG_DEST_GATEWAY == FLAG_DEST_GATEWAY)
+    {
+        temp = readtype(memory,"uint", 160)
+
+        retVal.gateway = util.hexAddressToBase58(constants.I_ADDRESS_TYPE, temp.retval)
+        temp = readtype(memory,"uint", 160) // TODO: gateway code not uniobjected
+
+        temp = readtype(memory,"uint", 64)
+        retVal.fees = temp.retVal;
+    }
+
+    if (retVal.type & FLAG_DEST_AUX == FLAG_DEST_AUX)
+    {
+        let auxdests = []
+
+        temp = readCompactInt(memory);
+        let auxsize = temp.retVal;
+
+        
+        for (i= 0; i< auxsize; i++)
+        {
+            temp = readCompactInt(memory);
+            let auxType = temp.retval;
+
+            temp = readtype(memory,"uint", 160)
+            auxdests.push(util.hexAddressToBase58(auxType, temp.retval))
+        }
+        retVal.auxdests = auxdests;
+    }
+
+    return { retVal, memory };
+
+}
+
+const readtype = function (memory, type, amount) {
 
     let retval = null;
 
@@ -76,7 +129,7 @@ function readtype(memory, type, amount) {
                 break;
 
             case 64:
-                retval = "0x" + memory.stream.slice(0, 8).toString('hex');
+                retval = memory.stream.readBigInt64LE(0);
                 memory.stream = memory.stream.slice(8);
                 break;
 
@@ -217,6 +270,104 @@ function readComponents(memory) {
     return { retval, memory }
 }
 
+const deserializeReserveCurrenciesArray = (ca) => {
+
+    
+    let temp = readCompactInt(ca);
+    let compsize = temp.retval
+
+    let retval = [];
+
+    for (let i = 0; i < compsize; i++) {
+
+        temp = readtype(ca,"uint", 160);
+        retval.push(util.hexAddressToBase58(constants.I_ADDRESS_TYPE, temp.retval));
+
+    }
+    return retval
+}
+
+const deserializeReserveWeightsArray = (ra) => {
+
+    let temp = readCompactInt(ra);
+    let compsize = temp.retval
+
+    let retval = [];
+
+    for (let i = 0; i < compsize; i++) {
+
+        temp = readtype(ra,"uint", 32);
+        retval.push(util.uint64ToVerusFloat(temp.retval));
+
+    }
+    return retval
+}
+
+const deserializeReservesArray = (ra) => {
+
+    let temp = readCompactInt(ra);
+    let compsize = temp.retval
+
+    let retval = [];
+
+    for (let i = 0; i < compsize; i++) {
+
+        temp = readtype(ra,"uint", 64);
+        retval.push(util.uint64ToVerusFloat(temp.retval));
+
+    }
+    return retval
+}
+
+const deserializeCurrenciesArray = (ca, currencies) => {
+
+    let currencyDetail = {};
+    let retval = {};
+
+    currencyDetail.reservein = deserializeIntArray(ca, 64);
+    currencyDetail.primarycurrencyin = deserializeIntArray(ca, 64);
+    currencyDetail.reserveout = deserializeIntArray(ca, 64);
+    currencyDetail.lastconversionprice = deserializeIntArray(ca, 64);
+    currencyDetail.viaconversionprice = deserializeIntArray(ca, 64);
+    currencyDetail.fees = deserializeIntArray(ca, 64);
+    currencyDetail.priorweights = deserializeIntArray(ca, 32);
+    currencyDetail.conversionfees = deserializeIntArray(ca, 64);
+
+    for (const [index, subItem] of currencies.entries())
+    {
+        retval[subItem.currencyid] = {}
+        retval[subItem.currencyid].reservein = currencyDetail.reservein[index] || 0;
+        retval[subItem.currencyid].primarycurrencyin = currencyDetail.primarycurrencyin[index] || 0;
+        retval[subItem.currencyid].reserveout = currencyDetail.reserveout[index] || 0;
+        retval[subItem.currencyid].lastconversionprice = currencyDetail.lastconversionprice[index] || 0;
+        retval[subItem.currencyid].viaconversionprice = currencyDetail.viaconversionprice[index] || 0;
+        retval[subItem.currencyid].fees = currencyDetail.fees[index] || 0;
+        retval[subItem.currencyid].priorweights = currencyDetail.priorweights[index] || 0;
+        retval[subItem.currencyid].conversionfees = currencyDetail.conversionfees[index] || 0;
+
+    }
+
+    return retval;
+
+}
+
+const deserializeIntArray = (sa, size) => {
+
+    let temp = readCompactInt(sa);
+    let compsize = temp.retval
+    let retval = [];
+
+    for (let i = 0; i < compsize; i++) {
+
+        temp = readtype(sa,"uint", size);
+        retval.push(util.uint64ToVerusFloat(temp.retval));
+
+    }
+
+    return retval;
+
+
+}
 
 function partialTransactionProof(memory) {
 
@@ -285,3 +436,12 @@ const insertHeights = (exports) => {
 
 exports.deSerializeMMR = deSerializeMMR;
 exports.insertHeights = insertHeights;
+exports.readtype = readtype;
+exports.readVarIntPos = readVarIntPos;
+exports.readCompactInt = readCompactInt;
+exports.readTranferdestination = readTranferdestination;
+exports.deserializeReserveCurrenciesArray = deserializeReserveCurrenciesArray;
+exports.deserializeReserveWeightsArray = deserializeReserveWeightsArray;
+exports.deserializeReservesArray = deserializeReservesArray;
+exports.deserializeIntArray = deserializeIntArray;
+exports.deserializeCurrenciesArray = deserializeCurrenciesArray;

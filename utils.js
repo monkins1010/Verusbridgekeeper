@@ -186,14 +186,14 @@ const writeVarInt = (newNumber) => {
 }
 
 const readVarInt = (data) => {
-    let n = 0;
+    let n = BigInt(0);
     let is = Buffer.from(data, 'hex');
     let pos = 0;
     // eslint-disable-next-line no-constant-condition
     while (true) {
         let chData = is.readUInt8(pos); //single char
         pos++;
-        n = (n << 7) | (chData & 0x7F);
+        n = (n * BigInt(128)) | BigInt(chData & 0x7F);
         if (chData & 0x80)
             n++;
         else
@@ -231,7 +231,7 @@ const removeHexLeader = (hexString) => {
 
 const uint160ToVAddress = (number, version) => {
 
-    if(number.slice(0,2) != '0x' && (number.length != 40)) 
+    if(number.slice(0,2) != '0x' && (number.length != 40)) //if bigint passed instead of hex
     {
         let temphex = Web3.utils.toHex(number);
         return (bitGoUTXO.address.toBase58Check(Buffer.from(removeHexLeader(temphex), 'hex'), version));

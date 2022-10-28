@@ -176,3 +176,4 @@ const createNotarization = function (input) {
 }
 
 exports.createNotarization = createNotarization;
+exports.notarizationFlags = notarizationFlags;

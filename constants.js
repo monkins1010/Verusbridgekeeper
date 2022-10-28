@@ -51,9 +51,9 @@ module.exports = Object.freeze({
     TRANSFER_TYPE_ETH: 3,
     RESERVETORESERVE: 1024,
     LIF: {
-        HASHPOS: 66,
-        TXIDPOS: 194,
-        NPOS: 264,
+        HASHPOS: 0,
+        TXIDPOS: 64,
+        NPOS: 128,
         BYTES32SIZE: 64,
         HEX: 16,
         FLAGS: 68,
