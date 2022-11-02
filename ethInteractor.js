@@ -119,11 +119,11 @@ async function eventListener(notarizerAddress) {
         if (!error) console.log('Notarization at ETH Height: ' +  result?.blockNumber);
         else console.log(error);
     }).on("data", function(log) {
-        console.log('***** EVENT: Got new Notarization, Clearing the cache*********');
+        console.log('***** EVENT: New Notarization, Clearing the cache*********');
         clearCachedApis();
         // await setCachedApi(log?.blockNumber, 'lastNotarizationHeight');
     }).on("changed", function(log) {
-        console.log('***** EVENT: Got new Notarization, Clearing the cache**********');
+        console.log('***** EVENT: New Notarization, Clearing the cache**********');
         clearCachedApis();
     });
 }
@@ -829,49 +829,8 @@ async function getProofRoot(height = "latest") {
     latestproofroot.stateroot = util.removeHexLeader(block.stateRoot).match(/[a-fA-F0-9]{2}/g).reverse().join('');
     latestproofroot.blockhash = util.removeHexLeader(block.hash).match(/[a-fA-F0-9]{2}/g).reverse().join('');
     latestproofroot.power = BigInt(block.totalDifficulty).toString(16);
-    latestproofroot.gasprice = 0;
+    latestproofroot.gasprice = "0.0000001";
     return latestproofroot;
-
-}
-//TODO: REMOVE
-async function getLastProofRoot() {
-    let lastProof = {};
-    try {
-        lastProof = await verusBridgeMaster.methods.getLastProofRoot().call();
-    } catch (error) {
-
-        throw "web3.eth.getLastProofRoot error: \n" + error.message;
-    }
-    // the contract returns an abi.encoded bytes array for effiencey.
-    let decodedParams = null;
-    let lastproofroot = {};
-
-    if (lastProof.length > 130) {
-        let decodePattern = ['int16', 'int16', 'address', 'uint32', 'bytes32', 'bytes32', 'bytes32','uint16']
-
-        decodedParams = abi.decodeParameters(decodePattern, "0x" + lastProof.slice(578));
-
-        const ETHLastProofRoot = {
-            "version": decodedParams[0],
-            "cprtype": decodedParams[1],
-            "systemid": decodedParams[2],
-            "rootheight": decodedParams[3],
-            "stateroot": decodedParams[4],
-            "blockhash": decodedParams[5],
-            "compactpower": decodedParams[6],
-            "gasprice": decodedParams[7],
-        }
-
-        lastproofroot.version = parseInt(ETHLastProofRoot.version, 10);
-        lastproofroot.type = parseInt(ETHLastProofRoot.cprtype, 10);
-        lastproofroot.systemid = VerusSystemID;
-        lastproofroot.height = parseInt(ETHLastProofRoot.rootheight, 10);
-        lastproofroot.stateroot = util.removeHexLeader(ETHLastProofRoot.stateroot);
-        lastproofroot.blockhash = util.removeHexLeader(ETHLastProofRoot.blockhash);
-        lastproofroot.power = util.removeHexLeader(ETHLastProofRoot.compactpower);
-    }
-
-    return lastproofroot;
 
 }
 
@@ -892,7 +851,7 @@ async function checkProofRoot(height, stateroot, blockhash, power) {
 
     block.stateRoot = util.removeHexLeader(block.stateRoot).match(/[a-fA-F0-9]{2}/g).reverse().join('');
     block.hash = util.removeHexLeader(block.hash).match(/[a-fA-F0-9]{2}/g).reverse().join('');
-    block.gasprice = 0;
+    block.gasprice = "0.0000001";
 
     if (block.stateRoot == stateroot && blockhash == block.hash && BigInt(block.totalDifficulty).toString(16) == BigInt(power).toString(16)) {
         return true;
@@ -1308,77 +1267,6 @@ exports.submitAcceptedNotarization = async(params) => {
     }
 }
 
-function completeCurrencyState(currencyState) {
-
-    currencyState.currencyid = util.convertVerusAddressToEthAddress(currencyState.currencyid);
-
-    if (currencyState.weights == undefined) currencyState.weights = [];
-    if (currencyState.reserves == undefined) currencyState.reserves = [];
-    if (currencyState.reservein == undefined) currencyState.reservein = [];
-    if (currencyState.primarycurrencyin == undefined) currencyState.primarycurrencyin = [];
-    if (currencyState.reserveout == undefined) currencyState.reserveout = [];
-    if (currencyState.conversionprice == undefined) currencyState.conversionprice = [];
-    if (currencyState.viaconversionprice == undefined) currencyState.viaconversionprice = [];
-    if (currencyState.fees == undefined) currencyState.fees = [];
-    if (currencyState.conversionfees == undefined) currencyState.conversionfees = [];
-    if (currencyState.priorweights == undefined) currencyState.priorweights = [];
-    //!! Because we are creating a matching hash of the import we need to just have a uint160[]
-    if (currencyState.currencies !== undefined) {
-        //loop through and convert from verusID to 0x address
-        let currencies = [];
-        let currencyids = Object.keys(currencyState.currencies);
-
-        for (let i = 0; i < currencyids.length; i++) {
-            if (currencyState.currencies[currencyids[i]].reservein != undefined) currencyState.reservein.push(amountFromValue(currencyState.currencies[currencyids[i]].reservein));
-            else currencyState.reservein.push(0);
-            if (currencyState.currencies[currencyids[i]].primarycurrencyin != undefined) currencyState.primarycurrencyin.push(amountFromValue(currencyState.currencies[currencyids[i]].primarycurrencyin));
-            else currencyState.primarycurrencyin.push(0);
-            if (currencyState.currencies[currencyids[i]].reserveout != undefined) currencyState.reserveout.push(amountFromValue(currencyState.currencies[currencyids[i]].reserveout));
-            else currencyState.reserveout.push(0);
-            if (currencyState.currencies[currencyids[i]].lastconversionprice != undefined) currencyState.conversionprice.push(amountFromValue(currencyState.currencies[currencyids[i]].lastconversionprice));
-            else currencyState.conversionprice.push(0);
-            if (currencyState.currencies[currencyids[i]].viaconversionprice != undefined) currencyState.viaconversionprice.push(amountFromValue(currencyState.currencies[currencyids[i]].viaconversionprice));
-            else currencyState.viaconversionprice.push(0);
-            if (currencyState.currencies[currencyids[i]].fees != undefined) currencyState.fees.push(amountFromValue(currencyState.currencies[currencyids[i]].fees));
-            else currencyState.fees.push(0);
-            if (currencyState.currencies[currencyids[i]].conversionfees != undefined) currencyState.conversionfees.push(amountFromValue(currencyState.currencies[currencyids[i]].conversionfees));
-            else currencyState.conversionfees.push(0);
-            if (currencyState.currencies[currencyids[i]].priorweights != undefined) currencyState.priorweights.push(amountFromValue(currencyState.currencies[currencyids[i]].priorweights));
-            else currencyState.priorweights.push(0);
-        }
-
-        //loop through the object keys
-        for (let j = 0; j < currencyids.length; j++) {
-            currencies.push(util.convertVerusAddressToEthAddress(currencyids[j]));
-        }
-        currencyState.currencies = currencies;
-    } else currencyState.currencies = [];
-
-
-    if (currencyState.launchcurrencies != undefined && currencyState.launchcurrencies.length > 0) {
-        for (let i = 0; i < currencyState.launchcurrencies.length; i++) {
-            currencyState.weights.push(amountFromValue(currencyState.launchcurrencies[i].weight));
-            currencyState.reserves.push(amountFromValue(currencyState.launchcurrencies[i].reserves));
-        }
-
-    } else if (currencyState.reservecurrencies != undefined && currencyState.reservecurrencies.length > 0) {
-        for (let i = 0; i < currencyState.reservecurrencies.length; i++) {
-            currencyState.weights.push(amountFromValue(currencyState.reservecurrencies[i].weight));
-            currencyState.reserves.push(amountFromValue(currencyState.reservecurrencies[i].reserves));
-        }
-    }
-
-    if (currencyState.initialsupply > 0) currencyState.initialsupply = amountFromValue(currencyState.initialsupply);
-    if (currencyState.supply > 0) currencyState.supply = amountFromValue(currencyState.supply);
-    if (currencyState.emitted > 0) currencyState.emitted = amountFromValue(currencyState.emitted);
-    currencyState.primarycurrencyout = amountFromValue(currencyState.primarycurrencyout);
-    if (currencyState.preconvertedout > 0) currencyState.preconvertedout = amountFromValue(currencyState.preconvertedout);
-    if (currencyState.primarycurrencyfees > 0) currencyState.primarycurrencyfees = amountFromValue(currencyState.primarycurrencyfees);
-    if (currencyState.primarycurrencyconversionfees > 0) currencyState.primarycurrencyconversionfees = amountFromValue(currencyState.primarycurrencyconversionfees);
-
-    return currencyState;
-
-}
 //return the data required for a notarisation to be made
 exports.getLastImportFrom = async() => {
 

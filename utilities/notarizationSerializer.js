@@ -145,7 +145,7 @@ function serializeCProofRootArray (proof) {
             Buffer.from(item.power.match(/[a-fA-F0-9]{2}/g).reverse().join(''), 'hex')]);
         if (item.type == 2) // type ethereum
         {
-          encodedOutput = Buffer.concat([encodedOutput, util.writeUInt(item.gasprice, 64)]);
+          encodedOutput = Buffer.concat([encodedOutput, util.writeUInt(util.convertToInt64(item.gasprice), 64)]);
         }
     }
 
