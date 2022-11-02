@@ -53,11 +53,12 @@ module.exports = Object.freeze({
     LIF: {
         HASHPOS: 0,
         TXIDPOS: 64,
-        NPOS: 128,
+        NPOS: 204,
         BYTES32SIZE: 64,
         HEX: 16,
         FLAGS: 68,
-        VERSION: 1
+        VERSION: 1,
+        FORKLEN: 256
     },
     RESERVE_TO_RESERVE: 0x400,
     CROSS_SYSTEM: 0x40

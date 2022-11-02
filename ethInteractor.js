@@ -149,7 +149,7 @@ function serializeCCurrencyValueMapVarInt(ccvm) {
     return encodedOutput
 }
 
-
+const FLAG_DEST_AUX = 64;
 
 function serializeCTransferDestination(ctd) {
 
@@ -169,6 +169,29 @@ function serializeCTransferDestination(ctd) {
     }
 
     encodedOutput = Buffer.concat([encodedOutput, util.writeCompactSize(lengthOfDestination), destination]);
+
+    if (parseInt(ctd.destinationtype & FLAG_DEST_AUX) == FLAG_DEST_AUX)
+    {
+        let mainVecLength = ctd.auxdests.length;
+
+        let subLength = util.writeCompactSize(mainVecLength);
+
+        let subvector = Buffer.from("");
+
+        for (let i = 0; i < mainVecLength; i++)
+        {
+            let subType = Buffer.alloc(1);
+            subType.writeUInt8(ctd.auxdests[i].type);
+            let subDestination = Buffer.from(bitGoUTXO.address.fromBase58Check(ctd.auxdests[i].address, 160).hash);
+
+            let arrayItem = Buffer.concat([subType, util.writeCompactSize(Buffer.byteLength(subDestination)), subDestination])
+            subvector = Buffer.concat([subvector, util.writeCompactSize(Buffer.byteLength(arrayItem)), arrayItem])
+
+        }
+
+        encodedOutput = Buffer.concat([encodedOutput, subLength, subvector]);
+
+    }
 
     return encodedOutput;
 }
@@ -806,7 +829,7 @@ async function getProofRoot(height = "latest") {
     latestproofroot.stateroot = util.removeHexLeader(block.stateRoot).match(/[a-fA-F0-9]{2}/g).reverse().join('');
     latestproofroot.blockhash = util.removeHexLeader(block.hash).match(/[a-fA-F0-9]{2}/g).reverse().join('');
     latestproofroot.power = BigInt(block.totalDifficulty).toString(16);
-    latestproofroot.gasprice = null;
+    latestproofroot.gasprice = 0;
     return latestproofroot;
 
 }
@@ -869,6 +892,7 @@ async function checkProofRoot(height, stateroot, blockhash, power) {
 
     block.stateRoot = util.removeHexLeader(block.stateRoot).match(/[a-fA-F0-9]{2}/g).reverse().join('');
     block.hash = util.removeHexLeader(block.hash).match(/[a-fA-F0-9]{2}/g).reverse().join('');
+    block.gasprice = 0;
 
     if (block.stateRoot == stateroot && blockhash == block.hash && BigInt(block.totalDifficulty).toString(16) == BigInt(power).toString(16)) {
         return true;
@@ -881,6 +905,7 @@ async function checkProofRoot(height, stateroot, blockhash, power) {
 exports.getNotarizationData = async() => {
 
     let Notarization = {};
+    Notarization.version = 2;
 
     var d = new Date();
     var timenow = d.valueOf();
@@ -903,33 +928,39 @@ exports.getNotarizationData = async() => {
         let notarizations = {};
         let largestIndex = 0;
 
+        let calcIndex = 0;
         try {
             while (true) {
                 let notarization = await verusNotarizer.methods.bestForks(j).call();
                 notarization = util.removeHexLeader(notarization);
-                if (notarization && notarization.length >= 192) {
-                    let length = notarization.length / 192;
+                if (notarization && notarization.length >= constants.LIF.FORKLEN) {
+                    let length = notarization.length / constants.LIF.FORKLEN;
 
                     for (let i = 0; length > i; i++) {
 
-                        let hashPos = constants.LIF.HASHPOS + (i * 192);
-                        let txidPos = constants.LIF.TXIDPOS + (i * 192);
-                        let nPos = constants.LIF.NPOS + (i * 192);
-
-                        let indexPos = 188 + (i * 256);
-                        let index = parseInt(notarization.slice(indexPos, indexPos + 4), 16);
-
-                        notarizations[index] = {
-                            txid: "0x" + notarization.substring(txidPos, txidPos + 64),
-                            n: parseInt(notarization.slice(nPos, nPos + 8), 16),
-                            hash: "0x" + notarization.substring(hashPos, hashPos + 64).match(/[a-fA-F0-9]{2}/g).reverse().join('')
-                        };
-                        if (largestIndex < index)
+                        let hashPos = constants.LIF.HASHPOS + (i * constants.LIF.FORKLEN);
+                        let txidPos = constants.LIF.TXIDPOS + (i * constants.LIF.FORKLEN);
+                        let nPos = constants.LIF.NPOS + (i * constants.LIF.FORKLEN);
+                        if (largestIndex < calcIndex)
                         {
-                            largestIndex = index;
+                            largestIndex = calcIndex;
                             Notarization.bestchain = j;
                         }
-                        forksData.push(index);
+                       
+                        if ((j == 0  && i == 0) || i > 0) 
+                        {
+                            notarizations[calcIndex] = {
+                                txid: "0x" + notarization.substring(txidPos, txidPos + constants.LIF.BYTES32SIZE).match(/[a-fA-F0-9]{2}/g).reverse().join(''),
+                                n: parseInt(notarization.slice(nPos, nPos + 4), constants.LIF.HEX),
+                                hash: "0x" + notarization.substring(hashPos, hashPos + constants.LIF.BYTES32SIZE).match(/[a-fA-F0-9]{2}/g).reverse().join('')
+                            };
+                            forksData.push(calcIndex);
+                            calcIndex++;
+                        }
+                        else{
+                            forksData.push(0);
+                        }
+
                     }
                     forks.push(forksData);
                     forksData = [];
@@ -951,26 +982,16 @@ exports.getNotarizationData = async() => {
             Notarization.notarizations = [];
 
             for (const index in notarizations) {
-                let returnedNotarization = await verusNotorizerStorage.methods.PBaaSNotarization(index - 1).call();
-               // let returnedNotarization = await verusNotorizerStorage.methods.getNotarization(notarizations[index].hash).call();
-                let tempNotarization = notarization.deserializeNotarization(returnedNotarization);
-                //let tempNotarization = notarizationFuncs.createNotarization(returnedNotarization);
                 Notarization.notarizations.push({
                     index: parseInt(index),
                     txid: util.removeHexLeader(notarizations[index].txid),
                     vout: notarizations[index].n,
-                    notarization: tempNotarization
                 });
             }
         }
 
-        Notarization.version = 1;
-
         if (debug) {
-            // console.log("NOTARIZATION CONTRACT INFO \n" + JSON.stringify(notarizations, null, 2))
-            console.log(JSON.stringify(Notarization?.notarizations && Notarization?.notarizations[0]?.notarization.proofroots, null, 2))
-            console.log(JSON.stringify(forks, null, 2))
-            console.log(JSON.stringify("Best Chain: " + Notarization.bestchain, null, 2))
+            console.log("NOTARIZATION CONTRACT INFO \n" + JSON.stringify(Notarization, null, 2))
         }
 
         await setCachedApi({ "result": Notarization }, 'lastgetNotarizationData');
@@ -1165,33 +1186,19 @@ exports.submitImports = async(CTransferArray) => {
     return { result: globalsubmitimports.transactionHash };
 }
 
-function IsLaunchCleared(pBaasNotarization) {
-    return pBaasNotarization.launchcleared == true ? constants.FLAG_START_NOTARIZATION : 0;
-}
-
-function IsLaunchConfirmed(pBaasNotarization) {
-    return pBaasNotarization.launchconfirmed == true ? constants.FLAG_LAUNCH_CONFIRMED : 0;
-
-}
-
-function IsLaunchComplete(pBaasNotarization) {
-    return pBaasNotarization.launchcomplete == true ? constants.FLAG_LAUNCH_COMPLETE : 0;
-}
-
 exports.submitAcceptedNotarization = async(params) => {
 
     if (noaccount ) {
         console.log("************** submitAcceptedNotarization: Wallet will not spend ********************");
         return { result: { error: true } };
     }
+
     if (debugnotarization) {
         console.log(JSON.stringify(params[0], null, 2));
         console.log(JSON.stringify(params[1], null, 2));
     }
-    const original = params[0].valueOf();
-    let pBaasNotarization = params[0];
 
-    const serializednotarization = notarization.serializeNotarization(original);
+    const serializednotarization = notarization.serializeNotarization(params[0]);
 
     let signatures = {};
 
@@ -1222,11 +1229,9 @@ exports.submitAcceptedNotarization = async(params) => {
         signatures[ID[0]] = items[ID[0]];
     }
 
-
     let txidObj = params[1].output;
-
-    //  console.log(JSON.stringify(params));
     const lastTxid = await getCachedApi('lastNotarizationTxid');
+
     try {
 
         if (lastTxid && lastTxid == JSON.stringify(txidObj.txid)) {
@@ -1238,66 +1243,14 @@ exports.submitAcceptedNotarization = async(params) => {
         return null;
     }
 
-    pBaasNotarization.hashnotarization = "0x0000000000000000000000000000000000000000000000000000000000000000"; // set blank as contract will set
-    pBaasNotarization.flags = IsLaunchCleared(pBaasNotarization) | IsLaunchConfirmed(pBaasNotarization) | IsLaunchComplete(pBaasNotarization);
-    //change all iaddresses to ethAddress and add 0x to all hex
-    pBaasNotarization.proposer.destinationtype = pBaasNotarization.proposer.type;
-    pBaasNotarization.proposer.destinationaddress = util.convertVerusAddressToEthAddress(pBaasNotarization.proposer.address);
-    delete pBaasNotarization.proposer.type;
-    delete pBaasNotarization.proposer.address;
-    pBaasNotarization.currencyid = util.convertVerusAddressToEthAddress(pBaasNotarization.currencyid);
-    pBaasNotarization.currencystate = completeCurrencyState(pBaasNotarization.currencystate);
-    //pBaasNotarization.currencystate.currencyid = convertVerusAddressToEthAddress(pBaasNotarization.currencystate.currencyid);
-    pBaasNotarization.prevnotarization = {};
-    pBaasNotarization.prevnotarization.hash = addHexPrefix(pBaasNotarization.prevnotarizationtxid);
-    pBaasNotarization.prevnotarization.n = pBaasNotarization.prevnotarizationout;
-    delete pBaasNotarization.prevnotarizationout;
-    delete pBaasNotarization.prevnotarizationtxid;
-    pBaasNotarization.hashprevnotarization = addHexPrefix(pBaasNotarization.hashprevcrossnotarization);
-    delete pBaasNotarization.hashprevcrossnotarization;
-
-    // complete currencystate
-    //loop through currencystates and update the addresses
-
-    let currencystates = [];
-    for (let i = 0; i < pBaasNotarization.currencystates.length; i++) {
-        let currencystate = {};
-        let currencyids = Object.keys(pBaasNotarization.currencystates[i]);
-        currencystate.currencyid = util.convertVerusAddressToEthAddress(currencyids[0]);
-        currencystate.currencystate = completeCurrencyState(pBaasNotarization.currencystates[i][currencyids[0]]);
-        currencystates.push(currencystate);
-    }
-
-    pBaasNotarization.currencystates = currencystates;
-
-    for (let i = 0; i < pBaasNotarization.proofroots.length; i++) {
-
-        pBaasNotarization.proofroots[i].cprtype = pBaasNotarization.proofroots[i].type;
-        delete pBaasNotarization.proofroots[i].type;
-        pBaasNotarization.proofroots[i].systemid = util.convertVerusAddressToEthAddress(pBaasNotarization.proofroots[i].systemid);
-        pBaasNotarization.proofroots[i].rootheight = pBaasNotarization.proofroots[i].height;
-        delete pBaasNotarization.proofroots[i].height;
-        pBaasNotarization.proofroots[i].stateroot = addHexPrefix(pBaasNotarization.proofroots[i].stateroot);
-        pBaasNotarization.proofroots[i].blockhash = addHexPrefix(pBaasNotarization.proofroots[i].blockhash);
-        pBaasNotarization.proofroots[i].compactpower = addHexPrefix(pBaasNotarization.proofroots[i].power);
-        if (pBaasNotarization.proofroots[i].cprtype == 2)
-            pBaasNotarization.proofroots[i].gasprice = util.convertToInt64(pBaasNotarization.proofroots[i].gasprice);
-        else
-            pBaasNotarization.proofroots[i].gasprice = 0;
-        delete pBaasNotarization.proofroots[i].power;
-    }
-    delete pBaasNotarization.launchcurrencies
     let sigKeys = Object.keys(signatures);
-
-    if (signatures[sigKeys[0]].signatures.length == 0) throw "No Signatures present"; //what should i return if we get bad data
     let splitSigs = {}
-
-
     let vsVals = [];
     let rsVals = [];
     let ssVals = [];
     let blockheights = [];
     let notaryAddresses = [];
+
     for (let i = 0; i < sigKeys.length; i++) {
 
         splitSigs = util.splitSignature(signatures[sigKeys[i]].signatures[0]);
@@ -1308,21 +1261,11 @@ exports.submitAcceptedNotarization = async(params) => {
         notaryAddresses.push(util.convertVerusAddressToEthAddress(sigKeys[i]));
     }
 
-    // Sort signatures in address accending order to assure uniqueness
-    // TODO: BigNumber.from("0xCA6b8EaB76F76B458b1c43c0C5f500b33f63F475").toBigInt()
-
-    //process nodes
-
-    for (let i = 0; i < pBaasNotarization.nodes.length; i++) {
-        pBaasNotarization.nodes[i].nodeidentity = util.convertVerusAddressToEthAddress(pBaasNotarization.nodes[i].nodeidentity);
-    }
-
-    pBaasNotarization.txid = { hash: addHexPrefix(txidObj.txid), n: txidObj.voutnum };
-
     try {
         let txhash = {}
         var firstNonce = await web3.eth.getTransactionCount(account.address);
 
+        // Reduce contract size by serializing signature evidence
         let data = abi.encodeParameter({
             "data": {
                 "_vs": 'uint8[]',
@@ -1339,17 +1282,13 @@ exports.submitAcceptedNotarization = async(params) => {
             "notaryAddress": notaryAddresses
         });
 
-        data = "0x" + data.slice(66); //remove first 32bytes from hex array.
-        if (debugnotarization) {
-            console.log("********NOTARIZATION INPUT DATA********");
-            console.log(JSON.stringify(pBaasNotarization, null, 2));
-            console.log(JSON.stringify(data, null, 2));
-        }
-
-        txhash = await verusBridgeMaster.methods.setLatestData(`0x${serializednotarization.toString('hex')}`,addHexPrefix(txidObj.txid), txidObj.voutnum,  data).call();
+        //remove first 32bytes + 0x from hex array, so abi.decode in contract recievces correct value.
+        data = "0x" + data.slice(66); 
+        // Call contract to test for reversion.
+        let testValue = await verusBridgeMaster.methods.setLatestData(`0x${serializednotarization.toString('hex')}`, addHexPrefix(txidObj.txid.match(/[a-fA-F0-9]{2}/g).reverse().join('')), txidObj.voutnum, data).call();
 
         if (transactioncount != firstNonce) {
-            txhash = await verusBridgeMaster.methods.setLatestData(`0x${serializednotarization.toString('hex')}`,addHexPrefix(txidObj.txid), txidObj.voutnum,  data).send({ from: account.address, gas: maxGas });
+            txhash = await verusBridgeMaster.methods.setLatestData(`0x${serializednotarization.toString('hex')}`, addHexPrefix(txidObj.txid.match(/[a-fA-F0-9]{2}/g).reverse().join('')), txidObj.voutnum, data).send({ from: account.address, gas: maxGas });
             transactioncount = firstNonce;
         }
 
@@ -1357,14 +1296,16 @@ exports.submitAcceptedNotarization = async(params) => {
         return { "result": txhash };
 
     } catch (error) {
-        if (error.message && error.message == "Returned error: already known") {
+
+        if (error.reason)
+            console.log("\x1b[41m%s\x1b[0m", "submitAcceptedNotarization:" + error.reason);
+        else if (error.message && error.message == "Returned error: already known") {
             console.log("Notarization already Submitted, transaction cancelled");
         } else {
             console.log(error);
         }
-        return { "result": { "txid": error } };
+        return { "result": { "txid": error } }; 
     }
-
 }
 
 function completeCurrencyState(currencyState) {
@@ -1477,15 +1418,11 @@ exports.getLastImportFrom = async() => {
             try {
                 forksData = await verusNotarizer.methods.bestForks(0).call();
                 forksData = util.removeHexLeader(forksData);
-                let hashPos = constants.LIF.HASHPOS;
+
                 let txidPos = constants.LIF.TXIDPOS;
                 let nPos = constants.LIF.NPOS;
-                let txid = "0x" + forksData.substring(txidPos, txidPos + constants.LIF.BYTES32SIZE);
-                let n = parseInt(forksData.substring(nPos, nPos + 8), constants.LIF.HEX);
-                let hash = "0x" + forksData.substring(hashPos, hashPos + constants.LIF.BYTES32SIZE).match(/[a-fA-F0-9]{2}/g).reverse().join('')
-                let returnedNotarization = await verusNotorizerStorage.methods.PBaaSNotarization(0).call();
-
-                lastconfirmednotarization = notarization.deserializeNotarization(returnedNotarization);
+                let txid = "0x" + forksData.substring(txidPos, txidPos + constants.LIF.BYTES32SIZE).match(/[a-fA-F0-9]{2}/g).reverse().join('');
+                let n = parseInt(forksData.substring(nPos, nPos + 4), constants.LIF.HEX);
 
                 lastconfirmedutxo = { txid: util.removeHexLeader(txid), voutnum: n }
 

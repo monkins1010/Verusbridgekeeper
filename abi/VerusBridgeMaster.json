@@ -13,9 +13,9 @@
   {
     "inputs": [
       {
-        "internalType": "address",
+        "internalType": "bytes32",
         "name": "",
-        "type": "address"
+        "type": "bytes32"
       }
     ],
     "name": "claimableFees",
@@ -27,8 +27,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [
@@ -125,8 +124,7 @@
     "name": "export",
     "outputs": [],
     "stateMutability": "payable",
-    "type": "function",
-    "payable": true
+    "type": "function"
   },
   {
     "inputs": [
@@ -145,8 +143,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [
@@ -410,8 +407,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [],
@@ -424,8 +420,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [
@@ -466,8 +461,7 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [
@@ -511,15 +505,14 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function",
-    "constant": true
+    "type": "function"
   },
   {
     "inputs": [
       {
-        "internalType": "address",
+        "internalType": "bytes32",
         "name": "_feeRecipient",
-        "type": "address"
+        "type": "bytes32"
       },
       {
         "internalType": "uint256",
@@ -527,9 +520,9 @@
         "type": "uint256"
       },
       {
-        "internalType": "address",
+        "internalType": "uint176",
         "name": "bridgekeeper",
-        "type": "address"
+        "type": "uint176"
       }
     ],
     "name": "setClaimableFees",
@@ -553,13 +546,25 @@
   {
     "inputs": [],
     "name": "claimfees",
-    "outputs": [
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
       {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
+        "internalType": "bytes32",
+        "name": "publicKeyX",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "publicKeyY",
+        "type": "bytes32"
       }
     ],
+    "name": "sendfees",
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },

@@ -120,7 +120,7 @@ function serializeCoinbaseCurrencyStates(currencyState) {
     for (const items of currencyState) {
         let keys = Object.keys(items);
 
-        encodedOutput = Buffer.concat([encodedOutput, bitGoUTXO.address.fromBase58Check((keys[0]), 160).hash]);
+        //encodedOutput = Buffer.concat([encodedOutput, bitGoUTXO.address.fromBase58Check((keys[0]), 160).hash]);
         encodedOutput = Buffer.concat([encodedOutput, serializeCoinbaseCurrencyState(items[keys[0]])]);
 
     }
@@ -132,7 +132,7 @@ function serializeCProofRootArray (proof) {
     let encodedOutput = Buffer.from(util.writeCompactSize(proof.length));
 
     for (const item of proof) {
-        encodedOutput = Buffer.concat([encodedOutput, bitGoUTXO.address.fromBase58Check((item.systemid), 160).hash]);
+       // encodedOutput = Buffer.concat([encodedOutput, bitGoUTXO.address.fromBase58Check((item.systemid), 160).hash]);
         encodedOutput = Buffer.concat([encodedOutput, util.writeUInt(item.version, 16)]);
         encodedOutput = Buffer.concat([encodedOutput, util.writeUInt(item.type, 16)]);
         encodedOutput = Buffer.concat([encodedOutput, bitGoUTXO.address.fromBase58Check((item.systemid), 160).hash]);
