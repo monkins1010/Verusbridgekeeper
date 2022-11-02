@@ -7,12 +7,19 @@ const Web3 = require('web3');
 const addHexPrefix = (string) => {
     if (string.startsWith("0x")) return string;
     else return "0x" + string;
-  };
-
+};
 
 const uint64ToVerusFloat = (number) => {
-    var inter = (BigInt(number) / BigInt(100000000)) + '.';
-    var decimalp = "" + (BigInt(number) % BigInt(100000000));
+   
+    var input = BigInt(number);
+    var inter = (input / BigInt(100000000)) + '.';
+    var decimalp = "" + (input % BigInt(100000000));
+
+    if(input < 0)
+    {
+        inter = "-" + inter;
+        decimalp = decimalp.slice(1);
+    }
 
     while (decimalp.length < 8) {
         decimalp = "0" + decimalp;
@@ -32,6 +39,73 @@ const weitoEther = (number) => {
 
 const convertVerusAddressToEthAddress = (verusAddress) => {
     return "0x" + bitGoUTXO.address.fromBase58Check(verusAddress).hash.toString('hex');
+}
+
+const serializeCCurrencyValueMapArray = (ccvm) => {
+    let encodedOutput = writeCompactSize(ccvm.length);
+
+    for (let i = 0; i < ccvm.length; i++) {
+
+        encodedOutput = Buffer.concat([encodedOutput, bitGoUTXO.address.fromBase58Check(ccvm[i].currency, 160).hash]);
+        encodedOutput = Buffer.concat([encodedOutput, writeUInt((ccvm[i].amount), 64)]);
+
+    }
+    return encodedOutput
+}
+
+const serializeReserveCurrenciesArray = (ccvm) => {
+
+    let encodedOutput = writeCompactSize(ccvm.length);
+
+    for (const item of ccvm) {
+
+        encodedOutput = Buffer.concat([encodedOutput, bitGoUTXO.address.fromBase58Check(item.currencyid, 160).hash]);
+
+    }
+    return encodedOutput
+}
+
+const serializeReserveWeightsArray = (ccvm, size) => {
+
+    let encodedOutput = writeCompactSize(ccvm.length);
+
+    for (const items of ccvm) {
+        
+        encodedOutput = Buffer.concat([encodedOutput, writeUInt(convertToInt64(items.weight), 32)]); 
+    }
+
+    return encodedOutput
+
+}
+
+const serializeReservesArray = (ccvm) => {
+
+    let encodedOutput = writeCompactSize(ccvm.length);
+
+    for (const items of ccvm) {
+        
+        encodedOutput = Buffer.concat([encodedOutput, writeUInt(convertToInt64(items.reserves), 64)]); 
+    }
+
+    return encodedOutput
+}
+
+const serializeIntArray = (ccvm, object, size) => {
+
+    if (!ccvm)
+    {
+        return Buffer.alloc(1);
+    }
+    let keys = Object.keys(ccvm)
+
+    let encodedOutput = writeCompactSize(keys.length);
+
+    for (const items of keys) {
+        
+        encodedOutput = Buffer.concat([encodedOutput, writeUInt(convertToInt64(ccvm[items][object]), size)]); 
+    }
+
+    return encodedOutput
 }
 
 const splitSignature = (fullSig) => {
@@ -93,7 +167,8 @@ const increaseHexByAmount = (hex, amount) => {
 
 const writeVarInt = (newNumber) => {
     //   console.log(newNumber);
-    //let tmp = Array(Math.floor((sizeofInt(newNumber)*8+6)/7));
+    if (!newNumber) return Buffer.from('00', 'hex');
+
     let tmp = [];
     let len = 0;
     // eslint-disable-next-line no-constant-condition
@@ -111,14 +186,14 @@ const writeVarInt = (newNumber) => {
 }
 
 const readVarInt = (data) => {
-    let n = 0;
+    let n = BigInt(0);
     let is = Buffer.from(data, 'hex');
     let pos = 0;
     // eslint-disable-next-line no-constant-condition
     while (true) {
         let chData = is.readUInt8(pos); //single char
         pos++;
-        n = (n << 7) | (chData & 0x7F);
+        n = (n * BigInt(128)) | BigInt(chData & 0x7F);
         if (chData & 0x80)
             n++;
         else
@@ -156,7 +231,7 @@ const removeHexLeader = (hexString) => {
 
 const uint160ToVAddress = (number, version) => {
 
-    if(number.slice(0,2) != '0x' && (number.length != 40)) 
+    if(number.slice(0,2) != '0x' && (number.length != 40)) //if bigint passed instead of hex
     {
         let temphex = Web3.utils.toHex(number);
         return (bitGoUTXO.address.toBase58Check(Buffer.from(removeHexLeader(temphex), 'hex'), version));
@@ -174,8 +249,10 @@ const hexAddressToBase58 = (type, address) => {
     else if ((parseInt(type & constants.ADDRESS_TYPE_MASK)) == constants.I_ADDRESS_TYPE) 
     {
         retval = uint160ToVAddress(address, constants.IADDRESS);
-    } 
-
+    }
+    else if  ((parseInt(type & constants.ADDRESS_TYPE_MASK)) == constants.ETH_ADDRESS_TYPE) {
+        retval = address;
+    }
     return retval;
 
 }
@@ -348,3 +425,8 @@ exports.writeUInt = writeUInt;
 exports.GetMMRProofIndex = GetMMRProofIndex;
 exports.convertToInt64 = convertToInt64;
 exports.addHexPrefix = addHexPrefix;
+exports.serializeCCurrencyValueMapArray = serializeCCurrencyValueMapArray;
+exports.serializeReserveCurrenciesArray = serializeReserveCurrenciesArray;
+exports.serializeReserveWeightsArray = serializeReserveWeightsArray;
+exports.serializeReservesArray = serializeReservesArray; 
+exports.serializeIntArray = serializeIntArray;

@@ -9,7 +9,8 @@ module.exports = Object.freeze({
     BRIDGEID: "iSojYsotVzXz4wh2eJriASGo6UidJDDhL2",
     VETHIDHEXREVERSED: "000b090bec6c9ff28586eb7ed24e77562f0c4667",
     MAINNETVETH: "", //TODO: FIND OUT
-
+    EMPTY_ADDRESS: "0x0000000000000000000000000000000000000000",
+    CROSS_SYSTEM: 64,
     FLAG_DEFINITION_NOTARIZATION : 1,   // initial notarization on definition of currency/system/chain
     FLAG_PRE_LAUNCH : 2,                // pre-launch notarization
     FLAG_START_NOTARIZATION : 4,        // first notarization after pre-launch
@@ -41,7 +42,26 @@ module.exports = Object.freeze({
     RADDRESS: 60,
     ADDRESS_TYPE_MASK: 127,
     R_ADDRESS_TYPE: 2,
-    I_ADDRESS_TYPE: 4
+    I_ADDRESS_TYPE: 4,
+    ETH_ADDRESS_TYPE: 9,
+    IAddressBaseConst: 102,
+    RAddressBaseConst: 60,
+    maxGas: 6000000,
+    globaltimedelta: 60000,
+    TRANSFER_TYPE_ETH: 3,
+    RESERVETORESERVE: 1024,
+    LIF: {
+        HASHPOS: 0,
+        TXIDPOS: 64,
+        NPOS: 204,
+        BYTES32SIZE: 64,
+        HEX: 16,
+        FLAGS: 68,
+        VERSION: 1,
+        FORKLEN: 256
+    },
+    RESERVE_TO_RESERVE: 0x400,
+    CROSS_SYSTEM: 0x40
 
 
 });

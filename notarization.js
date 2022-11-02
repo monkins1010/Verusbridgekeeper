@@ -27,9 +27,7 @@ const notarizationFlags = function (notarization) {
     if (parseInt(notarization.flags & constants.FLAG_ACCEPTED_MIRROR) == constants.FLAG_ACCEPTED_MIRROR) {
         notarization.ismirror = true;
     }
-    else {
-        notarization.ismirror = false;
-    }
+   
 
     return notarization;
 }
@@ -155,6 +153,8 @@ const createNotarization = function (input) {
         tempProofRoot.blockhash = util.removeHexLeader(notarization.proofroots[i].blockhash);
         tempProofRoot.power = util.removeHexLeader(notarization.proofroots[i].compactpower);
         tempProofRoot.type = notarization.proofroots[i].cprtype;
+        if (tempProofRoot.type == 2) //TODO: CHANGE TO TYPETH
+            tempProofRoot.gasprice = util.uint64ToVerusFloat(notarization.proofroots[i].gasprice);
         tempProofRoot.height = notarization.proofroots[i].rootheight;
         tempProofRoots.push(tempProofRoot);
 
@@ -176,3 +176,4 @@ const createNotarization = function (input) {
 }
 
 exports.createNotarization = createNotarization;
+exports.notarizationFlags = notarizationFlags;
