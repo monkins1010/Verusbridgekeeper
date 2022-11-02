@@ -794,12 +794,7 @@ exports.getBestProofRoot = async(input) => {
             console.log("getbestproofroot result:", { bestindex, validindexes, latestproofroot, laststableproofroot });
         }
 
-        let gasPrice = await web3.eth.getGasPrice();
-        let currencies = {[constants.VETHCURRENCYID]:  { weights: [gasPrice]}}; // TODO: Enable gas price
-        if (logging)
-            console.log("GAS PRICE:", util.uint64ToVerusFloat(gasPrice))
-
-        let retval = { "result": { bestindex, validindexes, latestproofroot, laststableproofroot, currencies } };
+        let retval = { "result": { bestindex, validindexes, latestproofroot, laststableproofroot} };
 
         await setCachedApiValue(retval, input, 'lastGetBestProofRoot');
 
@@ -814,12 +809,18 @@ exports.getBestProofRoot = async(input) => {
 async function getProofRoot(height = "latest") {
 
     let block;
-
+    let transaction;
     try {
         block = await web3.eth.getBlock(height);
+        transaction = await web3.eth.getTransaction(block.transactions[0])
     } catch (error) {
         throw "web3.eth.getBlock error:"
     }
+
+ 
+    let gasprice =  util.uint64ToVerusFloat((BigInt(transaction.gasPrice) / 1000000000n) == 0n ? "0.00000001" : (BigInt(transaction.gasPrice) / 1000000000n));
+    if (debug)
+        console.log("getProofRoot GASPRICE:"+ gasprice)
 
     let latestproofroot = {};
     latestproofroot.version = 1;
@@ -829,7 +830,7 @@ async function getProofRoot(height = "latest") {
     latestproofroot.stateroot = util.removeHexLeader(block.stateRoot).match(/[a-fA-F0-9]{2}/g).reverse().join('');
     latestproofroot.blockhash = util.removeHexLeader(block.hash).match(/[a-fA-F0-9]{2}/g).reverse().join('');
     latestproofroot.power = BigInt(block.totalDifficulty).toString(16);
-    latestproofroot.gasprice = "0.0000001";
+    latestproofroot.gasprice = `${gasprice}`;
     return latestproofroot;
 
 }
@@ -837,9 +838,14 @@ async function getProofRoot(height = "latest") {
 async function checkProofRoot(height, stateroot, blockhash, power) {
     //  console.log("height:", height);
     let block = {};
-
+    let transaction = {};
+    let gasprice = {};
     try {
         block = await web3.eth.getBlock(height);
+        transaction = await web3.eth.getTransaction(block.transactions[0])
+        gasprice =  util.uint64ToVerusFloat((BigInt(transaction.gasPrice) / 1000000000n) == 0n ? "0.00000001" : (BigInt(transaction.gasPrice) / 1000000000n));
+        if (debug)
+        console.log("checkProofRoot GASPRICE:"+ gasprice)
     } catch (error) {
         console.log("\x1b[41m%s\x1b[0m", "web3.eth.getBlock error:" + error);
         throw "web3.eth.getBlock error:"
@@ -851,7 +857,7 @@ async function checkProofRoot(height, stateroot, blockhash, power) {
 
     block.stateRoot = util.removeHexLeader(block.stateRoot).match(/[a-fA-F0-9]{2}/g).reverse().join('');
     block.hash = util.removeHexLeader(block.hash).match(/[a-fA-F0-9]{2}/g).reverse().join('');
-    block.gasprice = "0.0000001";
+    block.gasprice = `${gasprice}`;
 
     if (block.stateRoot == stateroot && blockhash == block.hash && BigInt(block.totalDifficulty).toString(16) == BigInt(power).toString(16)) {
         return true;
