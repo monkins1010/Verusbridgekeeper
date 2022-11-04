@@ -9,9 +9,23 @@ let apiCache = new Cache.Cache({
   },
 })
 
+let blockCache = new Cache.Cache({
+    namespace: "blocks",
+    policy: {
+        maxEntries: CACHE_CAP
+    },
+  })
+
 exports.initApiCache = () => {
     return apiCache.initializeCache().catch(e => {
       console.log("Error while initializing Api cache")
+      throw e
+    })
+}
+
+exports.initBlockCache = () => {
+    return blockCache.initializeCache().catch(e => {
+      console.log("Error while initializing Block cache")
       throw e
     })
 }
@@ -70,6 +84,34 @@ exports.getCachedApi = async (call) => {
 }
 
 exports.setCachedApi = async (ApiObj, call) => {
+    let key = `${call}`
+
+    try 
+    {
+        return await apiCache.setItem(key, JSON.stringify(ApiObj));
+    } 
+    catch(e) 
+    {
+         console.log("Error while setting Api cache")
+         throw e
+    }
+}
+
+exports.getCachedBlock = async (call) => {
+    let key = `${call}`
+
+    try 
+    {
+       return await apiCache.getItem(key);
+    } 
+    catch(e) 
+    {
+        console.log("Error while getting Api cache")
+        throw e
+    }
+}
+
+exports.setCachedBlock = async (ApiObj, call) => {
     let key = `${call}`
 
     try 
