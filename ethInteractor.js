@@ -769,7 +769,7 @@ exports.getBestProofRoot = async(input) => {
     try {
         if (input.length && proofroots) {
             for (let i = 0; i < proofroots.length; i++) {
-                if (await checkProofRoot(proofroots[i].height, proofroots[i].stateroot, proofroots[i].blockhash, BigInt(util.addBytesIndicator(proofroots[i].power)))) {
+                if ((parseInt(proofroots[i].height) > 1) && await checkProofRoot(proofroots[i].height, proofroots[i].stateroot, proofroots[i].blockhash, BigInt(util.addBytesIndicator(proofroots[i].power)))) {
                     validindexes.push(i);
                     if (proofroots[bestindex].height < proofroots[i].height) {
                         bestindex = i;
