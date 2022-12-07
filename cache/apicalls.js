@@ -102,7 +102,7 @@ exports.getCachedBlock = async (call) => {
 
     try 
     {
-       return await apiCache.getItem(key);
+       return await blockCache.getItem(key);
     } 
     catch(e) 
     {
@@ -116,7 +116,7 @@ exports.setCachedBlock = async (ApiObj, call) => {
 
     try 
     {
-        return await apiCache.setItem(key, JSON.stringify(ApiObj));
+        return await blockCache.setItem(key, JSON.stringify(ApiObj));
     } 
     catch(e) 
     {

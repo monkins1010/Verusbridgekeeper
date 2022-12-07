@@ -134,7 +134,7 @@ const updatecontract = async() => {
         let submission = { _vs: vVal, _rs: rVal, _ss: sVal, contracts, upgradeType: TYPE_CONTRACT , salt: "0x" + randomBuf.toString('Hex'), notarizerID };
         
         const revv1 = await verusUpgrade.methods.upgradeContracts(submission).call();
-        console.log("Call replied with: " + revv1 + "/n1: More Signatures required.\n2: Upgrade Complete\n");
+        console.log("Call replied with: " + revv1 + "\n1: More Signatures required.\n2: Upgrade Complete\n");
         const revv2 = await verusUpgrade.methods.upgradeContracts(submission).send({ from: account.address, gas: maxGas });
 
         console.log("\nsignature: ", /* signature,*/ revv2);
