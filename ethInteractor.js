@@ -824,10 +824,10 @@ async function getProofRoot(height = "latest") {
         }
         
         let gasPriceInWei = new util.BigDecimal(transaction.gasPrice)
-        let gasInSats =  gasPriceInWei.divide("10000000000");
-        let roundedSats = Math.ceil(gasInSats.toString());
+        let gasInSats =  gasPriceInWei.divide("1000000000");
+        let roundedSats = gasInSats.toString();
 
-        latestproofroot.gasprice = util.uint64ToVerusFloat(roundedSats == 0 ? "0.00000001" : roundedSats);
+        latestproofroot.gasprice = roundedSats < 10 ? "10.0" : roundedSats.toFixed(8);
         latestproofroot.version = 1;
         latestproofroot.type = 2;
         latestproofroot.systemid = ETHSystemID;
@@ -869,10 +869,10 @@ async function checkProofRoot(height, stateroot, blockhash, power) {
         }
         
         let gasPriceInWei = new util.BigDecimal(transaction.gasPrice)
-        let gasInSats =  gasPriceInWei.divide("10000000000");
-        let roundedSats = Math.ceil(gasInSats.toString());
+        let gasInSats =  gasPriceInWei.divide("1000000000");
+        let roundedSats = gasInSats.toString();
 
-        latestproofroot.gasprice = util.uint64ToVerusFloat(roundedSats == 0 ? "0.00000001" : roundedSats);
+        latestproofroot.gasprice = roundedSats < 10 ? "10.0" : roundedSats.toFixed(8);
         latestproofroot.version = 1;
         latestproofroot.type = 2;
         latestproofroot.systemid = ETHSystemID;
