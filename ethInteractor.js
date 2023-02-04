@@ -45,7 +45,7 @@ let globallastinfo = d.valueOf() - globaltimedelta;
 let globallastcurrency = d.valueOf() - globaltimedelta;
 let globalgetlastimport = d.valueOf() - globaltimedelta;
 let verusBridgeMaster = undefined;
-let verusNotorizerStorage = undefined;
+let verusNotarizerStorage = undefined;
 let verusBridgeStorage = undefined;
 let storageAddress = undefined;
 let verusNotarizer = undefined;
@@ -54,6 +54,12 @@ let transactioncount = 0;
 let account = undefined;
 let upgradeManager = undefined;
 let contracts = [];
+
+Object.assign(String.prototype, {
+    reversebytes() {
+        return this.match(/[a-fA-F0-9]{2}/g).reverse().join('');
+    }
+});
 
 function setupConf() {
     settings = confFile.loadConfFile(ticker);
@@ -89,7 +95,7 @@ exports.init = async() => {
         contracts.push(tempContract);
     }
     verusBridgeMaster = new web3.eth.Contract(verusBridgeMasterAbi, contracts[constants.CONTRACT_TYPE.VerusBridgeMaster]);
-    verusNotorizerStorage = new web3.eth.Contract(verusNotarizerStorageAbi, contracts[constants.CONTRACT_TYPE.VerusNotarizerStorage]);
+    verusNotarizerStorage = new web3.eth.Contract(verusNotarizerStorageAbi, contracts[constants.CONTRACT_TYPE.VerusNotarizerStorage]);
     verusBridgeStorage = new web3.eth.Contract(verusBridgeStorageAbi, contracts[constants.CONTRACT_TYPE.VerusBridgeStorage]);
     verusNotarizer = new web3.eth.Contract(verusNotarizerAbi, contracts[constants.CONTRACT_TYPE.VerusNotarizer]);
     verusSerializer = new web3.eth.Contract(verusSerializerAbi, contracts[constants.CONTRACT_TYPE.VerusSerializer]);
@@ -301,9 +307,8 @@ function serializeEthFullProof(ethProof) {
     //serialize address bytes 20
     encodedOutput = Buffer.concat([encodedOutput, Buffer.from(util.removeHexLeader(ethProof.address), 'hex')]);
     let balancehex = util.removeHexLeader(web3.utils.numberToHex(ethProof.balance));
-    let temphexreversed = web3.utils.padLeft(balancehex, 64).match(/[a-fA-F0-9]{2}/g).reverse().join('');
-    let tempbuf = Buffer.from(temphexreversed, 'hex');
-    encodedOutput = Buffer.concat([encodedOutput, tempbuf]);
+    let temphexreversed = web3.utils.padLeft(balancehex, 64).reversebytes();
+    encodedOutput = Buffer.concat([encodedOutput, Buffer.from(temphexreversed, 'hex')]);
 
     //serialize codehash bytes 32
     encodedOutput = Buffer.concat([encodedOutput, Buffer.from(util.removeHexLeader(ethProof.codeHash), 'hex')]);
@@ -415,7 +420,7 @@ function createOutboundTransfers(transfers) {
             "type": transfer.destination.destinationtype,
             "address": address,
             "gateway": util.ethAddressToVAddress(transfer.destination.destinationaddress.slice(42, 82), IAddressBaseConst),
-            "fees": parseInt(transfer.destination.destinationaddress.slice(transfer.destination.destinationaddress.length - 16, transfer.destination.destinationaddress.length - 1).match(/[a-fA-F0-9]{2}/g).reverse().join(''), 16) / 100000000
+            "fees": parseInt(transfer.destination.destinationaddress.slice(transfer.destination.destinationaddress.length - 16, transfer.destination.destinationaddress.length - 1).reversebytes(), 16) / 100000000
         }
         else{
             outTransfer.destination = {
@@ -706,10 +711,10 @@ exports.getExports = async(input) => {
             //loop through and add in the proofs for each export set and the additional fields
             let exportSet = exportSets[i];
             let outputSet = {};
-            let poolLaunchedHeight = await verusNotorizerStorage.methods.poolAvailable(constants.BRIDGECURRENCYHEX).call();
+            let poolLaunchedHeight = await verusNotarizerStorage.methods.poolAvailable(constants.BRIDGECURRENCYHEX).call();
             poolavailable = parseInt(poolLaunchedHeight) == 0 ? false : parseInt(poolLaunchedHeight) < parseInt(exportSet.blockHeight);
             outputSet.height = exportSet.blockHeight;
-            outputSet.txid = util.removeHexLeader(exportSet.exportHash).match(/[a-fA-F0-9]{2}/g).reverse().join(''); //export hash used for txid
+            outputSet.txid = util.removeHexLeader(exportSet.exportHash).reversebytes(); //export hash used for txid
             outputSet.txoutnum = 0; //exportSet.position;
             outputSet.exportinfo = createCrossChainExport(exportSet.transfers, exportSet.blockHeight, true, poolavailable);
             outputSet.partialtransactionproof = await getProof(exportSet.blockHeight, heightend);
@@ -743,7 +748,7 @@ exports.getBestProofRoot = async(input) => {
     //loop through the proofroots and check each one
 
     let proofroots = input[0].proofroots;
-    let bestindex = 0;
+    let bestindex = -1;
     let validindexes = [];
     let latestproofroot = {};
     var d = new Date();
@@ -771,6 +776,8 @@ exports.getBestProofRoot = async(input) => {
             for (let i = 0; i < proofroots.length; i++) {
                 if ((parseInt(proofroots[i].height) > 1) && await checkProofRoot(proofroots[i].height, proofroots[i].stateroot, proofroots[i].blockhash, BigInt(util.addBytesIndicator(proofroots[i].power)))) {
                     validindexes.push(i);
+                    if (bestindex == -1)
+                        bestindex = 0;
                     if (proofroots[bestindex].height < proofroots[i].height) {
                         bestindex = i;
                     }
@@ -778,7 +785,11 @@ exports.getBestProofRoot = async(input) => {
             }
         }
 
-        let latestProofHeight = proofroots[bestindex].height;
+        let latestProofHeight = 0;
+
+        if(bestindex != -1)
+            latestProofHeight = proofroots[bestindex].height;
+
         let latestBlock = await web3.eth.getBlockNumber();
 
         if (parseInt(latestProofHeight) >= (parseInt(latestBlock) - 2)) {
@@ -830,8 +841,8 @@ async function getProofRoot(height = "latest") {
         latestproofroot.type = 2;
         latestproofroot.systemid = ETHSystemID;
         latestproofroot.height = block.number;
-        latestproofroot.stateroot = util.removeHexLeader(block.stateRoot).match(/[a-fA-F0-9]{2}/g).reverse().join('');
-        latestproofroot.blockhash = util.removeHexLeader(block.hash).match(/[a-fA-F0-9]{2}/g).reverse().join('');
+        latestproofroot.stateroot = util.removeHexLeader(block.stateRoot).reversebytes();
+        latestproofroot.blockhash = util.removeHexLeader(block.hash).reversebytes();
         latestproofroot.power = BigInt(block.totalDifficulty).toString(16);
 
         await setCachedBlock( latestproofroot, `${height}` )
@@ -863,7 +874,7 @@ async function checkProofRoot(height, stateroot, blockhash, power) {
             block = await web3.eth.getBlock(height);
             transaction = await web3.eth.getTransaction(block.transactions[Math.ceil(block.transactions.length / 2)]);
         } catch (error) {
-            throw "getProofRoot error:" + error;
+            throw "getProofRoot error:" + error + height;
         }
         
         let gasPriceInSATS = (BigInt(transaction.gasPrice) / BigInt(10))
@@ -873,8 +884,8 @@ async function checkProofRoot(height, stateroot, blockhash, power) {
         latestproofroot.type = 2;
         latestproofroot.systemid = ETHSystemID;
         latestproofroot.height = block.number;
-        latestproofroot.stateroot = util.removeHexLeader(block.stateRoot).match(/[a-fA-F0-9]{2}/g).reverse().join('');
-        latestproofroot.blockhash = util.removeHexLeader(block.hash).match(/[a-fA-F0-9]{2}/g).reverse().join('');
+        latestproofroot.stateroot = util.removeHexLeader(block.stateRoot).reversebytes();
+        latestproofroot.blockhash = util.removeHexLeader(block.hash).reversebytes();
         latestproofroot.power = BigInt(block.totalDifficulty).toString(16);
 
         await setCachedBlock( latestproofroot, `${height}` )
@@ -896,7 +907,7 @@ async function checkProofRoot(height, stateroot, blockhash, power) {
 exports.getNotarizationData = async() => {
 
     let Notarization = {};
-    Notarization.version = 2;
+    Notarization.version = 1;
 
     var d = new Date();
     var timenow = d.valueOf();
@@ -941,9 +952,9 @@ exports.getNotarizationData = async() => {
                         if ((j == 0  && i == 0) || i > 0) 
                         {
                             notarizations[calcIndex] = {
-                                txid: "0x" + notarization.substring(txidPos, txidPos + constants.LIF.BYTES32SIZE).match(/[a-fA-F0-9]{2}/g).reverse().join(''),
+                                txid: "0x" + notarization.substring(txidPos, txidPos + constants.LIF.BYTES32SIZE).reversebytes(),
                                 n: parseInt(notarization.slice(nPos, nPos + 4), constants.LIF.HEX),
-                                hash: "0x" + notarization.substring(hashPos, hashPos + constants.LIF.BYTES32SIZE).match(/[a-fA-F0-9]{2}/g).reverse().join('')
+                                hash: "0x" + notarization.substring(hashPos, hashPos + constants.LIF.BYTES32SIZE).reversebytes()
                             };
                             forksData.push(calcIndex);
                             calcIndex++;
@@ -1003,7 +1014,7 @@ function conditionSubmitImports(CTransferArray) {
         CTransferArray[i].sourcesystemid = util.convertVerusAddressToEthAddress(CTransferArray[i].sourcesystemid);
         for (let j = 0; j < CTransferArray[i].exports.length; j++) {
             CTransferArray[i].exports[j].partialtransactionproof = addHexPrefix(CTransferArray[i].exports[j].partialtransactionproof);
-            CTransferArray[i].exports[j].txid = addHexPrefix(CTransferArray[i].exports[j].txid.match(/[a-fA-F0-9]{2}/g).reverse().join(''));
+            CTransferArray[i].exports[j].txid = addHexPrefix(CTransferArray[i].exports[j].txid.reversebytes());
             for (let k = 0; k < CTransferArray[i].exports[j].transfers.length; k++) {
 
                 let keys = Object.keys(CTransferArray[i].exports[j].transfers[k].currencyvalues);
@@ -1207,19 +1218,6 @@ exports.submitAcceptedNotarization = async(params) => {
         }
     }
 
-    let sigArrayKeys = Object.keys(sigArray);
-    let largestcount = 0;
-
-    for (const heights of sigArrayKeys) {
-        if (largestcount < parseInt(heights))
-            largestcount = heights;
-    }
-
-    for (const items of sigArray[largestcount]) {
-        let ID = Object.keys(items);
-        signatures[ID[0]] = items[ID[0]];
-    }
-
     let txidObj = params[1].output;
     const lastTxid = await getCachedApi('lastNotarizationTxid');
 
@@ -1234,52 +1232,15 @@ exports.submitAcceptedNotarization = async(params) => {
         return null;
     }
 
-    let sigKeys = Object.keys(signatures);
-    let splitSigs = {}
-    let vsVals = [];
-    let rsVals = [];
-    let ssVals = [];
-    let blockheights = [];
-    let notaryAddresses = [];
-
-    for (let i = 0; i < sigKeys.length; i++) {
-
-        splitSigs = util.splitSignature(signatures[sigKeys[i]].signatures[0]);
-        vsVals.push(splitSigs.vVal);
-        rsVals.push(splitSigs.rVal);
-        ssVals.push(splitSigs.sVal);
-        blockheights.push(signatures[sigKeys[i]].blockheight);
-        notaryAddresses.push(util.convertVerusAddressToEthAddress(sigKeys[i]));
-    }
-
+    const abiencodedSigData = util.encodeSignatures(signatures);
+    const txid = addHexPrefix(txidObj.txid.reversebytes())
+    
     try {
-        let txhash = {}
-        var firstNonce = await web3.eth.getTransactionCount(account.address);
-
-        // Reduce contract size by serializing signature evidence
-        let data = abi.encodeParameter({
-            "data": {
-                "_vs": 'uint8[]',
-                "_rs": 'bytes32[]',
-                "_ss": 'bytes32[]',
-                "blockheights": "uint32[]",
-                "notaryAddress": "address[]"
-            }
-        }, {
-            "_vs": vsVals,
-            "_rs": rsVals,
-            "_ss": ssVals,
-            "blockheights": blockheights,
-            "notaryAddress": notaryAddresses
-        });
-
-        //remove first 32bytes + 0x from hex array, so abi.decode in contract recievces correct value.
-        data = "0x" + data.slice(66); 
         // Call contract to test for reversion.
-        let testValue = await verusBridgeMaster.methods.setLatestData(`0x${serializednotarization.toString('hex')}`, addHexPrefix(txidObj.txid.match(/[a-fA-F0-9]{2}/g).reverse().join('')), txidObj.voutnum, data).call();
+        const testValue = await verusNotarizer.methods.setLatestData(serializednotarization, txid, txidObj.voutnum, abiencodedSigData).call();
 
         if (transactioncount != firstNonce) {
-            txhash = await verusBridgeMaster.methods.setLatestData(`0x${serializednotarization.toString('hex')}`, addHexPrefix(txidObj.txid.match(/[a-fA-F0-9]{2}/g).reverse().join('')), txidObj.voutnum, data).send({ from: account.address, gas: maxGas });
+            txhash = await verusNotarizer.methods.setLatestData(serializednotarization, txid, txidObj.voutnum, abiencodedSigData).send({ from: account.address, gas: maxGas });
             transactioncount = firstNonce;
         }
 
@@ -1328,8 +1289,8 @@ exports.getLastImportFrom = async() => {
             lastimport.tokensout = {};
             lastimport.numoutputs = {};
 
-            lastimport.hashtransfers  = util.removeHexLeader(lastImportInfo.hashOfTransfers).match(/[a-fA-F0-9]{2}/g).reverse().join('');
-            lastimport.exporttxid = util.removeHexLeader(lastImportInfo.exporttxid).match(/[a-fA-F0-9]{2}/g).reverse().join('');
+            lastimport.hashtransfers  = util.removeHexLeader(lastImportInfo.hashOfTransfers).reversebytes();
+            lastimport.exporttxid = util.removeHexLeader(lastImportInfo.exporttxid).reversebytes();
             lastimport.exporttxout = lastImportInfo.exporttxoutnum;
 
             let forksData = {};
@@ -1341,7 +1302,7 @@ exports.getLastImportFrom = async() => {
 
                 let txidPos = constants.LIF.TXIDPOS;
                 let nPos = constants.LIF.NPOS;
-                let txid = "0x" + forksData.substring(txidPos, txidPos + constants.LIF.BYTES32SIZE).match(/[a-fA-F0-9]{2}/g).reverse().join('');
+                let txid = "0x" + forksData.substring(txidPos, txidPos + constants.LIF.BYTES32SIZE).reversebytes();
                 let n = parseInt(forksData.substring(nPos, nPos + 4), constants.LIF.HEX);
 
                 lastconfirmedutxo = { txid: util.removeHexLeader(txid), voutnum: n }

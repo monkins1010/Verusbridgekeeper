@@ -441,6 +441,48 @@ const GetMMRProofIndex = (pos, mmvSize, extraHashes) => {
     return index.toNumber();
 }
 
+const encodeSignatures = (signatures) => {
+    let sigKeys = Object.keys(signatures);
+    let splitSigs = {}
+    let vsVals = [];
+    let rsVals = [];
+    let ssVals = [];
+    let blockheights = [];
+    let notaryAddresses = [];
+
+    for (let i = 0; i < signatures.length; i++) {
+
+        splitSigs = util.splitSignature(signatures[i].signatures[0]);
+        vsVals.push(splitSigs.vVal);
+        rsVals.push(splitSigs.rVal);
+        ssVals.push(splitSigs.sVal);
+        blockheights.push(signatures[i].blockheight);
+        notaryAddresses.push(util.convertVerusAddressToEthAddress(sigKeys[i]));
+    }
+
+    let data = abi.encodeParameter({
+        "data": {
+            "_vs": 'uint8[]',
+            "_rs": 'bytes32[]',
+            "_ss": 'bytes32[]',
+            "blockheights": "uint32[]",
+            "notaryAddress": "address[]"
+        }
+    }, {
+        "_vs": vsVals,
+        "_rs": rsVals,
+        "_ss": ssVals,
+        "blockheights": blockheights,
+        "notaryAddress": notaryAddresses
+    });
+
+    //remove first 32bytes + 0x from hex array, so abi.decode in contract recievces correct value.
+    data = "0x" + data.slice(66); 
+
+    return data;
+
+}
+
 exports.uint64ToVerusFloat = uint64ToVerusFloat;
 exports.weitoEther = weitoEther;
 exports.convertVerusAddressToEthAddress = convertVerusAddressToEthAddress;
@@ -470,3 +512,4 @@ exports.serializeReserveWeightsArray = serializeReserveWeightsArray;
 exports.serializeReservesArray = serializeReservesArray; 
 exports.serializeIntArray = serializeIntArray;
 exports.BigDecimal = BigDecimal;
+exports.encodeSignatures = encodeSignatures;
