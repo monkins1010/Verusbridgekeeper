@@ -3,6 +3,7 @@ const bitGoUTXO = require('bitgo-utxo-lib');
 const Long = require('long');
 var constants = require('./constants');
 const Web3 = require('web3');
+const abi = new Web3().eth.abi
 
 class BigDecimal {
     // Configuration: constants
@@ -450,14 +451,14 @@ const encodeSignatures = (signatures) => {
     let blockheights = [];
     let notaryAddresses = [];
 
-    for (let i = 0; i < signatures.length; i++) {
+    for (let i = 0; i < sigKeys.length; i++) {
 
-        splitSigs = util.splitSignature(signatures[i].signatures[0]);
+        splitSigs = splitSignature(signatures[sigKeys[i]].signatures[0]);
         vsVals.push(splitSigs.vVal);
         rsVals.push(splitSigs.rVal);
         ssVals.push(splitSigs.sVal);
-        blockheights.push(signatures[i].blockheight);
-        notaryAddresses.push(util.convertVerusAddressToEthAddress(sigKeys[i]));
+        blockheights.push(signatures[sigKeys[i]].blockheight);
+        notaryAddresses.push(convertVerusAddressToEthAddress(sigKeys[i]));
     }
 
     let data = abi.encodeParameter({

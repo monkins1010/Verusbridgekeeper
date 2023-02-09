@@ -754,23 +754,28 @@ exports.getBestProofRoot = async(input) => {
     var d = new Date();
     var timenow = d.valueOf();
     const lastTime = await getCachedApi('lastBestProofinputtime');
+    let latestBlock = null;
+    let cachedValue = await getCachedApi('lastGetBestProofRoot');
 
-    let cachedValue = await checkCachedApi('lastGetBestProofRoot', input);
+     if (cachedValue) {
 
-    if (cachedValue) {
+        if (lastTime && (JSON.parse(lastTime) + 20000) < timenow) {
 
-        if (lastTime && (JSON.parse(lastTime) + globaltimedelta) < timenow) {
-
-            clearCachedApis();
-            cachedValue = null;
+            latestBlock = await web3.eth.getBlockNumber();
+            await setCachedApi(latestBlock, 'lastGetBestProofRoot');
         }
-    }
+        else {
+            latestBlock = cachedValue
+        }
+     }
+     else {
+        latestBlock = await web3.eth.getBlockNumber();
+        await setCachedApi(latestBlock, 'lastGetBestProofRoot');
+     }
 
-    if (cachedValue) {
-        return cachedValue;
-    }
 
-    await setCachedApi(timenow, 'lastBestProofinputtime');
+    setCachedApi(timenow, 'lastBestProofinputtime');
+    
     try {
         if (input.length && proofroots) {
             for (let i = 0; i < proofroots.length; i++) {
@@ -790,25 +795,23 @@ exports.getBestProofRoot = async(input) => {
         if(bestindex != -1)
             latestProofHeight = proofroots[bestindex].height;
 
-        let latestBlock = await web3.eth.getBlockNumber();
+       
 
         if (parseInt(latestProofHeight) >= (parseInt(latestBlock) - 2)) {
             latestproofroot = proofroots[bestindex];
         } else {
-            latestproofroot = await getProofRoot(latestBlock - 2);
+            latestproofroot = await getProofRoot(parseInt(latestBlock) - 2);
         }
 
         let laststableproofroot = null;
 
         laststableproofroot = await getProofRoot(parseInt(latestBlock) - 30);
 
-        if (logging) {
+        if (debug) {
             console.log("getbestproofroot result:", { bestindex, validindexes, latestproofroot, laststableproofroot });
         }
 
         let retval = { "result": { bestindex, validindexes, latestproofroot, laststableproofroot} };
-
-        await setCachedApiValue(retval, input, 'lastGetBestProofRoot');
 
         return retval;
 
@@ -829,14 +832,18 @@ async function getProofRoot(height = "latest") {
     {
         try {
             block = await web3.eth.getBlock(height);
-            transaction = await web3.eth.getTransaction(block.transactions[Math.ceil(block.transactions.length / 2)]);
+            if (block.transactions.length == 0)
+                throw `No Transactions for Block: ${height}`
+            const blockTransactionNum = block.transactions.length == 1 ? 1 : Math.ceil(block.transactions.length / 2);
+
+            transaction = await web3.eth.getTransaction(block.transactions[blockTransactionNum]);
         } catch (error) {
-            throw "getProofRoot error:" + error;
+            throw "[getProofRoot] " + error;
         }
         
         let gasPriceInSATS = (BigInt(transaction.gasPrice) / BigInt(10))
 
-        latestproofroot.gasprice = gasPriceInSATS < BigInt(1000000000) ? "10.0" : util.uint64ToVerusFloat(gasPriceInSATS);
+        latestproofroot.gasprice = gasPriceInSATS < BigInt(1000000000) ? "10.00000000" : util.uint64ToVerusFloat(gasPriceInSATS);
         latestproofroot.version = 1;
         latestproofroot.type = 2;
         latestproofroot.systemid = ETHSystemID;
@@ -879,7 +886,7 @@ async function checkProofRoot(height, stateroot, blockhash, power) {
         
         let gasPriceInSATS = (BigInt(transaction.gasPrice) / BigInt(10))
 
-        latestproofroot.gasprice = gasPriceInSATS < BigInt(1000000000) ? "10.0" : util.uint64ToVerusFloat(gasPriceInSATS);
+        latestproofroot.gasprice = gasPriceInSATS < BigInt(1000000000) ? "10.00000000" : util.uint64ToVerusFloat(gasPriceInSATS);
         latestproofroot.version = 1;
         latestproofroot.type = 2;
         latestproofroot.systemid = ETHSystemID;
@@ -953,7 +960,7 @@ exports.getNotarizationData = async() => {
                         {
                             notarizations[calcIndex] = {
                                 txid: "0x" + notarization.substring(txidPos, txidPos + constants.LIF.BYTES32SIZE).reversebytes(),
-                                n: parseInt(notarization.slice(nPos, nPos + 4), constants.LIF.HEX),
+                                n: parseInt(notarization.slice(nPos, nPos + 8), constants.LIF.HEX),
                                 hash: "0x" + notarization.substring(hashPos, hashPos + constants.LIF.BYTES32SIZE).reversebytes()
                             };
                             forksData.push(calcIndex);
@@ -980,7 +987,7 @@ exports.getNotarizationData = async() => {
             Notarization.bestchain = 0;
         } else {
             Notarization.forks = forks;
-            Notarization.lastconfirmed = 0;
+            Notarization.lastconfirmed = forks.length == 1 && forks[0].length == 1 ? -1 : 0;
             Notarization.notarizations = [];
 
             for (const index in notarizations) {
@@ -1131,16 +1138,9 @@ exports.submitImports = async(CTransferArray) => {
         return { result: { error: true } };
     }
 
-    const lastCTransferArray = await getCachedApi('lastsubmitImports');
-
     CTransferArray = conditionSubmitImports(CTransferArray);
 
     let CTempArray = reshapeTransfers(CTransferArray);
-
-    if (lastCTransferArray === JSON.stringify(CTransferArray)) {
-
-        return { result: globalsubmitimports.transactionHash };
-    }
 
     CTempArray = deserializer.deSerializeMMR(CTempArray);
 
@@ -1159,7 +1159,7 @@ exports.submitImports = async(CTransferArray) => {
             }
         }
 
-        let testcall = await verusBridgeMaster.methods.submitImports(submitArray[0]).call(); //test call
+        const testcall = await verusBridgeMaster.methods.submitImports(submitArray[0]).call(); //test call
 
         if (CTempArray)
         console.log("Transfer to ETH: " + JSON.stringify(CTempArray[0].transfers[0].currencyvalue, null,2) + "\nto: " + JSON.stringify(CTempArray[0].transfers[0].destination.destinationaddress, null, 2));
@@ -1172,7 +1172,7 @@ exports.submitImports = async(CTransferArray) => {
         }
     } catch (error) {
 
-        console.log(error);
+        //console.log(error);
 
         if (error.reason)
             console.log("\x1b[41m%s\x1b[0m", "submitImports:" + error.reason);
@@ -1204,17 +1204,13 @@ exports.submitAcceptedNotarization = async(params) => {
 
     let signatures = {};
 
-    let sigArray = {}
-
     for (const sigObj of params[1].evidence.chainobjects) {
-        let sigKeys = Object.keys(sigObj.value.signatures);
-        for (let i = 0; i < sigKeys.length; i++) {
-            if (sigArray[sigObj.value.signatures[sigKeys[i]].blockheight] == undefined) {
-                sigArray[sigObj.value.signatures[sigKeys[i]].blockheight] = [];
+        if(sigObj.vdxftype == "iP1QT5ee7EP63WSrfjiMFc1dVJVSAy85cT")
+        {
+            let sigKeys = Object.keys(sigObj.value.signatures);
+            for (let i = 0; i < sigKeys.length; i++) {
+                signatures[sigKeys[i]] = sigObj.value.signatures[sigKeys[i]];
             }
-            sigArray[sigObj.value.signatures[sigKeys[i]].blockheight].push({
-                [sigKeys[i]]: sigObj.value.signatures[sigKeys[i]]
-            });
         }
     }
 
@@ -1234,26 +1230,27 @@ exports.submitAcceptedNotarization = async(params) => {
 
     const abiencodedSigData = util.encodeSignatures(signatures);
     const txid = addHexPrefix(txidObj.txid.reversebytes())
-    
+    let txhash
     try {
         // Call contract to test for reversion.
         const testValue = await verusNotarizer.methods.setLatestData(serializednotarization, txid, txidObj.voutnum, abiencodedSigData).call();
-
-        if (transactioncount != firstNonce) {
-            txhash = await verusNotarizer.methods.setLatestData(serializednotarization, txid, txidObj.voutnum, abiencodedSigData).send({ from: account.address, gas: maxGas });
-            transactioncount = firstNonce;
-        }
+        txhash = await verusNotarizer.methods.setLatestData(serializednotarization, txid, txidObj.voutnum, abiencodedSigData).send({ from: account.address, gas: maxGas });
 
         await setCachedApi(txidObj.txid, 'lastNotarizationTxid');
         return { "result": txhash };
 
     } catch (error) {
 
-        if (error.reason)
+        if (error.message == "Returned error: submitAcceptedNotarization execution reverted") {
+            console.log("Returned error: execution reverted");
+        }
+        else if (error.reason) {
             console.log("\x1b[41m%s\x1b[0m", "submitAcceptedNotarization:" + error.reason);
+        }
         else if (error.message && error.message == "Returned error: already known") {
             console.log("Notarization already Submitted, transaction cancelled");
-        } else {
+        }
+        else {
             console.log(error);
         }
         return { "result": { "txid": error } }; 
@@ -1273,7 +1270,6 @@ exports.getLastImportFrom = async() => {
         if (globaltimedelta + globalgetlastimport < timenow || !lastImportFrom) {
             globalgetlastimport = timenow;
 
-            block = await web3.eth.getBlock("latest");
             let lastimporttxid = await verusBridgeStorage.methods.lastTxIdImport().call();
 
             let lastImportInfo = await verusBridgeStorage.methods.lastImportInfo(lastimporttxid).call();
@@ -1303,7 +1299,7 @@ exports.getLastImportFrom = async() => {
                 let txidPos = constants.LIF.TXIDPOS;
                 let nPos = constants.LIF.NPOS;
                 let txid = "0x" + forksData.substring(txidPos, txidPos + constants.LIF.BYTES32SIZE).reversebytes();
-                let n = parseInt(forksData.substring(nPos, nPos + 4), constants.LIF.HEX);
+                let n = parseInt(forksData.substring(nPos, nPos + 8), constants.LIF.HEX);
 
                 lastconfirmedutxo = { txid: util.removeHexLeader(txid), voutnum: n }
 

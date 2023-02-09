@@ -39,7 +39,7 @@ const serializeNotarization = (notarization) => {
 
     console.log(serializedBytes.toString("hex"));
 
-    const serializedhex = addHexPrefix(serializedBytes.toString('hex'));
+    const serializedhex = util.addHexPrefix(serializedBytes.toString('hex'));
 
     return serializedhex;
 }
