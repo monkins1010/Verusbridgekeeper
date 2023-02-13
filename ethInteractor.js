@@ -984,7 +984,7 @@ exports.getNotarizationData = async() => {
         if (forks.length == 0) {
             Notarization.forks = [];
             Notarization.lastconfirmed = -1;
-            Notarization.bestchain = 0;
+            Notarization.bestchain = -1;
         } else {
             Notarization.forks = forks;
             Notarization.lastconfirmed = forks.length == 1 && forks[0].length == 1 ? -1 : 0;
