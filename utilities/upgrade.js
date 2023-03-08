@@ -66,7 +66,7 @@ const ContractType = {
 const verusUpgradeAbi = require('../abi/VerusUpgradeManager.json');
 const { exit } = require('process');
 
-const verusUpgrade = new web3.eth.Contract(verusUpgradeAbi, "0x9570abe4460a4905A8192e34d20c093f56c15549");
+const verusUpgrade = new web3.eth.Contract(verusUpgradeAbi, "0xB62DB9F0dFfD2b977211375DDDa7DfaDb44b7bFa");
 
 let account = web3.eth.accounts.privateKeyToAccount(settings.privatekey);
 web3.eth.accounts.wallet.add(account);
@@ -94,13 +94,12 @@ const getSig = async(sigParams) => {
 const updatecontract = async() => {
     try {
         let randomBuf = randomBytes(32);
-        const ISDNOTARY = ["0xb26820ee0c9b1276aac834cf457026a575dfce84", "0x51f9f5f053ce16cb7ca070f5c68a1cb0616ba624", "0x65374d6a8b853a5f61070ad7d774ee54621f9638"]
-        const verusNotariserIDSHEX = ["0xb26820ee0c9b1276aac834cf457026a575dfce84", "0x51f9f5f053ce16cb7ca070f5c68a1cb0616ba624", "0x65374d6a8b853a5f61070ad7d774ee54621f9638"];
-        const verusNotarizerIDs = ["RH7h8p9LN2Yb48SkxzNQ29c1Ltfju8Cd5i", "RLXCv2dQPB4NPqKUweFx4Ua5ZRPFfN2F6D" ,"REXBEDfAz9eJMCxdexa5GnWQBAax8hwuiu"]
+        const notaryIds = ["0xb26820ee0c9b1276aac834cf457026a575dfce84", "0x51f9f5f053ce16cb7ca070f5c68a1cb0616ba624", "0x65374d6a8b853a5f61070ad7d774ee54621f9638"]
+        const verusNotarizerColdStoreWallets = ["RH7h8p9LN2Yb48SkxzNQ29c1Ltfju8Cd5i", "RLXCv2dQPB4NPqKUweFx4Ua5ZRPFfN2F6D" ,"REXBEDfAz9eJMCxdexa5GnWQBAax8hwuiu"]
         
         // Choose notarizer to sign upgrade
-        let notarizerID = ISDNOTARY[1];
-        const signatureAddress = verusNotarizerIDs[1];
+        let notarizerID = notaryIds[1];
+        const signatureAddress = verusNotarizerColdStoreWallets[1];
 
         let outBuffer = Buffer.alloc(1);
         outBuffer.writeUInt8(TYPE_CONTRACT);
@@ -115,7 +114,7 @@ const updatecontract = async() => {
         }
 
          //replace existing contract with new contract address
-        contracts[ContractType.TokenManager] = "0x604e4E284B1Ce88792e822EF5a85EE21f0f73b0c"; 
+        contracts[ContractType.VerusNotarizer] = "0xaaF86A43e8AB027cee4a4d9e2f2F047A17F3786A"; 
 
         for (let i = 0; i < 13; i++) 
         {
@@ -187,8 +186,8 @@ const recoverID = async() => {
         const verusNotariserIDSHEX = ["0xb26820ee0c9b1276aac834cf457026a575dfce84", "0x51f9f5f053ce16cb7ca070f5c68a1cb0616ba624", "0x65374d6a8b853a5f61070ad7d774ee54621f9638"];
         const verusNotarizerIDs = ["RH7h8p9LN2Yb48SkxzNQ29c1Ltfju8Cd5i", "RLXCv2dQPB4NPqKUweFx4Ua5ZRPFfN2F6D" ,"REXBEDfAz9eJMCxdexa5GnWQBAax8hwuiu"]
         
-        //ID being recovered id, spend address & cold storage address
-        let recoverNotaryAddresses = ["0xb26820ee0c9b1276aac834cf457026a575dfce84","0xD010dEBcBf4183188B00cafd8902e34a2C1E9f41","0xD010dEBcBf4183188B00cafd8902e34a2C1E9f41"];
+        //ID being recovered spend address & cold storage address
+        let recoverNotaryAddresses = ["0xD010dEBcBf4183188B00cafd8902e34a2C1E9f41","0xD010dEBcBf4183188B00cafd8902e34a2C1E9f41"];
         
         // Notarizer perfroming recover
         const signatureAddress = verusNotarizerIDs[0] 
@@ -198,9 +197,9 @@ const recoverID = async() => {
         outBuffer.writeUInt8(TYPE_RECOVER);
 
         let serialized = Buffer.from('');
-        serialized = Buffer.concat([Buffer.from(util.removeHexLeader(recoverNotaryAddresses[0]), "Hex"),
+        serialized = Buffer.concat([Buffer.from(util.removeHexLeader(notarizerID), "Hex"),
+            Buffer.from(util.removeHexLeader(recoverNotaryAddresses[0]), "Hex"), 
             Buffer.from(util.removeHexLeader(recoverNotaryAddresses[1]), "Hex"), 
-            Buffer.from(util.removeHexLeader(recoverNotaryAddresses[2]), "Hex"), 
             outBuffer,
             randomBuf ])
 

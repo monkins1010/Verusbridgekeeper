@@ -57,6 +57,10 @@ function serializeCTransferDestination(ctd) {
 
     let encodedOutput = Buffer.alloc(1);
     encodedOutput.writeUInt8(ctd.type);
+    
+    if (ctd.type == 0)
+      return encodedOutput;
+    
     let destination = Buffer.from(bitGoUTXO.address.fromBase58Check(util.removeHexLeader(ctd.address), 160).hash , 'hex');
     encodedOutput = Buffer.concat([encodedOutput, util.writeCompactSize(destination.length), destination]);
 
