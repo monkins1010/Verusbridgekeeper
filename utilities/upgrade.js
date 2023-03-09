@@ -64,9 +64,12 @@ const ContractType = {
 }
 
 const verusUpgradeAbi = require('../abi/VerusUpgradeManager.json');
+const verusNotarizerAbi = require('../abi/VerusNotarizer.json');
 const { exit } = require('process');
 
 const verusUpgrade = new web3.eth.Contract(verusUpgradeAbi, "0xB62DB9F0dFfD2b977211375DDDa7DfaDb44b7bFa");
+
+const verusNotarizer = new web3.eth.Contract(verusNotarizerAbi, verusUpgrade.methods.contracts(ContractType.VerusNotarizer));
 
 let account = web3.eth.accounts.privateKeyToAccount(settings.privatekey);
 web3.eth.accounts.wallet.add(account);
@@ -156,6 +159,11 @@ const revokeID = async() => {
         const signatureAddress = verusNotarizerIDs[0]; 
         let notaryID = verusNotariserIDSHEX[0];
 
+        let outBuffer = Buffer.alloc(1);
+        outBuffer.writeUInt8(TYPE_REVOKE);
+
+        randomBuf = Buffer.concat([outBuffer, randomBuf]);
+
         const signature = await getSig([signatureAddress, randomBuf.toString('Hex').toLowerCase()])
         const buffer = Buffer.from(signature, 'base64');
 
@@ -167,8 +175,8 @@ const revokeID = async() => {
 
         submission = { _vs: vVal, _rs: rVal, _ss: sVal, notaryID, salt: "0x" + randomBuf.toString('Hex') };
 
-        const revv1 = await verusUpgrade.methods.revoke(submission).call();
-        const revv2 = await verusUpgrade.methods.revoke(submission).send({ from: account.address, gas: maxGas });
+        const revv1 = await verusNotarizer.methods.revoke(submission).call();
+        const revv2 = await verusNotarizer.methods.revoke(submission).send({ from: account.address, gas: maxGas });
 
         console.log("\nsignature: ", /* signature,*/ revv2);
 
@@ -197,7 +205,7 @@ const recoverID = async() => {
         outBuffer.writeUInt8(TYPE_RECOVER);
 
         let serialized = Buffer.from('');
-        serialized = Buffer.concat([Buffer.from(util.removeHexLeader(notarizerID), "Hex"),
+        serialized = Buffer.concat([
             Buffer.from(util.removeHexLeader(recoverNotaryAddresses[0]), "Hex"), 
             Buffer.from(util.removeHexLeader(recoverNotaryAddresses[1]), "Hex"), 
             outBuffer,
@@ -215,8 +223,8 @@ const recoverID = async() => {
 
         submission = { _vs: vVal, _rs: rVal, _ss: sVal, contracts: recoverNotaryAddresses, upgradeType: TYPE_RECOVER, salt: "0x" + randomBuf.toString('Hex'), notarizerID };
 
-        const revv1 = await verusUpgrade.methods.recover(submission).call();
-        const revv2 = await verusUpgrade.methods.recover(submission).send({ from: account.address, gas: maxGas });
+        const revv1 = await verusNotarizer.methods.recover(submission).call();
+        const revv2 = await verusNotarizer.methods.recover(submission).send({ from: account.address, gas: maxGas });
 
         console.log("\nsignature: ", /* signature,*/ revv2);
 
