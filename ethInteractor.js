@@ -896,7 +896,7 @@ async function checkProofRoot(height, stateroot, blockhash, power) {
 exports.getNotarizationData = async() => {
 
     let Notarization = {};
-    Notarization.version = 2;
+    Notarization.version = constants.VERSION_NOTARIZATIONDATA_CURRENT;
 
     var d = new Date();
     var timenow = d.valueOf();
@@ -1193,31 +1193,11 @@ exports.submitAcceptedNotarization = async(params) => {
 
     let signatures = {};
 
-    let sigArray = {}
-
     for (const sigObj of params[1].evidence.chainobjects) {
         let sigKeys = Object.keys(sigObj.value.signatures);
         for (let i = 0; i < sigKeys.length; i++) {
-            if (sigArray[sigObj.value.signatures[sigKeys[i]].blockheight] == undefined) {
-                sigArray[sigObj.value.signatures[sigKeys[i]].blockheight] = [];
-            }
-            sigArray[sigObj.value.signatures[sigKeys[i]].blockheight].push({
-                [sigKeys[i]]: sigObj.value.signatures[sigKeys[i]]
-            });
+            signatures[sigKeys[i]] = sigObj.value.signatures[sigKeys[i]];
         }
-    }
-
-    let sigArrayKeys = Object.keys(sigArray);
-    let largestcount = 0;
-
-    for (const heights of sigArrayKeys) {
-        if (largestcount < parseInt(heights))
-            largestcount = heights;
-    }
-
-    for (const items of sigArray[largestcount]) {
-        let ID = Object.keys(items);
-        signatures[ID[0]] = items[ID[0]];
     }
 
     let txidObj = params[1].output;

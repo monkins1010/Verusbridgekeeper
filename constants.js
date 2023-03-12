@@ -11,6 +11,7 @@ module.exports = Object.freeze({
     MAINNETVETH: "", //TODO: FIND OUT
     EMPTY_ADDRESS: "0x0000000000000000000000000000000000000000",
     CROSS_SYSTEM: 64,
+    VERSION_NOTARIZATIONDATA_CURRENT : 1,
     FLAG_DEFINITION_NOTARIZATION : 1,   // initial notarization on definition of currency/system/chain
     FLAG_PRE_LAUNCH : 2,                // pre-launch notarization
     FLAG_START_NOTARIZATION : 4,        // first notarization after pre-launch
