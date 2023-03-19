@@ -77,7 +77,7 @@ function setupConf() {
     } else {
         noaccount = true;
     }
-    web3.eth.handleRevert = true;
+    web3.eth.handleRevert = false;
     upgradeManager = new web3.eth.Contract(verusUpgradeManagerAbi, settings.upgrademanageraddress);
 }
 
@@ -1194,10 +1194,17 @@ exports.submitAcceptedNotarization = async(params) => {
     let signatures = {};
 
     for (const sigObj of params[1].evidence.chainobjects) {
-        let sigKeys = Object.keys(sigObj.value.signatures);
-        for (let i = 0; i < sigKeys.length; i++) {
-            signatures[sigKeys[i]] = sigObj.value.signatures[sigKeys[i]];
+        if(sigObj.vdxftype == "iP1QT5ee7EP63WSrfjiMFc1dVJVSAy85cT")
+        {
+            let sigKeys = Object.keys(sigObj.value.signatures);
+            for (let i = 0; i < sigKeys.length; i++) {
+                signatures[sigKeys[i]] = sigObj.value.signatures[sigKeys[i]];
+            }
         }
+    }
+
+    if (Object.keys(signatures).length < 1) {
+        return { "result": { "txid": null } }; 
     }
 
     let txidObj = params[1].output;
