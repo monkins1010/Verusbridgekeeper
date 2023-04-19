@@ -37,7 +37,7 @@ const serializeNotarization = (notarization) => {
     serializedBytes = Buffer.concat([serializedBytes, serializeCProofRootArray(notarization.proofroots)]); 
     serializedBytes = Buffer.concat([serializedBytes, serializeNodes(notarization.nodes)]); 
 
-    console.log(serializedBytes.toString("hex"));
+    //console.log(serializedBytes.toString("hex"));
 
     const serializedhex = util.addHexPrefix(serializedBytes.toString('hex'));
 

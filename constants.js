@@ -1,7 +1,8 @@
 module.exports = Object.freeze({
     
     VDXFDATAKEY: {VRSCTEST: "bb29b6fbac51550f7bda924d73c8e0bc971fb1dc",
-                  VRSC:     "8cea50fa0fc6787f0ff3d68858b2fadd36e7a485"},
+                  VRSC:     "8cea50fa0fc6787f0ff3d68858b2fadd36e7a485",
+                  VETH: "0x67460C2f56774eD27EeB8685f29f6CEC0B090B00"},
     VETHCURRENCYID: "iCtawpxUiCc2sEupt7Z4u8SDAncGZpgSKm",
     BRIDGECURRENCYHEX: "0xffEce948b8A38bBcC813411D2597f7f8485a0689",
     VERUSSYSTEMID:  "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq",
@@ -11,6 +12,7 @@ module.exports = Object.freeze({
     MAINNETVETH: "", //TODO: FIND OUT
     EMPTY_ADDRESS: "0x0000000000000000000000000000000000000000",
     CROSS_SYSTEM: 64,
+    VERSION_NOTARIZATIONDATA_CURRENT : 1,
     FLAG_DEFINITION_NOTARIZATION : 1,   // initial notarization on definition of currency/system/chain
     FLAG_PRE_LAUNCH : 2,                // pre-launch notarization
     FLAG_START_NOTARIZATION : 4,        // first notarization after pre-launch
@@ -30,13 +32,13 @@ module.exports = Object.freeze({
         VerusProof: 2,
         VerusCrossChainExport: 3,
         VerusNotarizer: 4,
-        VerusBridge: 5,
-        VerusInfo: 6,
+        CreateExport: 5,
+        VerusNotaryTools: 6,
         ExportManager: 7,
-        VerusBridgeStorage: 8,
-        VerusNotarizerStorage: 9,
-        VerusBridgeMaster: 10,
-        LastIndex: 11
+        SubmitImports: 8,
+        NotarizationSerializer: 9,
+        UpgradeManager: 10,
+		LastIndex: 11
     },
     IADDRESS: 102,
     RADDRESS: 60,

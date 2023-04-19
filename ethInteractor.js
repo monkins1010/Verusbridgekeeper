@@ -29,7 +29,7 @@ const RAddressBaseConst = constants.RAddressBaseConst;
 const maxGas = constants.maxGas;
 const verusBridgeMasterAbi = require('./abi/VerusBridgeMaster.json');
 const verusNotarizerStorageAbi = require('./abi/VerusNotarizerStorage.json');
-const verusUpgradeManagerAbi = require('./abi/VerusUpgradeManager.json');
+const verusDelegatorAbi = require('./abi/VerusDelegator.json');
 const verusBridgeStorageAbi = require('./abi/VerusBridgeStorage.json');
 const verusNotarizerAbi = require('./abi/VerusNotarizer.json');
 const verusSerializerAbi = require('./abi/VerusSerializer.json');
@@ -52,7 +52,7 @@ let verusNotarizer = undefined;
 let verusSerializer = undefined;
 let transactioncount = 0;
 let account = undefined;
-let upgradeManager = undefined;
+let delegatorContract = undefined;
 let contracts = [];
 
 Object.assign(String.prototype, {
@@ -83,27 +83,27 @@ function setupConf() {
     } else {
         noaccount = true;
     }
-    web3.eth.handleRevert = true;
-    upgradeManager = new web3.eth.Contract(verusUpgradeManagerAbi, settings.upgrademanageraddress);
+    web3.eth.handleRevert = false;
+    delegatorContract = new web3.eth.Contract(verusDelegatorAbi, settings.delegatorcontractaddress);
 }
 
 exports.init = async() => {
 
     setupConf();
-    for (let i = 0; i < 12; i++) {
-        let tempContract = await upgradeManager.methods.contracts(i).call();
+    for (let i = 0; i < constants.CONTRACT_TYPE.LastIndex; i++) {
+        let tempContract = await delegatorContract.methods.contracts(i).call();
         contracts.push(tempContract);
     }
-    verusBridgeMaster = new web3.eth.Contract(verusBridgeMasterAbi, contracts[constants.CONTRACT_TYPE.VerusBridgeMaster]);
-    verusNotarizerStorage = new web3.eth.Contract(verusNotarizerStorageAbi, contracts[constants.CONTRACT_TYPE.VerusNotarizerStorage]);
-    verusBridgeStorage = new web3.eth.Contract(verusBridgeStorageAbi, contracts[constants.CONTRACT_TYPE.VerusBridgeStorage]);
-    verusNotarizer = new web3.eth.Contract(verusNotarizerAbi, contracts[constants.CONTRACT_TYPE.VerusNotarizer]);
-    verusSerializer = new web3.eth.Contract(verusSerializerAbi, contracts[constants.CONTRACT_TYPE.VerusSerializer]);
-    storageAddress = contracts[constants.CONTRACT_TYPE.VerusBridgeStorage];
+   // verusBridgeMaster = new web3.eth.Contract(verusBridgeMasterAbi, contracts[constants.CONTRACT_TYPE.VerusBridgeMaster]);
+  //  verusNotarizerStorage = new web3.eth.Contract(verusNotarizerStorageAbi, contracts[constants.CONTRACT_TYPE.VerusNotarizerStorage]);
+   /// verusBridgeStorage = new web3.eth.Contract(verusBridgeStorageAbi, contracts[constants.CONTRACT_TYPE.VerusBridgeStorage]);
+  //  verusNotarizer = new web3.eth.Contract(verusNotarizerAbi, contracts[constants.CONTRACT_TYPE.VerusNotarizer]);
+   // verusSerializer = new web3.eth.Contract(verusSerializerAbi, contracts[constants.CONTRACT_TYPE.VerusSerializer]);
+   // storageAddress = contracts[constants.CONTRACT_TYPE.VerusBridgeStorage];
 
     initApiCache();
     initBlockCache();
-    eventListener(contracts[constants.CONTRACT_TYPE.VerusNotarizer]);
+    eventListener(settings.delegatorcontractaddress);
 
 };
 
@@ -348,9 +348,9 @@ async function getProof(eIndex, blockHeight) {
 
 // create the component parts for the proof
 
-function createComponents(transfers, blockHeight, previousExportHash, poolavailable) {
+function createComponents(transfers, startHeight, endHeight, previousExportHash, poolavailable) {
 
-    let cce = createCrossChainExport(transfers, blockHeight, false, poolavailable);
+    let cce = createCrossChainExport(transfers, startHeight, endHeight, false, poolavailable);
     //Var Int Components size as this can only 
     let encodedOutput = util.writeCompactSize(1);
     //eltype
@@ -434,7 +434,7 @@ function createOutboundTransfers(transfers) {
     return outTransfers;
 }
 
-function createCrossChainExport(transfers, blockHeight, jsonready = false, poolavailable) {
+function createCrossChainExport(transfers, startHeight, endHeight, jsonready = false, poolavailable) {
     let cce = {};
     let hash = ethersUtils.keccak256(serializeCReserveTransfers(transfers));
     if (CHECKHASH) {
@@ -453,8 +453,8 @@ function createCrossChainExport(transfers, blockHeight, jsonready = false, poola
         cce.destinationcurrencyid = VerusSystemID;
     }
 
-    cce.sourceheightstart = blockHeight;
-    cce.sourceheightend = blockHeight;
+    cce.sourceheightstart = startHeight;
+    cce.sourceheightend = endHeight;
     cce.numinputs = transfers.length;
     cce.totalamounts = [];
     let totalamounts = [];
@@ -495,63 +495,63 @@ function createCrossChainExport(transfers, blockHeight, jsonready = false, poola
     return cce;
 }
 
-function createCrossChainExportToETH(transfers, blockHeight, jsonready = false) {
-    let cce = {};
-    let hash = ethersUtils.keccak256(serializeCReserveTransfers(transfers));
-    if (CHECKHASH) {
-        console.log("hash of transfers: ",hash.toString('Hex'));
-        console.log("Serialize: ",serializeCReserveTransfers(transfers).slice(1).toString('Hex'));
-    }
-    cce.version = 1;
-    cce.flags = 2;
-    cce.sourcesystemid = util.convertVerusAddressToEthAddress(ETHSystemID);
-    cce.hashtransfers = addHexPrefix(hash);
-    cce.destinationsystemid = util.convertVerusAddressToEthAddress(VerusSystemID);
+// function createCrossChainExportToETH(transfers, blockHeight, jsonready = false) {
+//     let cce = {};
+//     let hash = ethersUtils.keccak256(serializeCReserveTransfers(transfers));
+//     if (CHECKHASH) {
+//         console.log("hash of transfers: ",hash.toString('Hex'));
+//         console.log("Serialize: ",serializeCReserveTransfers(transfers).slice(1).toString('Hex'));
+//     }
+//     cce.version = 1;
+//     cce.flags = 2;
+//     cce.sourcesystemid = util.convertVerusAddressToEthAddress(ETHSystemID);
+//     cce.hashtransfers = addHexPrefix(hash);
+//     cce.destinationsystemid = util.convertVerusAddressToEthAddress(VerusSystemID);
 
-    if (transfers[0].destcurrencyid.slice(0, 2) == "0x" && transfers[0].destcurrencyid.length == 42) {
-        cce.destinationcurrencyid = transfers[0].destcurrencyid;
-    } else {
-        cce.destinationcurrencyid = util.convertVerusAddressToEthAddress(transfers[0].destcurrencyid);
-    }
+//     if (transfers[0].destcurrencyid.slice(0, 2) == "0x" && transfers[0].destcurrencyid.length == 42) {
+//         cce.destinationcurrencyid = transfers[0].destcurrencyid;
+//     } else {
+//         cce.destinationcurrencyid = util.convertVerusAddressToEthAddress(transfers[0].destcurrencyid);
+//     }
 
-    cce.sourceheightstart = 1;
-    cce.sourceheightend = 2;
+//     cce.sourceheightstart = 1;
+//     cce.sourceheightend = 2;
 
-    cce.numinputs = transfers.length;
-    cce.totalamounts = [];
-    let totalamounts = [];
-    cce.totalfees = [];
-    let totalfees = [];
+//     cce.numinputs = transfers.length;
+//     cce.totalamounts = [];
+//     let totalamounts = [];
+//     cce.totalfees = [];
+//     let totalfees = [];
 
-    for (let i = 0; i < transfers.length; i++) {
-        //sum up all the currencies
-        if (transfers[i].currencyvalue.currency in totalamounts)
-            totalamounts[transfers[i].currencyvalue.currency] += transfers[i].currencyvalue.amount;
-        else
-            totalamounts[transfers[i].currencyvalue.currency] = transfers[i].currencyvalue.amount;
-        //add fees to the total amounts
-        if (transfers[i].feecurrencyid in totalamounts)
-            totalamounts[transfers[i].feecurrencyid] += transfers[i].fees;
-        else
-            totalamounts[transfers[i].feecurrencyid] = transfers[i].fees;
+//     for (let i = 0; i < transfers.length; i++) {
+//         //sum up all the currencies
+//         if (transfers[i].currencyvalue.currency in totalamounts)
+//             totalamounts[transfers[i].currencyvalue.currency] += transfers[i].currencyvalue.amount;
+//         else
+//             totalamounts[transfers[i].currencyvalue.currency] = transfers[i].currencyvalue.amount;
+//         //add fees to the total amounts
+//         if (transfers[i].feecurrencyid in totalamounts)
+//             totalamounts[transfers[i].feecurrencyid] += transfers[i].fees;
+//         else
+//             totalamounts[transfers[i].feecurrencyid] = transfers[i].fees;
 
-        if (transfers[i].feecurrencyid in totalfees)
-            totalfees[transfers[i].feecurrencyid] += transfers[i].fees;
-        else
-            totalfees[transfers[i].feecurrencyid] = transfers[i].fees;
-    }
-    for (let key in totalamounts) {
-        cce.totalamounts.push({ "currency": key, "amount": (jsonready ? util.uint64ToVerusFloat(totalamounts[key]) : totalamounts[key]) });
-    }
-    for (let key in totalfees) {
-        cce.totalfees.push({ "currency": key, "amount": (jsonready ? util.uint64ToVerusFloat(totalfees[key]) : totalfees[key]) });
-    }
+//         if (transfers[i].feecurrencyid in totalfees)
+//             totalfees[transfers[i].feecurrencyid] += transfers[i].fees;
+//         else
+//             totalfees[transfers[i].feecurrencyid] = transfers[i].fees;
+//     }
+//     for (let key in totalamounts) {
+//         cce.totalamounts.push({ "currency": key, "amount": (jsonready ? util.uint64ToVerusFloat(totalamounts[key]) : totalamounts[key]) });
+//     }
+//     for (let key in totalfees) {
+//         cce.totalfees.push({ "currency": key, "amount": (jsonready ? util.uint64ToVerusFloat(totalfees[key]) : totalfees[key]) });
+//     }
 
-    cce.totalburned = [{ "currency": '0x0000000000000000000000000000000000000000', "amount": 0 }];
-    cce.rewardaddress = {};
-    cce.firstinput = 1;
-    return cce;
-}
+//     cce.totalburned = [{ "currency": '0x0000000000000000000000000000000000000000', "amount": 0 }];
+//     cce.rewardaddress = {};
+//     cce.firstinput = 1;
+//     return cce;
+// }
 
 /** core functions */
 
@@ -567,19 +567,15 @@ exports.getInfo = async() => {
 
         if (globaltimedelta + globallastinfo < timenow || !getInfo) {
             globallastinfo = timenow;
-            let info = await verusBridgeMaster.methods.getinfo().call();
-
-            let decodedParams = abi.decodeParameters(
-                ['uint256', 'string', 'uint256', 'uint256', 'string', 'bool'],
-                "0x" + info.slice(66));
-
+            let blknum = await web3.eth.getBlockNumber();
+            const {timestamp } = await web3.eth.getBlock(blknum)
             getinfo = {
-                "version": decodedParams[0],
-                "name": decodedParams[4],
-                "VRSCversion": decodedParams[1],
-                "blocks": decodedParams[2],
-                "tiptime": decodedParams[3],
-                "testnet": decodedParams[5],
+                "version": 2000753,
+                "name": "vETH",
+                "VRSCversion": "0.9.9-5",
+                "blocks": await web3.eth.getBlockNumber(),
+                "tiptime": timestamp,
+                "testnet": "true",
             }
             console.log("Command: getinfo");
             await setCachedApi(getinfo, 'getInfo');
@@ -604,7 +600,7 @@ exports.getCurrency = async(input) => {
         if (globaltimedelta + globallastcurrency < timenow || !getCurrency) {
 
             globallastcurrency = timenow;
-            let info = await verusBridgeMaster.methods.getcurrency(util.convertVerusAddressToEthAddress(currency)).call();
+            let info = await delegatorContract.methods.getcurrency(util.convertVerusAddressToEthAddress(currency)).call();
             let notaries = [];
             let abiPattern = ['uint', 'string', 'address', 'address', 'address', 'uint8', 'uint8', [
                 ['uint8', 'bytes']
@@ -666,68 +662,37 @@ exports.getExports = async(input) => {
 
     try {
         //input chainname should always be VETH
-        let poolavailable = await verusBridgeMaster.methods.isPoolAvailable().call();
+        let poolavailable = await delegatorContract.methods.poolAvailable().call();
 
         if (chainname != VerusSystemID) throw "i-Address not VRSCTEST";
 
         let exportSets = [];
-        let tempExportset = [];
-        if (parseInt(heightstart) == 0) {
-            exportSets = await verusBridgeMaster.methods.getReadyExportsByRange(heightstart, heightend).call();
-        } else {
-            let range = parseInt(heightend) - parseInt(heightstart);
-            const DELTA = 200;
-            if (range > DELTA) {
-                let tempstartheight = undefined;
-                let tempendheight = undefined;
-                let tempfloor = Math.floor(range / DELTA);
-                let tempremaind = range % DELTA;
-
-                for (let i = 0; i < tempfloor; i++) {
-                    tempstartheight = parseInt(heightstart) + (i * DELTA);
-                    tempendheight = parseInt(heightstart) + ((i + 1) * DELTA) - 1;
-                    tempExportset.push(await verusBridgeMaster.methods.getReadyExportsByRange(tempstartheight, tempendheight).call());
-                }
-                if (tempremaind > 0) {
-                    tempExportset.push(await verusBridgeMaster.methods.getReadyExportsByRange(tempendheight + 1, heightend).call());
-                }
-
-                for (let j = 0; j < tempExportset.length; j++) {
-                    if (tempExportset[j].length > 0) {
-                        for (const set of tempExportset[j])
-                            exportSets.push(set);
-                    }
-
-                }
-
-            } else {
-                exportSets = await verusBridgeMaster.methods.getReadyExportsByRange(heightstart, heightend).call();
-            }
-        }
+        
+        exportSets = await delegatorContract.methods.getReadyExportsByRange(heightstart, heightend).call();
         
         console.log("Height end: ", heightend, "heightStart:", heightstart);
 
-        for (let i = 0; i < exportSets.length; i++) {
+        for (const exportSet of exportSets) {
             //loop through and add in the proofs for each export set and the additional fields
-            let exportSet = exportSets[i];
+
             let outputSet = {};
-            let poolLaunchedHeight = await verusNotarizerStorage.methods.poolAvailable(constants.BRIDGECURRENCYHEX).call();
-            poolavailable = parseInt(poolLaunchedHeight) == 0 ? false : parseInt(poolLaunchedHeight) < parseInt(exportSet.blockHeight);
-            outputSet.height = exportSet.blockHeight;
+            poolavailable = exportSet.transfers[0].feecurrencyid.toLowerCase() == constants.VDXFDATAKEY.VETH.toLowerCase();
+            outputSet.height = exportSet.endHeight;
             outputSet.txid = util.removeHexLeader(exportSet.exportHash).reversebytes(); //export hash used for txid
             outputSet.txoutnum = 0; //exportSet.position;
-            outputSet.exportinfo = createCrossChainExport(exportSet.transfers, exportSet.blockHeight, true, poolavailable);
-            outputSet.partialtransactionproof = await getProof(exportSet.blockHeight, heightend);
+            outputSet.exportinfo = createCrossChainExport(exportSet.transfers, exportSet.startHeight, exportSet.endHeight, true, poolavailable);
+            outputSet.partialtransactionproof = await getProof(exportSet.endHeight, heightend);
 
             //serialize the prooflet index 
-            let components = createComponents(exportSet.transfers, parseInt(exportSet.blockHeight, 10), exportSet.prevExportHash, poolavailable);
+            let components = createComponents(exportSet.transfers, exportSet.startHeight, exportSet.endHeight, exportSet.prevExportHash, poolavailable);
             outputSet.partialtransactionproof = serializeEthFullProof(outputSet.partialtransactionproof).toString('hex') + components;
 
             //build transfer list
             //get the transactions at the index
-            let test = await verusBridgeStorage.methods._readyExports(outputSet.height).call();
+            let test = await delegatorContract.methods._readyExports(outputSet.height).call();
             outputSet.transfers = createOutboundTransfers(exportSet.transfers);
-            console.log("ETH Send to Verus: ", outputSet.transfers[0].currencyvalues, " to ", outputSet.transfers[0].destination);
+            if (debug)
+                console.log("First Ethereum Send to Verus: ", outputSet.transfers[0].currencyvalues, " to ", outputSet.transfers[0].destination);
             //loop through the 
             output.push(outputSet);
         }
@@ -739,7 +704,10 @@ exports.getExports = async(input) => {
         await setCachedApi(input, 'lastgetExports');
         return { "result": output };
     } catch (error) {
-        console.log("\x1b[41m%s\x1b[0m", "GetExports error:" + error);
+        if (error.message == "Returned error: execution reverted" && heightstart == 0)
+            console.log("First get Export call, no exports found.");
+        else
+            console.log("\x1b[41m%s\x1b[0m", "GetExports error:" + error);
         return { "result": { "error": true, "message": error } };
     }
 }
@@ -914,7 +882,7 @@ async function checkProofRoot(height, stateroot, blockhash, power) {
 exports.getNotarizationData = async() => {
 
     let Notarization = {};
-    Notarization.version = 1;
+    Notarization.version = constants.VERSION_NOTARIZATIONDATA_CURRENT;
 
     var d = new Date();
     var timenow = d.valueOf();
@@ -940,7 +908,7 @@ exports.getNotarizationData = async() => {
         let calcIndex = 0;
         try {
             while (true) {
-                let notarization = await verusNotarizer.methods.bestForks(j).call();
+                let notarization = await delegatorContract.methods.bestForks(j).call();
                 notarization = util.removeHexLeader(notarization);
                 if (notarization && notarization.length >= constants.LIF.FORKLEN) {
                     let length = notarization.length / constants.LIF.FORKLEN;
@@ -978,13 +946,13 @@ exports.getNotarizationData = async() => {
                     break;
             }
         } catch (e) {
-
+            let test1 = e;
         }
 
         if (forks.length == 0) {
             Notarization.forks = [];
             Notarization.lastconfirmed = -1;
-            Notarization.bestchain = -1;
+            Notarization.bestchain = 0;
         } else {
             Notarization.forks = forks;
             Notarization.lastconfirmed = forks.length == 1 && forks[0].length == 1 ? -1 : 0;
@@ -1107,13 +1075,13 @@ function reshapeTransfers(CTransferArray) {
             const serializedTransfers = serializeCReserveTransfers(transfers);
             if (i == -1)
                 console.log("Serialized transfers: 0x", serializedTransfers.toString('hex'));
-            let exportinfo = createCrossChainExportToETH(transfers);
+           // let exportinfo = createCrossChainExportToETH(transfers);
 
             let subarray = {
                 height: 1,
                 txid: CTransferArray[i].exports[j].txid,
                 txoutnum: CTransferArray[i].exports[j].txoutnum,
-                exportinfo,
+              //  exportinfo,
                 partialtransactionproof: [CTransferArray[i].exports[j].partialtransactionproof],
                 transfers: CTransferArray[i].exports[j].transfers,
                 serializedTransfers: addHexPrefix(serializedTransfers.toString('hex'))
@@ -1153,20 +1121,20 @@ exports.submitImports = async(CTransferArray) => {
     try {
 
         if (CTempArray.length > 0) {
-            let processed = await verusBridgeMaster.methods.checkImport(CTempArray[0].txid).call();
+            let processed = await delegatorContract.methods.checkImport(CTempArray[0].txid).call();
             if (!processed) {
                 submitArray.push(CTempArray[0])
             }
         }
 
-        const testcall = await verusBridgeMaster.methods.submitImports(submitArray[0]).call(); //test call
+        const testcall = await delegatorContract.methods.submitImports(submitArray[0]).call(); //test call
 
         if (CTempArray)
         console.log("Transfer to ETH: " + JSON.stringify(CTempArray[0].transfers[0].currencyvalue, null,2) + "\nto: " + JSON.stringify(CTempArray[0].transfers[0].destination.destinationaddress, null, 2));
 
         await setCachedApi(CTransferArray, 'lastsubmitImports');
         if (submitArray.length > 0) {
-            globalsubmitimports = await verusBridgeMaster.methods.submitImports(submitArray[0]).send({ from: account.address, gas: maxGas });
+            globalsubmitimports = await delegatorContract.methods.submitImports(submitArray[0]).send({ from: account.address, gas: maxGas });
         } else {
             return { result: "false" };
         }
@@ -1214,6 +1182,10 @@ exports.submitAcceptedNotarization = async(params) => {
         }
     }
 
+    if (Object.keys(signatures).length < 1) {
+        return { "result": { "txid": null } }; 
+    }
+
     let txidObj = params[1].output;
     const lastTxid = await getCachedApi('lastNotarizationTxid');
 
@@ -1233,8 +1205,8 @@ exports.submitAcceptedNotarization = async(params) => {
     let txhash
     try {
         // Call contract to test for reversion.
-        const testValue = await verusNotarizer.methods.setLatestData(serializednotarization, txid, txidObj.voutnum, abiencodedSigData).call();
-        txhash = await verusNotarizer.methods.setLatestData(serializednotarization, txid, txidObj.voutnum, abiencodedSigData).send({ from: account.address, gas: maxGas });
+        const testValue = await delegatorContract.methods.setLatestData(serializednotarization, txid, txidObj.voutnum, abiencodedSigData).call();
+        txhash = await delegatorContract.methods.setLatestData(serializednotarization, txid, txidObj.voutnum, abiencodedSigData).send({ from: account.address, gas: maxGas });
 
         await setCachedApi(txidObj.txid, 'lastNotarizationTxid');
         return { "result": txhash };
@@ -1243,6 +1215,9 @@ exports.submitAcceptedNotarization = async(params) => {
 
         if (error.message == "Returned error: submitAcceptedNotarization execution reverted") {
             console.log("Returned error: execution reverted");
+        }
+        else if (error.message == "Returned error: execution reverted") {
+            console.log(`Notarization reverted... ${params[0].isdefinition ? "Chain definition skipping.." : ""}`);
         }
         else if (error.reason) {
             console.log("\x1b[41m%s\x1b[0m", "submitAcceptedNotarization:" + error.reason);
@@ -1270,9 +1245,9 @@ exports.getLastImportFrom = async() => {
         if (globaltimedelta + globalgetlastimport < timenow || !lastImportFrom) {
             globalgetlastimport = timenow;
 
-            let lastimporttxid = await verusBridgeStorage.methods.lastTxIdImport().call();
+            let lastimporttxid = await delegatorContract.methods.lastTxIdImport().call();
 
-            let lastImportInfo = await verusBridgeStorage.methods.lastImportInfo(lastimporttxid).call();
+            let lastImportInfo = await delegatorContract.methods.lastImportInfo(lastimporttxid).call();
 
             let lastimport = {};
 
@@ -1293,7 +1268,7 @@ exports.getLastImportFrom = async() => {
             let lastconfirmednotarization = {};
             let lastconfirmedutxo = {};
             try {
-                forksData = await verusNotarizer.methods.bestForks(0).call();
+                forksData = await delegatorContract.methods.bestForks(0).call();
                 forksData = util.removeHexLeader(forksData);
 
                 let txidPos = constants.LIF.TXIDPOS;
