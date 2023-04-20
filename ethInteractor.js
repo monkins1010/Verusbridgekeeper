@@ -576,6 +576,7 @@ exports.getInfo = async() => {
                 "blocks": await web3.eth.getBlockNumber(),
                 "tiptime": timestamp,
                 "testnet": "true",
+                "chainid": "iCtawpxUiCc2sEupt7Z4u8SDAncGZpgSKm"
             }
             console.log("Command: getinfo");
             await setCachedApi(getinfo, 'getInfo');
@@ -952,7 +953,7 @@ exports.getNotarizationData = async() => {
         if (forks.length == 0) {
             Notarization.forks = [];
             Notarization.lastconfirmed = -1;
-            Notarization.bestchain = 0;
+            Notarization.bestchain = -1;
         } else {
             Notarization.forks = forks;
             Notarization.lastconfirmed = forks.length == 1 && forks[0].length == 1 ? -1 : 0;
