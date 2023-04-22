@@ -338,7 +338,7 @@ async function getProof(eIndex, blockHeight) {
 
     try {
 
-        let proof = await web3.eth.getProof(storageAddress, [key], blockHeight);
+        let proof = await web3.eth.getProof(settings.delegatorcontractaddress, [key], blockHeight);
         return proof;
     } catch (error) {
         console.log("error:", error);
@@ -682,7 +682,7 @@ exports.getExports = async(input) => {
             outputSet.txid = util.removeHexLeader(exportSet.exportHash).reversebytes(); //export hash used for txid
             outputSet.txoutnum = 0; //exportSet.position;
             outputSet.exportinfo = createCrossChainExport(exportSet.transfers, exportSet.startHeight, exportSet.endHeight, true, poolavailable);
-            outputSet.partialtransactionproof = await getProof(exportSet.endHeight, heightend);
+            outputSet.partialtransactionproof = await getProof(exportSet.startHeight, heightend);
 
             //serialize the prooflet index 
             let components = createComponents(exportSet.transfers, exportSet.startHeight, exportSet.endHeight, exportSet.prevExportHash, poolavailable);
