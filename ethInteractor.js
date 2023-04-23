@@ -680,7 +680,8 @@ exports.getExports = async(input) => {
             //loop through and add in the proofs for each export set and the additional fields
 
             let outputSet = {};
-            poolavailable = exportSet.transfers[0].feecurrencyid.toLowerCase() == constants.VDXFDATAKEY.VETH.toLowerCase();
+            poolavailable = exportSet.transfers[0].feecurrencyid.toLowerCase() != constants.VDXFDATAKEY.VRSCTEST.toLowerCase() ||
+                            exportSet.transfers[0].destinationcurrencyid.toLowerCase() == constants.BRIDGECURRENCYHEX.toLowerCase();
             outputSet.height = exportSet.endHeight;
             outputSet.txid = util.removeHexLeader(exportSet.exportHash).reversebytes(); //export hash used for txid
             outputSet.txoutnum = 0; //exportSet.position;

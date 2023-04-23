@@ -1,6 +1,6 @@
 module.exports = Object.freeze({
     
-    VDXFDATAKEY: {VRSCTEST: "bb29b6fbac51550f7bda924d73c8e0bc971fb1dc",
+    VDXFDATAKEY: {VRSCTEST: "0xA6ef9ea235635E328124Ff3429dB9F9E91b64e2d",
                   VRSC:     "8cea50fa0fc6787f0ff3d68858b2fadd36e7a485",
                   VETH: "0x67460C2f56774eD27EeB8685f29f6CEC0B090B00"},
     VETHCURRENCYID: "iCtawpxUiCc2sEupt7Z4u8SDAncGZpgSKm",
