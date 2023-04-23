@@ -568,7 +568,10 @@ exports.getInfo = async() => {
         if (globaltimedelta + globallastinfo < timenow || !getInfo) {
             globallastinfo = timenow;
             let blknum = await web3.eth.getBlockNumber();
-            const {timestamp } = await web3.eth.getBlock(blknum)
+            const {timestamp } = await web3.eth.getBlock(blknum);
+            if(!timestamp) {
+                return { "result": null };
+            }
             getinfo = {
                 "version": 2000753,
                 "name": "vETH",
@@ -668,10 +671,10 @@ exports.getExports = async(input) => {
         if (chainname != VerusSystemID) throw "i-Address not VRSCTEST";
 
         let exportSets = [];
+        const previousStartHeight = await delegatorContract.methods.exportHeights(heightstart).call();
+        exportSets = await delegatorContract.methods.getReadyExportsByRange(previousStartHeight, heightend).call();
         
-        exportSets = await delegatorContract.methods.getReadyExportsByRange(heightstart, heightend).call();
-        
-        console.log("Height end: ", heightend, "heightStart:", heightstart);
+        console.log("Height end: ", heightend, "heightStart:", heightstart, {previousStartHeight});
 
         for (const exportSet of exportSets) {
             //loop through and add in the proofs for each export set and the additional fields
@@ -1184,6 +1187,7 @@ exports.submitAcceptedNotarization = async(params) => {
     }
 
     if (Object.keys(signatures).length < 1) {
+        console.log("submitAcceptedNotarization: Not enough signatures.");
         return { "result": { "txid": null } }; 
     }
 

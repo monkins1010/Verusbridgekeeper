@@ -48,7 +48,7 @@ module.exports = Object.freeze({
     ETH_ADDRESS_TYPE: 9,
     IAddressBaseConst: 102,
     RAddressBaseConst: 60,
-    maxGas: 2000000,
+    maxGas: 3000000,
     globaltimedelta: 60000,
     TRANSFER_TYPE_ETH: 3,
     RESERVETORESERVE: 1024,
