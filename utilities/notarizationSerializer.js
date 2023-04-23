@@ -4,6 +4,12 @@ var constants = require('../constants');
 const deserializer = require('../deserializer.js')
 const notarizer = require('../notarization.js')
 
+Object.assign(String.prototype, {
+  reversebytes() {
+      return this.match(/[a-fA-F0-9]{2}/g).reverse().join('');
+  }
+});
+
 const serializeNotarization = (notarization) => {
 
     let serializedBytes = Buffer.from(new Uint8Array(util.writeVarInt(notarization.version)));
@@ -19,11 +25,11 @@ const serializeNotarization = (notarization) => {
     serializedBytes = Buffer.concat([serializedBytes, util.writeUInt(notarization.notarizationheight, 32)]); 
 
     serializedBytes = Buffer.concat([serializedBytes, 
-        Buffer.from(notarization.prevnotarizationtxid.match(/[a-fA-F0-9]{2}/g).reverse().join(''), 'hex')]); 
+        Buffer.from(notarization.prevnotarizationtxid.reversebytes(), 'hex')]); 
 
     serializedBytes = Buffer.concat([serializedBytes, util.writeUInt(notarization.prevnotarizationout, 32)]); 
     serializedBytes = Buffer.concat([serializedBytes, 
-        Buffer.from(notarization.hashprevcrossnotarization.match(/[a-fA-F0-9]{2}/g).reverse().join(''), 'hex')]);
+        Buffer.from(notarization.hashprevcrossnotarization.reversebytes(), 'hex')]);
 
     serializedBytes = Buffer.concat([serializedBytes, util.writeUInt(notarization.prevheight, 32)]); 
 
@@ -31,9 +37,11 @@ const serializeNotarization = (notarization) => {
     serializedBytes = Buffer.concat([serializedBytes, serializeCProofRootArray(notarization.proofroots)]); 
     serializedBytes = Buffer.concat([serializedBytes, serializeNodes(notarization.nodes)]); 
 
-    console.log(serializedBytes.toString("hex"))
+    //console.log(serializedBytes.toString("hex"));
 
-    return serializedBytes;
+    const serializedhex = util.addHexPrefix(serializedBytes.toString('hex'));
+
+    return serializedhex;
 }
 
 function notarizationFlags(pBaasNotarization) {
@@ -49,6 +57,10 @@ function serializeCTransferDestination(ctd) {
 
     let encodedOutput = Buffer.alloc(1);
     encodedOutput.writeUInt8(ctd.type);
+    
+    if (ctd.type == 0)
+      return encodedOutput;
+    
     let destination = Buffer.from(bitGoUTXO.address.fromBase58Check(util.removeHexLeader(ctd.address), 160).hash , 'hex');
     encodedOutput = Buffer.concat([encodedOutput, util.writeCompactSize(destination.length), destination]);
 
@@ -138,11 +150,11 @@ function serializeCProofRootArray (proof) {
         encodedOutput = Buffer.concat([encodedOutput, bitGoUTXO.address.fromBase58Check((item.systemid), 160).hash]);
         encodedOutput = Buffer.concat([encodedOutput, util.writeUInt(item.height, 32)]);
         encodedOutput = Buffer.concat([encodedOutput, 
-            Buffer.from(item.stateroot.match(/[a-fA-F0-9]{2}/g).reverse().join(''), 'hex')]); 
+            Buffer.from(item.stateroot.reversebytes(), 'hex')]); 
         encodedOutput = Buffer.concat([encodedOutput, 
-            Buffer.from(item.blockhash.match(/[a-fA-F0-9]{2}/g).reverse().join(''), 'hex')]); 
+            Buffer.from(item.blockhash.reversebytes(), 'hex')]); 
         encodedOutput = Buffer.concat([encodedOutput, 
-            Buffer.from(item.power.match(/[a-fA-F0-9]{2}/g).reverse().join(''), 'hex')]);
+            Buffer.from(item.power.reversebytes(), 'hex')]);
         if (item.type == 2) // type ethereum
         {
           encodedOutput = Buffer.concat([encodedOutput, util.writeUInt(util.convertToInt64(item.gasprice), 64)]);
@@ -194,13 +206,13 @@ const deserializeNotarization = (notarization) => {
     returnVal.notarizationheight = temp.retval;
 
     temp = deserializer.readtype(serValue,"uint", 256)
-    returnVal.prevnotarizationtxid = util.removeHexLeader(temp.retval).match(/[a-fA-F0-9]{2}/g).reverse().join('')
+    returnVal.prevnotarizationtxid = util.removeHexLeader(temp.retval).reversebytes()
 
     temp = deserializer.readtype(serValue,"uint", 32)
     returnVal.prevnotarizationout = temp.retval;
 
     temp = deserializer.readtype(serValue,"uint", 256)
-    returnVal.hashprevcrossnotarization = util.removeHexLeader(temp.retval).match(/[a-fA-F0-9]{2}/g).reverse().join('')
+    returnVal.hashprevcrossnotarization = util.removeHexLeader(temp.retval).reversebytes()
 
     temp = deserializer.readtype(serValue,"uint", 32)
     returnVal.prevheight = temp.retval;
@@ -347,13 +359,13 @@ const deserializeProofRoots = (memory) => {
     rootObject.height = temp.retval;
 
     temp = deserializer.readtype(memory,"uint", 256)
-    rootObject.stateroot = util.removeHexLeader(temp.retval).match(/[a-fA-F0-9]{2}/g).reverse().join('')
+    rootObject.stateroot = util.removeHexLeader(temp.retval).reversebytes()
 
     temp = deserializer.readtype(memory,"uint", 256)
-    rootObject.blockhash = util.removeHexLeader(temp.retval).match(/[a-fA-F0-9]{2}/g).reverse().join('')
+    rootObject.blockhash = util.removeHexLeader(temp.retval).reversebytes()
 
     temp = deserializer.readtype(memory,"uint", 256)
-    rootObject.power = util.removeHexLeader(temp.retval).match(/[a-fA-F0-9]{2}/g).reverse().join('')
+    rootObject.power = util.removeHexLeader(temp.retval).reversebytes()
 
     if (rootObject.type == 2)  //type ethereum
     {

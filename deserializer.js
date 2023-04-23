@@ -10,8 +10,8 @@ function extractPartial(proof) {
     let proofBuffer = [];
 
     for (let i = 0; i < proof.length; i++) { // std::vector<uint256> branch;
-        let hashtransfers = proof[i].exportinfo.hashtransfers;
-        proofBuffer.push({ hashtransfers, stream: Buffer.from(util.removeHexLeader(proof[i].partialtransactionproof[0]), 'hex'), output: {} });
+       //let hashtransfers = proof[i].exportinfo.hashtransfers;
+        proofBuffer.push({ stream: Buffer.from(util.removeHexLeader(proof[i].partialtransactionproof[0]), 'hex'), output: {} });
     }
     return proofBuffer;
 }

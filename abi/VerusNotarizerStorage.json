@@ -13,26 +13,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "PBaaSNotarization",
-    "outputs": [
-      {
-        "internalType": "bytes",
-        "name": "",
-        "type": "bytes"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function",
-    "constant": true
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "",
         "type": "address"
@@ -53,17 +33,17 @@
   {
     "inputs": [
       {
-        "internalType": "address",
+        "internalType": "bytes32",
         "name": "",
-        "type": "address"
+        "type": "bytes32"
       }
     ],
     "name": "storageGlobal",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "bytes32",
         "name": "",
-        "type": "uint256"
+        "type": "bytes32"
       }
     ],
     "stateMutability": "view",
@@ -93,14 +73,14 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "iaddress",
-        "type": "address"
+        "internalType": "bytes32",
+        "name": "key",
+        "type": "bytes32"
       },
       {
-        "internalType": "uint256",
+        "internalType": "bytes32",
         "name": "data",
-        "type": "uint256"
+        "type": "bytes32"
       }
     ],
     "name": "pushStorageGlobal",
@@ -112,61 +92,34 @@
     "inputs": [
       {
         "internalType": "bytes",
-        "name": "_notarization",
-        "type": "bytes"
-      }
-    ],
-    "name": "setNotarization",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes",
-        "name": "newCandidate",
+        "name": "data",
         "type": "bytes"
       },
       {
-        "internalType": "uint256",
-        "name": "newconfirmed",
-        "type": "uint256"
+        "internalType": "uint32",
+        "name": "height",
+        "type": "uint32"
       }
     ],
-    "name": "resetNotarization",
+    "name": "pushNewProof",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "nextNotarizationIndex",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function",
-    "constant": true
-  },
-  {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "position",
-        "type": "uint256"
+        "internalType": "bytes32",
+        "name": "key",
+        "type": "bytes32"
       }
     ],
-    "name": "getLastStateRoot",
+    "name": "getProof",
     "outputs": [
       {
-        "internalType": "bytes32",
+        "internalType": "bytes",
         "name": "",
-        "type": "bytes32"
+        "type": "bytes"
       }
     ],
     "stateMutability": "view",
