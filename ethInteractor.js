@@ -27,12 +27,7 @@ const BridgeID = constants.BRIDGEID
 const IAddressBaseConst = constants.IAddressBaseConst;
 const RAddressBaseConst = constants.RAddressBaseConst;
 const maxGas = constants.maxGas;
-const verusBridgeMasterAbi = require('./abi/VerusBridgeMaster.json');
-const verusNotarizerStorageAbi = require('./abi/VerusNotarizerStorage.json');
 const verusDelegatorAbi = require('./abi/VerusDelegator.json');
-const verusBridgeStorageAbi = require('./abi/VerusBridgeStorage.json');
-const verusNotarizerAbi = require('./abi/VerusNotarizer.json');
-const verusSerializerAbi = require('./abi/VerusSerializer.json');
 
 // Global settings
 let settings = undefined;
@@ -44,12 +39,6 @@ let globaltimedelta = constants.globaltimedelta; //60s
 let globallastinfo = d.valueOf() - globaltimedelta;
 let globallastcurrency = d.valueOf() - globaltimedelta;
 let globalgetlastimport = d.valueOf() - globaltimedelta;
-let verusBridgeMaster = undefined;
-let verusNotarizerStorage = undefined;
-let verusBridgeStorage = undefined;
-let storageAddress = undefined;
-let verusNotarizer = undefined;
-let verusSerializer = undefined;
 let transactioncount = 0;
 let account = undefined;
 let delegatorContract = undefined;
@@ -94,12 +83,6 @@ exports.init = async() => {
         let tempContract = await delegatorContract.methods.contracts(i).call();
         contracts.push(tempContract);
     }
-   // verusBridgeMaster = new web3.eth.Contract(verusBridgeMasterAbi, contracts[constants.CONTRACT_TYPE.VerusBridgeMaster]);
-  //  verusNotarizerStorage = new web3.eth.Contract(verusNotarizerStorageAbi, contracts[constants.CONTRACT_TYPE.VerusNotarizerStorage]);
-   /// verusBridgeStorage = new web3.eth.Contract(verusBridgeStorageAbi, contracts[constants.CONTRACT_TYPE.VerusBridgeStorage]);
-  //  verusNotarizer = new web3.eth.Contract(verusNotarizerAbi, contracts[constants.CONTRACT_TYPE.VerusNotarizer]);
-   // verusSerializer = new web3.eth.Contract(verusSerializerAbi, contracts[constants.CONTRACT_TYPE.VerusSerializer]);
-   // storageAddress = contracts[constants.CONTRACT_TYPE.VerusBridgeStorage];
 
     initApiCache();
     initBlockCache();
@@ -680,7 +663,7 @@ exports.getExports = async(input) => {
             //loop through and add in the proofs for each export set and the additional fields
 
             let outputSet = {};
-            poolavailable = exportSet.transfers[0].feecurrencyid.toLowerCase() != constants.VDXFDATAKEY.VRSCTEST.toLowerCase() ||
+            poolavailable = exportSet.transfers[0].feecurrencyid.toLowerCase() != constants.VRSCTEST.toLowerCase() ||
                             exportSet.transfers[0].destinationcurrencyid.toLowerCase() == constants.BRIDGECURRENCYHEX.toLowerCase();
             outputSet.height = exportSet.endHeight;
             outputSet.txid = util.removeHexLeader(exportSet.exportHash).reversebytes(); //export hash used for txid
