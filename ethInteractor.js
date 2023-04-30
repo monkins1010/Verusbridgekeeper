@@ -663,26 +663,28 @@ exports.getExports = async(input) => {
             //loop through and add in the proofs for each export set and the additional fields
 
             let outputSet = {};
-            poolavailable = exportSet.transfers[0].feecurrencyid.toLowerCase() != constants.VRSCTEST.toLowerCase() ||
-                            exportSet.transfers[0].destinationcurrencyid.toLowerCase() == constants.BRIDGECURRENCYHEX.toLowerCase();
-            outputSet.height = exportSet.endHeight;
-            outputSet.txid = util.removeHexLeader(exportSet.exportHash).reversebytes(); //export hash used for txid
-            outputSet.txoutnum = 0; //exportSet.position;
-            outputSet.exportinfo = createCrossChainExport(exportSet.transfers, exportSet.startHeight, exportSet.endHeight, true, poolavailable);
-            outputSet.partialtransactionproof = await getProof(exportSet.startHeight, heightend);
+            if(exportSet.transfers[0].feecurrencyid) {
+                poolavailable = exportSet.transfers[0].feecurrencyid.toLowerCase() != constants.VRSCTEST.toLowerCase() ||
+                                exportSet.transfers[0].destinationcurrencyid.toLowerCase() == constants.BRIDGECURRENCYHEX.toLowerCase();
+                outputSet.height = exportSet.endHeight;
+                outputSet.txid = util.removeHexLeader(exportSet.exportHash).reversebytes(); //export hash used for txid
+                outputSet.txoutnum = 0; //exportSet.position;
+                outputSet.exportinfo = createCrossChainExport(exportSet.transfers, exportSet.startHeight, exportSet.endHeight, true, poolavailable);
+                outputSet.partialtransactionproof = await getProof(exportSet.startHeight, heightend);
 
-            //serialize the prooflet index
-            let components = createComponents(exportSet.transfers, exportSet.startHeight, exportSet.endHeight, exportSet.prevExportHash, poolavailable);
-            outputSet.partialtransactionproof = serializeEthFullProof(outputSet.partialtransactionproof).toString('hex') + components;
+                //serialize the prooflet index
+                let components = createComponents(exportSet.transfers, exportSet.startHeight, exportSet.endHeight, exportSet.prevExportHash, poolavailable);
+                outputSet.partialtransactionproof = serializeEthFullProof(outputSet.partialtransactionproof).toString('hex') + components;
 
-            //build transfer list
-            //get the transactions at the index
-            let test = await delegatorContract.methods._readyExports(outputSet.height).call();
-            outputSet.transfers = createOutboundTransfers(exportSet.transfers);
-            if (debug)
-                console.log("First Ethereum Send to Verus: ", outputSet.transfers[0].currencyvalues, " to ", outputSet.transfers[0].destination);
-            //loop through the
-            output.push(outputSet);
+                //build transfer list
+                //get the transactions at the index
+                let test = await delegatorContract.methods._readyExports(outputSet.height).call();
+                outputSet.transfers = createOutboundTransfers(exportSet.transfers);
+                if (debug)
+                    console.log("First Ethereum Send to Verus: ", outputSet.transfers[0].currencyvalues, " to ", outputSet.transfers[0].destination);
+                //loop through the
+                output.push(outputSet);
+            }
         }
 
         if (debugsubmit) {
