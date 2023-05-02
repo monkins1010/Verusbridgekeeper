@@ -31,7 +31,8 @@ const rootPath = function (chainName, currency) {
 
 const checkConfFileExists = function (chainName) {
     
-    const ID = (chaintc == "VRSCTEST") ? CONSTANTS.VETHIDHEXREVERSED : CONSTANTS.MAINNETVETH
+    let chaintc = chainName.toUpperCase();
+    const ID = CONSTANTS.VETHIDHEXREVERSED[chaintc]
     let confPath = rootPath(chainName, ID);
 
     return fs.existsSync(confPath);
@@ -40,7 +41,7 @@ const checkConfFileExists = function (chainName) {
 const loadConfFile = (chainName) => {
 
     let chaintc = chainName.toUpperCase();
-    const ID = (chaintc == "VRSCTEST") ? CONSTANTS.VETHIDHEXREVERSED : CONSTANTS.MAINNETVETH;
+    const ID =  CONSTANTS.VETHIDHEXREVERSED[chaintc]
     let Config = settings.INIKeys;
     let rpcconf = {};
     let confPath = rootPath(chainName, ID);
@@ -109,7 +110,7 @@ const set_conf = (key, infuraLink, ethContract, chainName)=> {
     }
 
     let chaintc = chainName.toUpperCase();
-    const ID = (chaintc == "VRSCTEST") ? CONSTANTS.VETHIDHEXREVERSED : CONSTANTS.MAINNETVETH;
+    const ID =  CONSTANTS.VETHIDHEXREVERSED[chaintc]
     confPath = rootPath(chainName, ID);
 
     let confKeys = settings.RPCDefault[chaintc];

@@ -17,6 +17,11 @@ exports.pbaas = {
         linux: "/pbaas/000b090bec6c9ff28586eb7ed24e77562f0c4667",
         win32: "/pbaas/000b090bec6c9ff28586eb7ed24e77562f0c4667"
     },
+    "52c7a71ed15802d33778235e7988d61339b84c45": {
+        darwin: "/pbaas/52c7a71ed15802d33778235e7988d61339b84c45",
+        linux: "/pbaas/52c7a71ed15802d33778235e7988d61339b84c45",
+        win32: "/pbaas/52c7a71ed15802d33778235e7988d61339b84c45"
+    },
 };
 
 exports.pbaasRoot = {
@@ -39,7 +44,6 @@ exports.RPCDefault = {
         rpcport: 8000,
         rpchost: "127.0.0.1",
         delegatorcontractaddress: "empty",
-        testnet: true,
         privatekey: "empty",
         ethnode: "empty",
     },
@@ -49,7 +53,6 @@ exports.RPCDefault = {
         rpcport: 8000,
         rpchost: "127.0.0.1",
         delegatorcontractaddress: "empty",
-        testnet: false,
         privatekey: "empty",
         ethnode: "wss://rinkeby.infura.io/ws/v3/........",
     }
@@ -61,7 +64,6 @@ exports.INIKeys = {
     rpcport: '',
     rpchost: '',
     delegatorcontractaddress: '',
-    testnet: '',
     privatekey: '',
     ethnode: '',
 };
