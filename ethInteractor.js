@@ -12,8 +12,7 @@ const { initApiCache, initBlockCache,  setCachedApi, getCachedApi, checkCachedAp
 const notarization = require('./utilities/notarizationSerializer.js');
 
 // command line arguments
-const ticker = process.argv.indexOf('-production') > -1 ? "VRSC" : "VRSCTEST";
-const logging = (process.argv.indexOf('-log') > -1);
+const ticker = process.argv.indexOf('-testnet') > -1 ? "VRSCTEST" : "VRSC";
 const debug = (process.argv.indexOf('-debug') > -1);
 const debugsubmit = (process.argv.indexOf('-debugsubmit') > -1);
 const debugnotarization = (process.argv.indexOf('-debugnotarization') > -1);
@@ -21,9 +20,9 @@ const noimports = (process.argv.indexOf('-noimports') > -1);
 const CHECKHASH = (process.argv.indexOf('-checkhash') > -1);
 
 //Main coin ID's
-const ETHSystemID = constants.VETHCURRENCYID;
-const VerusSystemID = constants.VERUSSYSTEMID
-const BridgeID = constants.BRIDGEID
+const ETHSystemID = constants.VETHCURRENCYID[ticker];
+const VerusSystemID = constants.VERUSSYSTEMID[ticker];
+const BridgeID = constants.BRIDGEID[ticker];
 const IAddressBaseConst = constants.IAddressBaseConst;
 const RAddressBaseConst = constants.RAddressBaseConst;
 const maxGas = constants.maxGas;
@@ -42,7 +41,7 @@ let globalgetlastimport = d.valueOf() - globaltimedelta;
 let transactioncount = 0;
 let account = undefined;
 let delegatorContract = undefined;
-let contracts = [];
+
 
 Object.assign(String.prototype, {
     reversebytes() {
@@ -79,11 +78,6 @@ function setupConf() {
 exports.init = async() => {
 
     setupConf();
-    for (let i = 0; i < constants.CONTRACT_TYPE.LastIndex; i++) {
-        let tempContract = await delegatorContract.methods.contracts(i).call();
-        contracts.push(tempContract);
-    }
-
     initApiCache();
     initBlockCache();
     eventListener(settings.delegatorcontractaddress);
@@ -558,11 +552,10 @@ exports.getInfo = async() => {
             getinfo = {
                 "version": 2000753,
                 "name": "vETH",
-                "VRSCversion": "0.9.9-5",
+                "VRSCversion": constants.VERSION,
                 "blocks": await web3.eth.getBlockNumber(),
                 "tiptime": timestamp,
-                "testnet": "true",
-                "chainid": "iCtawpxUiCc2sEupt7Z4u8SDAncGZpgSKm"
+                "chainid": constants.VETHCURRENCYID[ticker]
             }
             console.log("Command: getinfo");
             await setCachedApi(getinfo, 'getInfo');
@@ -651,7 +644,7 @@ exports.getExports = async(input) => {
         //input chainname should always be VETH
         let poolavailable = await delegatorContract.methods.poolAvailable().call();
 
-        if (chainname != VerusSystemID) throw "i-Address not VRSCTEST";
+        if (chainname != constants.VETHCURRENCYID[ticker]) throw `i-Address not ${ticker}`;
 
         let exportSets = [];
         const previousStartHeight = await delegatorContract.methods.exportHeights(heightstart).call();
@@ -664,8 +657,8 @@ exports.getExports = async(input) => {
 
             let outputSet = {};
             if(exportSet.transfers[0].feecurrencyid) {
-                poolavailable = exportSet.transfers[0].feecurrencyid.toLowerCase() != constants.VRSCTEST.toLowerCase() ||
-                                exportSet.transfers[0].destinationcurrencyid.toLowerCase() == constants.BRIDGECURRENCYHEX.toLowerCase();
+                poolavailable = exportSet.transfers[0].feecurrencyid.toLowerCase() != constants.HEXCURRENCIES[ticker].toLowerCase() ||
+                                exportSet.transfers[0].destinationcurrencyid.toLowerCase() == constants.BRIDGECURRENCYHEX[ticker].toLowerCase();
                 outputSet.height = exportSet.endHeight;
                 outputSet.txid = util.removeHexLeader(exportSet.exportHash).reversebytes(); //export hash used for txid
                 outputSet.txoutnum = 0; //exportSet.position;
@@ -1163,7 +1156,7 @@ exports.submitAcceptedNotarization = async(params) => {
     let signatures = {};
 
     for (const sigObj of params[1].evidence.chainobjects) {
-        if(sigObj.vdxftype == "iP1QT5ee7EP63WSrfjiMFc1dVJVSAy85cT")
+        if(sigObj.vdxftype == "iP1QT5ee7EP63WSrfjiMFc1dVJVSAy85cT") //vrsc::system.notarization.signature vdxfid
         {
             let sigKeys = Object.keys(sigObj.value.signatures);
             for (let i = 0; i < sigKeys.length; i++) {

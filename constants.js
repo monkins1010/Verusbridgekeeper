@@ -1,17 +1,34 @@
 module.exports = Object.freeze({
     
-    VDXFDATAKEY: {VRSCTEST: "bb29b6fbac51550f7bda924d73c8e0bc971fb1dc",
-                  VRSC:     "8cea50fa0fc6787f0ff3d68858b2fadd36e7a485",
-                  },
-    VETHCURRENCYID: "iCtawpxUiCc2sEupt7Z4u8SDAncGZpgSKm",
-    VETH: "0x67460C2f56774eD27EeB8685f29f6CEC0B090B00",
-    VRSCTEST: "0xA6ef9ea235635E328124Ff3429dB9F9E91b64e2d",
-    BRIDGECURRENCYHEX: "0xffEce948b8A38bBcC813411D2597f7f8485a0689",
-    VERUSSYSTEMID:  "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq",
-    BRIDGEIDHEX: "0xffece948b8a38bbcc813411d2597f7f8485a0689",
-    BRIDGEID: "iSojYsotVzXz4wh2eJriASGo6UidJDDhL2",
-    VETHIDHEXREVERSED: "000b090bec6c9ff28586eb7ed24e77562f0c4667",
-    MAINNETVETH: "", //TODO: FIND OUT
+    VDXFDATAKEY:        {
+                            VRSCTEST: "bb29b6fbac51550f7bda924d73c8e0bc971fb1dc",
+                            VRSC:     "8cea50fa0fc6787f0ff3d68858b2fadd36e7a485",
+                        },
+    VETHCURRENCYID:     {
+                            VRSCTEST: "iCtawpxUiCc2sEupt7Z4u8SDAncGZpgSKm",
+                            VRSC:    "i9nwxtKuVYX4MSbeULLiK2ttVi6rUEhh4X",
+                        },
+    HEXCURRENCIES:      {
+                            VRSCTEST: "0xA6ef9ea235635E328124Ff3429dB9F9E91b64e2d",
+                            VRSC: "0x454cb83913d688795e237837d30258d11ea7c752",
+                        },
+    BRIDGECURRENCYHEX:  {
+                            VRSCTEST: "0xffEce948b8A38bBcC813411D2597f7f8485a0689",
+                            VRSC: "0x0200ebbd26467b866120d84a0d37c82cde0acaeb"
+                        },
+    VERUSSYSTEMID:      {
+                            VRSCTEST: "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq",
+                            VRSC:    "i5w5MuNik5NtLcYmNzcvaoixooEebB6MGV",
+                        },
+    BRIDGEID:           {
+                            VRSCTEST: "iSojYsotVzXz4wh2eJriASGo6UidJDDhL2", 
+                            VRSC: "i3f7tSctFkiPpiedY8QR5Tep9p4qDVebDx"
+                        },
+    VETHIDHEXREVERSED:  {
+                            VRSCTEST:"000b090bec6c9ff28586eb7ed24e77562f0c4667",
+                            VRSC: "52c7a71ed15802d33778235e7988d61339b84c45"
+                        },
+    VERSION: "1.0.0",
     EMPTY_ADDRESS: "0x0000000000000000000000000000000000000000",
     CROSS_SYSTEM: 64,
     VERSION_NOTARIZATIONDATA_CURRENT : 1,
@@ -66,6 +83,4 @@ module.exports = Object.freeze({
     },
     RESERVE_TO_RESERVE: 0x400,
     CROSS_SYSTEM: 0x40
-
-
 });
