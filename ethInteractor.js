@@ -82,6 +82,7 @@ exports.init = async() => {
     initBlockCache();
     eventListener(settings.delegatorcontractaddress);
 
+    return settings.rpcport;
 };
 
 async function eventListener(notarizerAddress) {
