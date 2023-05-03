@@ -92,8 +92,9 @@ exports.status = function() {
 
 exports.start = async function() {
     try{
-        await ethInteractor.init();
-        bridgeKeeperServer.listen(8000);
+        const port = await ethInteractor.init();
+        bridgeKeeperServer.listen(port);
+        console.log(`Bridgekeeper Started listening on port: ${port}`);
         return true;
     } catch (error){
         return error;
