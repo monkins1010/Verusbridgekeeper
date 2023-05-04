@@ -645,7 +645,7 @@ exports.getExports = async(input) => {
         //input chainname should always be VETH
         let poolavailable = await delegatorContract.methods.poolAvailable().call();
 
-        if (chainname != constants.VETHCURRENCYID[ticker]) throw `i-Address not ${ticker}`;
+        if (chainname != constants.VERUSSYSTEMID[ticker]) throw `i-Address not ${ticker}`;
 
         let exportSets = [];
         const previousStartHeight = await delegatorContract.methods.exportHeights(heightstart).call();
