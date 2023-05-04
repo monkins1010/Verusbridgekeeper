@@ -645,7 +645,7 @@ exports.getExports = async(input) => {
         //input chainname should always be VETH
         let poolavailable = await delegatorContract.methods.poolAvailable().call();
 
-        if (chainname != constants.VETHCURRENCYID[ticker]) throw `i-Address not ${ticker}`;
+        if (chainname != constants.VERUSSYSTEMID[ticker]) throw `i-Address not ${ticker}`;
 
         let exportSets = [];
         const previousStartHeight = await delegatorContract.methods.exportHeights(heightstart).call();
@@ -659,7 +659,7 @@ exports.getExports = async(input) => {
             let outputSet = {};
             if(exportSet.transfers[0].feecurrencyid) {
                 poolavailable = exportSet.transfers[0].feecurrencyid.toLowerCase() != constants.HEXCURRENCIES[ticker].toLowerCase() ||
-                                exportSet.transfers[0].destinationcurrencyid.toLowerCase() == constants.BRIDGECURRENCYHEX[ticker].toLowerCase();
+                                exportSet.transfers[0].destcurrencyid.toLowerCase() == constants.BRIDGECURRENCYHEX[ticker].toLowerCase();
                 outputSet.height = exportSet.endHeight;
                 outputSet.txid = util.removeHexLeader(exportSet.exportHash).reversebytes(); //export hash used for txid
                 outputSet.txoutnum = 0; //exportSet.position;
