@@ -28,7 +28,7 @@ module.exports = Object.freeze({
                             VRSCTEST:"000b090bec6c9ff28586eb7ed24e77562f0c4667",
                             VRSC: "52c7a71ed15802d33778235e7988d61339b84c45"
                         },
-    VERSION: "1.0.0",
+    VERSION: "1.0.1",
     EMPTY_ADDRESS: "0x0000000000000000000000000000000000000000",
     CROSS_SYSTEM: 64,
     VERSION_NOTARIZATIONDATA_CURRENT : 1,
