@@ -545,8 +545,9 @@ exports.getInfo = async() => {
 
         if (globaltimedelta + globallastinfo < timenow || !getInfo) {
             globallastinfo = timenow;
-            let blknum = await web3.eth.getBlockNumber();
-            const {timestamp } = await web3.eth.getBlock(blknum);
+            const blknum = await web3.eth.getBlockNumber();
+            const block = await web3.eth.getBlock(blknum);
+            const timestamp  = block?.timestamp;
             if(!timestamp) {
                 return { "result": null };
             }
@@ -554,7 +555,7 @@ exports.getInfo = async() => {
                 "version": 2000753,
                 "name": "vETH",
                 "VRSCversion": constants.VERSION,
-                "blocks": await web3.eth.getBlockNumber(),
+                "blocks": blknum,
                 "tiptime": timestamp,
                 "chainid": constants.VETHCURRENCYID[ticker]
             }
@@ -657,28 +658,28 @@ exports.getExports = async(input) => {
             //loop through and add in the proofs for each export set and the additional fields
 
             let outputSet = {};
-            if(exportSet.transfers[0].feecurrencyid) {
-                poolavailable = exportSet.transfers[0].feecurrencyid.toLowerCase() != constants.HEXCURRENCIES[ticker].toLowerCase() ||
-                                exportSet.transfers[0].destcurrencyid.toLowerCase() == constants.BRIDGECURRENCYHEX[ticker].toLowerCase();
-                outputSet.height = exportSet.endHeight;
-                outputSet.txid = util.removeHexLeader(exportSet.exportHash).reversebytes(); //export hash used for txid
-                outputSet.txoutnum = 0; //exportSet.position;
-                outputSet.exportinfo = createCrossChainExport(exportSet.transfers, exportSet.startHeight, exportSet.endHeight, true, poolavailable);
-                outputSet.partialtransactionproof = await getProof(exportSet.startHeight, heightend);
 
-                //serialize the prooflet index
-                let components = createComponents(exportSet.transfers, exportSet.startHeight, exportSet.endHeight, exportSet.prevExportHash, poolavailable);
-                outputSet.partialtransactionproof = serializeEthFullProof(outputSet.partialtransactionproof).toString('hex') + components;
+            poolavailable = exportSet.transfers[0].feecurrencyid.toLowerCase() != constants.HEXCURRENCIES[ticker].toLowerCase() ||
+                            exportSet.transfers[0].destcurrencyid.toLowerCase() == constants.BRIDGECURRENCYHEX[ticker].toLowerCase();
+            outputSet.height = exportSet.endHeight;
+            outputSet.txid = util.removeHexLeader(exportSet.exportHash).reversebytes(); //export hash used for txid
+            outputSet.txoutnum = 0; //exportSet.position;
+            outputSet.exportinfo = createCrossChainExport(exportSet.transfers, exportSet.startHeight, exportSet.endHeight, true, poolavailable);
+            outputSet.partialtransactionproof = await getProof(exportSet.startHeight, heightend);
 
-                //build transfer list
-                //get the transactions at the index
-                let test = await delegatorContract.methods._readyExports(outputSet.height).call();
-                outputSet.transfers = createOutboundTransfers(exportSet.transfers);
-                if (debug)
-                    console.log("First Ethereum Send to Verus: ", outputSet.transfers[0].currencyvalues, " to ", outputSet.transfers[0].destination);
-                //loop through the
-                output.push(outputSet);
-            }
+            //serialize the prooflet index
+            let components = createComponents(exportSet.transfers, exportSet.startHeight, exportSet.endHeight, exportSet.prevExportHash, poolavailable);
+            outputSet.partialtransactionproof = serializeEthFullProof(outputSet.partialtransactionproof).toString('hex') + components;
+
+            //build transfer list
+            //get the transactions at the index
+            let test = await delegatorContract.methods._readyExports(outputSet.height).call();
+            outputSet.transfers = createOutboundTransfers(exportSet.transfers);
+            if (debug)
+                console.log("First Ethereum Send to Verus: ", outputSet.transfers[0].currencyvalues, " to ", outputSet.transfers[0].destination);
+            //loop through the
+            output.push(outputSet);
+
         }
 
         if (debugsubmit) {
