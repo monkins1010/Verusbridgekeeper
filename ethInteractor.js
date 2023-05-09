@@ -8,7 +8,7 @@ const util = require('./utils.js');
 const notarizationFuncs = require('./notarization.js');
 const abi = new Web3().eth.abi
 const deserializer = require('./deserializer.js');
-const { initApiCache, initBlockCache,  setCachedApi, getCachedApi, checkCachedApi, setCachedApiValue, clearCachedApis, getCachedBlock, setCachedBlock } = require('./cache/apicalls')
+const { initApiCache, initBlockCache,  setCachedApi, getCachedApi, checkCachedApi, setCachedApiValue, clearCachedApis, getCachedBlock, setCachedBlock, getCachedImport, setCachedImport } = require('./cache/apicalls')
 const notarization = require('./utilities/notarizationSerializer.js');
 
 // command line arguments
@@ -1222,7 +1222,7 @@ exports.submitAcceptedNotarization = async(params) => {
 exports.getLastImportFrom = async() => {
 
     //create a CProofRoot from the block data
-    let cachelastImportFrom = await getCachedApi('lastImportFrom');
+    let cachelastImportFrom = await getCachedImport('lastImportFrom');
     let lastImportFrom = cachelastImportFrom ? JSON.parse(cachelastImportFrom) : null;
 
     try {
@@ -1232,8 +1232,19 @@ exports.getLastImportFrom = async() => {
             globalgetlastimport = timenow;
 
             let lastimporttxid = await delegatorContract.methods.lastTxIdImport().call();
+            let cachelastImportInfo = await getCachedImport('lastImportInfo');
+            let cachelastImportTxid = await getCachedImport('lastimporttxid');
+            let lastimporttxidcache = cachelastImportTxid ? JSON.parse(cachelastImportTxid) : null;
 
-            let lastImportInfo = await delegatorContract.methods.lastImportInfo(lastimporttxid).call();
+            let lastImportInfo;
+
+            if (lastimporttxid != lastimporttxidcache || !cachelastImportInfo){
+                lastImportInfo = await delegatorContract.methods.lastImportInfo(lastimporttxid).call();
+                await setCachedImport(lastImportInfo, 'lastImportInfo');
+                await setCachedImport(lastimporttxid, 'lastimporttxid');
+            } else {
+                lastImportInfo = cachelastImportInfo ? JSON.parse(cachelastImportInfo) : null;
+            }
 
             let lastimport = {};
 
@@ -1268,7 +1279,7 @@ exports.getLastImportFrom = async() => {
                 console.log("\x1b[41m%s\x1b[0m", "No Notarizations recieved yet");
             }
             lastImportFrom = { "result": { lastimport, lastconfirmednotarization, lastconfirmedutxo } }
-            await setCachedApi(lastImportFrom, 'lastImportFrom');
+            await setCachedImport(lastImportFrom, 'lastImportFrom');
         }
 
         return lastImportFrom;

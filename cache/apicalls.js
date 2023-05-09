@@ -125,6 +125,34 @@ exports.setCachedBlock = async (ApiObj, call) => {
     }
 }
 
+exports.getCachedImport = async (call) => {
+    let key = `${call}`
+
+    try 
+    {
+       return await blockCache.getItem(key);
+    } 
+    catch(e) 
+    {
+        console.log("Error while getting Api cache")
+        throw e
+    }
+}
+
+exports.setCachedImport = async (ApiObj, call) => {
+    let key = `${call}`
+
+    try 
+    {
+        return await blockCache.setItem(key, JSON.stringify(ApiObj));
+    } 
+    catch(e) 
+    {
+         console.log("Error while setting Api cache")
+         throw e
+    }
+}
+
 exports.clearCachedApis = () => {
     console.log("Clearing block Api cache")
     return apiCache.clearAll().catch(e => {
