@@ -34,13 +34,16 @@ let noaccount = false;
 let web3 = undefined;
 let d = new Date();
 let globalsubmitimports = { "transactionHash": "" };
-let globaltimedelta = constants.globaltimedelta; //60s
+let globaltimedelta = constants.globaltimedelta; //60s for getnewblocks
+let globaltimedeltaNota = 300000;
 let globallastinfo = d.valueOf() - globaltimedelta;
 let globallastcurrency = d.valueOf() - globaltimedelta;
 let globalgetlastimport = d.valueOf() - globaltimedelta;
 let transactioncount = 0;
 let account = undefined;
 let delegatorContract = undefined;
+let lastblocknumber = null;
+let lasttimestamp = null
 
 
 Object.assign(String.prototype, {
@@ -104,13 +107,24 @@ async function eventListener(notarizerAddress) {
         if (!error) console.log('Notarization at ETH Height: ' +  result?.blockNumber);
         else console.log(error);
     }).on("data", function(log) {
-        console.log('***** EVENT: New Notarization, Clearing the cache*********');
+        console.log('***** EVENT: New Notarization, Clearing the cache(data)*********');
         clearCachedApis();
+        setCachedApi(null, 'lastgetNotarizationDatatime');
         // await setCachedApi(log?.blockNumber, 'lastNotarizationHeight');
     }).on("changed", function(log) {
-        console.log('***** EVENT: New Notarization, Clearing the cache**********');
+        console.log('***** EVENT: New Notarization, Clearing the cache(changed)**********');
         clearCachedApis();
     });
+
+    web3.eth.subscribe('newBlockHeaders', (error, blockHeader) => {
+        if (error) {
+          console.error(error);
+        } else {
+            lastblocknumber = blockHeader.number;
+            lasttimestamp = blockHeader.timestamp;
+          console.log("New block recieved",blockHeader.number);
+        }
+      });
 }
 
 function amountFromValue(incoming) {
@@ -545,9 +559,8 @@ exports.getInfo = async() => {
 
         if (globaltimedelta + globallastinfo < timenow || !getInfo) {
             globallastinfo = timenow;
-            const blknum = await web3.eth.getBlockNumber();
-            const block = await web3.eth.getBlock(blknum);
-            const timestamp  = block?.timestamp;
+            const blknum = lastblocknumber;
+            const timestamp  = lasttimestamp;
             if(!timestamp) {
                 return { "result": null };
             }
@@ -714,7 +727,7 @@ exports.getBestProofRoot = async(input) => {
 
         if (lastTime && (JSON.parse(lastTime) + 20000) < timenow) {
 
-            latestBlock = await web3.eth.getBlockNumber();
+            latestBlock = lastblocknumber; //await web3.eth.getBlockNumber();
             await setCachedApi(latestBlock, 'lastGetBestProofRoot');
         }
         else {
@@ -722,8 +735,12 @@ exports.getBestProofRoot = async(input) => {
         }
      }
      else {
-        latestBlock = await web3.eth.getBlockNumber();
-        await setCachedApi(latestBlock, 'lastGetBestProofRoot');
+        // wait for block to come in, this is only normally for the frist 15 seconds of startup
+        if (lastblocknumber){
+            latestBlock = lastblocknumber; //await web3.eth.getBlockNumber();
+            await setCachedApi(latestBlock, 'lastGetBestProofRoot');
+        }
+        return { "result": { "error": true } };
      }
 
 
@@ -874,13 +891,13 @@ exports.getNotarizationData = async() => {
 
     const lastTime = await getCachedApi('lastgetNotarizationDatatime');
 
-    if (lastTime && (JSON.parse(lastTime) + globaltimedelta) > timenow) {
+    if (lastTime && (JSON.parse(lastTime) + globaltimedeltaNota) > timenow) {
         let tempNotData = await getCachedApi('lastgetNotarizationData');
         if (tempNotData) {
             return JSON.parse(tempNotData);
         }
     }
-
+    newNotarization = false;
     await setCachedApi(timenow, 'lastgetNotarizationDatatime');
 
     try {
