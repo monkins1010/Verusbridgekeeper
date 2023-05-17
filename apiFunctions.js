@@ -10,6 +10,7 @@ exports.APIs = (api) => {
         'getnotarizationdata'           : "getNotarizationData",
         'getbestproofroot'              : "getBestProofRoot",
         'getlastimportfrom'             : "getLastImportFrom",
+        'getclaimablefees'              : "getclaimablefees"
     }
 
     for ( var property in validCalls ) {
