@@ -1307,6 +1307,23 @@ exports.getLastImportFrom = async() => {
 
 }
 
+exports.getclaimablefees = async(params) => {
+
+    const address = params[0];
+
+    if (!address || address.slice(0,2) != "0x" || address.length != 42 ) {
+
+        return { "result": { "error": true, "message": "Not a valid ETH address provided" } };
+    }
+
+    const formattedAddress = `0x${web3.utils.padLeft(`0c14${address.slice(2)}`, 64)}`
+    const feesSats = await delegatorContract.methods.claimableFees(formattedAddress).call();
+    const fees = util.uint64ToVerusFloat(feesSats);
+
+    return { "result": { ETH: {[address]: fees }},  };
+
+}
+
 exports.invalid = async() => {
     console.log("\x1b[41m%s\x1b[0m", "Invalid API call");
     return { "result": { "error": true, "message": "Unrecognized API call" } }
