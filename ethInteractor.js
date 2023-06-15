@@ -657,7 +657,7 @@ exports.getExports = async(input) => {
 
     try {
         //input chainname should always be VETH
-        let poolavailable = await delegatorContract.methods.poolAvailable().call();
+        let poolavailable;
 
         if (chainname != constants.VERUSSYSTEMID[ticker]) throw `i-Address not ${ticker}`;
 
