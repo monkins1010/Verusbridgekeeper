@@ -340,9 +340,9 @@ async function getProof(eIndex, blockHeight) {
 
 // create the component parts for the proof
 
-function createComponents(transfers, startHeight, endHeight, previousExportHash, poolavailable) {
+function createComponents(transfers, startHeight, endHeight, previousExportHash, bridgeConverterActive) {
 
-    let cce = createCrossChainExport(transfers, startHeight, endHeight, false, poolavailable);
+    let cce = createCrossChainExport(transfers, startHeight, endHeight, false, bridgeConverterActive);
     //Var Int Components size as this can only
     let encodedOutput = util.writeCompactSize(1);
     //eltype
@@ -426,7 +426,7 @@ function createOutboundTransfers(transfers) {
     return outTransfers;
 }
 
-function createCrossChainExport(transfers, startHeight, endHeight, jsonready = false, poolavailable) {
+function createCrossChainExport(transfers, startHeight, endHeight, jsonready = false, bridgeConverterActive) {
     let cce = {};
     let hash = ethersUtils.keccak256(serializeCReserveTransfers(transfers));
     if (CHECKHASH) {
@@ -439,7 +439,7 @@ function createCrossChainExport(transfers, startHeight, endHeight, jsonready = f
     cce.hashtransfers = hash;
     cce.destinationsystemid = VerusSystemID;
 
-    if (poolavailable) {
+    if (bridgeConverterActive) {
         cce.destinationcurrencyid = BridgeID;
     } else {
         cce.destinationcurrencyid = VerusSystemID;
@@ -657,7 +657,7 @@ exports.getExports = async(input) => {
 
     try {
         //input chainname should always be VETH
-        let poolavailable;
+        let bridgeConverterActive;
 
         if (chainname != constants.VERUSSYSTEMID[ticker]) throw `i-Address not ${ticker}`;
 
@@ -672,16 +672,16 @@ exports.getExports = async(input) => {
 
             let outputSet = {};
 
-            poolavailable = exportSet.transfers[0].feecurrencyid.toLowerCase() != constants.HEXCURRENCIES[ticker].toLowerCase() ||
+            bridgeConverterActive = exportSet.transfers[0].feecurrencyid.toLowerCase() != constants.HEXCURRENCIES[ticker].toLowerCase() ||
                             exportSet.transfers[0].destcurrencyid.toLowerCase() == constants.BRIDGECURRENCYHEX[ticker].toLowerCase();
             outputSet.height = exportSet.endHeight;
             outputSet.txid = util.removeHexLeader(exportSet.exportHash).reversebytes(); //export hash used for txid
             outputSet.txoutnum = 0; //exportSet.position;
-            outputSet.exportinfo = createCrossChainExport(exportSet.transfers, exportSet.startHeight, exportSet.endHeight, true, poolavailable);
+            outputSet.exportinfo = createCrossChainExport(exportSet.transfers, exportSet.startHeight, exportSet.endHeight, true, bridgeConverterActive);
             outputSet.partialtransactionproof = await getProof(exportSet.startHeight, heightend);
 
             //serialize the prooflet index
-            let components = createComponents(exportSet.transfers, exportSet.startHeight, exportSet.endHeight, exportSet.prevExportHash, poolavailable);
+            let components = createComponents(exportSet.transfers, exportSet.startHeight, exportSet.endHeight, exportSet.prevExportHash, bridgeConverterActive);
             outputSet.partialtransactionproof = serializeEthFullProof(outputSet.partialtransactionproof).toString('hex') + components;
 
             //build transfer list
