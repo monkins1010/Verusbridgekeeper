@@ -12,6 +12,7 @@
     "dependencies": {
         "axios": "0.25.0",
         "base58check": "^2.0.0",
+        "blake2b-wasm": "git+https://github.com/michaeltout/blake2b-wasm.git",
         "bitgo-utxo-lib": "git+https://github.com/VerusCoin/bitgo-utxo-lib.git",
         "ethers": "5.1.0",
         "ini": "2.0.0",
@@ -21,5 +22,7 @@
     },
     "devDependencies": {
         "eslint": "8.11.0"
-    }
+    },
+    "resolutions": {
+        "blake2b-wasm": "git+https://github.com/michaeltout/blake2b-wasm.git"}
 }
