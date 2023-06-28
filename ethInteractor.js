@@ -169,7 +169,7 @@ function serializeCTransferDestination(ctd) {
 
     encodedOutput = Buffer.concat([encodedOutput, util.writeCompactSize(lengthOfDestination), destination]);
 
-    if (parseInt(ctd.destinationtype & FLAG_DEST_AUX) == FLAG_DEST_AUX)
+    if (parseInt(ctd.destinationtype & FLAG_DEST_AUX) == FLAG_DEST_AUX && destination.length != 92)
     {
         let mainVecLength = ctd.auxdests.length;
 
@@ -412,7 +412,7 @@ function createOutboundTransfers(transfers) {
             "type": transfer.destination.destinationtype,
             "address": address,
             "gateway": util.ethAddressToVAddress(transfer.destination.destinationaddress.slice(42, 82), IAddressBaseConst),
-            "fees": parseInt(transfer.destination.destinationaddress.slice(transfer.destination.destinationaddress.length - 16, transfer.destination.destinationaddress.length - 1).reversebytes(), 16) / 100000000
+            "fees": parseInt(transfer.destination.destinationaddress.slice(122, 138).reversebytes(), 16) / 100000000
         }
         else{
             outTransfer.destination = {
@@ -420,6 +420,12 @@ function createOutboundTransfers(transfers) {
                 "address": address
             }
         }
+        if ((parseInt(transfer.destination.destinationtype & constants.FLAG_DEST_AUX)) == constants.FLAG_DEST_AUX) 
+        {
+            const auxType = parseInt(transfer.destination.destinationaddress.slice(142,144), 16);
+            const auxAddress = util.hexAddressToBase58(auxType, transfer.destination.destinationaddress.slice(146))
+            outTransfer.destination.auxdests = [{type: auxType, address: auxAddress}]
+        } 
 
         outTransfers.push(outTransfer);
     }
