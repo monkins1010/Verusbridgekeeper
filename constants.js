@@ -65,6 +65,7 @@ module.exports = Object.freeze({
     R_ADDRESS_TYPE: 2,
     I_ADDRESS_TYPE: 4,
     ETH_ADDRESS_TYPE: 9,
+    FLAG_DEST_AUX: 64,
     IAddressBaseConst: 102,
     RAddressBaseConst: 60,
     maxGas: 5000000,

@@ -282,15 +282,15 @@ const uint160ToVAddress = (number, version) => {
 const hexAddressToBase58 = (type, address) => {
 
     let retval = {};
-    if ((parseInt(type & constants.ADDRESS_TYPE_MASK)) == constants.R_ADDRESS_TYPE) 
+    if ((parseInt(type & constants.R_ADDRESS_TYPE)) == constants.R_ADDRESS_TYPE) 
     {
         retval = uint160ToVAddress(address, constants.RADDRESS);
     } 
-    else if ((parseInt(type & constants.ADDRESS_TYPE_MASK)) == constants.I_ADDRESS_TYPE) 
+    else if ((parseInt(type & constants.I_ADDRESS_TYPE)) == constants.I_ADDRESS_TYPE) 
     {
         retval = uint160ToVAddress(address, constants.IADDRESS);
     }
-    else if  ((parseInt(type & constants.ADDRESS_TYPE_MASK)) == constants.ETH_ADDRESS_TYPE) {
+    else if  ((parseInt(type & constants.ETH_ADDRESS_TYPE)) == constants.ETH_ADDRESS_TYPE) {
         retval = address;
     }
     return retval;
