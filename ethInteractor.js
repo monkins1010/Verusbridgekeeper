@@ -158,7 +158,8 @@ function serializeCTransferDestination(ctd) {
     let lengthOfDestination = {};
     let destination = Buffer.from(util.removeHexLeader(ctd.destinationaddress), 'hex');
 
-    if (ctd.destinationtype == constants.DEST_REGISTERCURRENCY) {
+    if (ctd.destinationtype == constants.DEST_REGISTERCURRENCY ||
+        ctd.destinationtype == constants.DEST_REGISTERCURRENCY + constants.FLAG_DEST_AUX) {
 
         lengthOfDestination = Buffer.byteLength(destination);
     } else {
@@ -1014,6 +1015,7 @@ function conditionSubmitImports(CTransferArray) {
                         util.convertVerusAddressToEthAddress(CTransferArray[i].exports[j].transfers[k].destination.address);
                 }
                 if (CTransferArray[i].exports[j].transfers[k].destination.type == constants.DEST_REGISTERCURRENCY ||
+                    CTransferArray[i].exports[j].transfers[k].destination.type == constants.DEST_REGISTERCURRENCY + constants.FLAG_DEST_AUX ||
                     CTransferArray[i].exports[j].transfers[k].destination.type == constants.DEST_FULLID) {
 
                     CTransferArray[i].exports[j].transfers[k].destination.address = "0x" + CTransferArray[i].exports[j].transfers[k].destination.serializeddata;
