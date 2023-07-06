@@ -650,14 +650,15 @@ exports.getExports = async(input) => {
 
     let output = [];
     const lastCTransferArray = await getCachedApi('lastgetExports');
+    const lastGetExport = await getCachedApi('lastgetExportResult');
     let chainname = input[0];
     let heightstart = input[1];
     let heightend = input[2];
 
     let srtInput = JSON.stringify(input);
-    if (lastCTransferArray == srtInput) {
+    if (lastCTransferArray == srtInput && lastGetExport) {
 
-        return { "result": null };
+        return { "result": JSON.parse(lastGetExport) };
     }
 
     heightstart = heightstart == 1 ? 0 : heightstart;
@@ -707,6 +708,7 @@ exports.getExports = async(input) => {
         }
 
         await setCachedApi(input, 'lastgetExports');
+        await setCachedApi(output, 'lastgetExportResult');
         return { "result": output };
     } catch (error) {
         if (error.message == "Returned error: execution reverted" && heightstart == 0)
