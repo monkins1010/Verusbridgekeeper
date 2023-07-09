@@ -1,8 +1,8 @@
 const server = require('./index');
-const start = () => 
+const start = (config) => 
 {
     try{
-    server.start();
+        server.start(config);
     } catch (e)
     {
         console.log(e);

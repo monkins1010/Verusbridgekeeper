@@ -5,7 +5,6 @@ let ethInteractor = require('./ethInteractor.js');
 let checkAPI = require('./apiFunctions.js');
 const confFile = require('./confFile.js');
 
-
 function processPost(request, response, callback) {
     var queryData = "";
     if (typeof callback !== 'function') return null;
@@ -90,13 +89,19 @@ exports.status = function() {
     return {serverrunning: serverstatus , logs: rollingBuffer};   
 }
 
-exports.start = async function() {
+/**
+ * Starts bridgekeeper
+ * @param {{ ticker: string, debug?: boolean, debugsubmit?: boolean, debugnotarization?: boolean, noimports?: boolean, checkhash?: boolean }} config
+ */
+exports.start = async function(config) {
     try{
-        const port = await ethInteractor.init();
+        const port = await ethInteractor.init(config);
         bridgeKeeperServer.listen(port);
         console.log(`Bridgekeeper Started listening on port: ${port}`);
         return true;
     } catch (error){
+        console.error(error)
+
         return error;
     }
 

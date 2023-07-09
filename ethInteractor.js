@@ -5,24 +5,47 @@ const constants = require('./constants');
 const ethersUtils = require('ethers').utils
 const { addHexPrefix } = require('./utils');
 const util = require('./utils.js');
-const notarizationFuncs = require('./notarization.js');
 const abi = new Web3().eth.abi
 const deserializer = require('./deserializer.js');
-const { initApiCache, initBlockCache,  setCachedApi, getCachedApi, checkCachedApi, setCachedApiValue, clearCachedApis, getCachedBlock, setCachedBlock, getCachedImport, setCachedImport } = require('./cache/apicalls')
+const { 
+    initApiCache, 
+    initBlockCache,  
+    setCachedApi, 
+    getCachedApi, 
+    clearCachedApis, 
+    getCachedBlock, 
+    setCachedBlock, 
+    getCachedImport, 
+    setCachedImport 
+} = require('./cache/apicalls')
 const notarization = require('./utilities/notarizationSerializer.js');
 
-// command line arguments
-const ticker = process.argv.indexOf('-testnet') > -1 ? "VRSCTEST" : "VRSC";
-const debug = (process.argv.indexOf('-debug') > -1);
-const debugsubmit = (process.argv.indexOf('-debugsubmit') > -1);
-const debugnotarization = (process.argv.indexOf('-debugnotarization') > -1);
-const noimports = (process.argv.indexOf('-noimports') > -1);
-const CHECKHASH = (process.argv.indexOf('-checkhash') > -1);
+class EthInteractorConfig {
+    constructor() {}
+
+    init(ticker, debug, debugsubmit, debugnotarization, noimports, checkhash) {
+        this._ticker = ticker ?? process.argv.indexOf('-testnet') > -1 ? "VRSCTEST" : "VRSC";
+        this._debug = debug ?? (process.argv.indexOf('-debug') > -1);
+        this._debugsubmit = debugsubmit ?? (process.argv.indexOf('-debugsubmit') > -1);
+        this._debugnotarization = debugnotarization ?? (process.argv.indexOf('-debugnotarization') > -1);
+        this._noimports = noimports ?? (process.argv.indexOf('-noimports') > -1);
+        this._checkhash = checkhash ?? (process.argv.indexOf('-checkhash') > -1);
+    }
+
+    get ticker() { return this._ticker };
+    get debug() { return this._debug };
+    get debugsubmit() { return this._debugsubmit };
+    get debugnotarization() { return this._debugnotarization };
+    get noimports() { return this._noimports };
+    get checkhash() { return this._checkhash };
+    get ethSystemId() { return constants.VETHCURRENCYID[this.ticker] };
+    get verusSystemId() { return constants.VERUSSYSTEMID[this.ticker] };
+    get bridgeId() { return constants.BRIDGEID[this.ticker] };
+}
+
+const InteractorConfig = new EthInteractorConfig();
 
 //Main coin ID's
-const ETHSystemID = constants.VETHCURRENCYID[ticker];
-const VerusSystemID = constants.VERUSSYSTEMID[ticker];
-const BridgeID = constants.BRIDGEID[ticker];
 const IAddressBaseConst = constants.IAddressBaseConst;
 const RAddressBaseConst = constants.RAddressBaseConst;
 const maxGas = constants.maxGas;
@@ -53,7 +76,7 @@ Object.assign(String.prototype, {
 });
 
 function setupConf() {
-    settings = confFile.loadConfFile(ticker);
+    settings = confFile.loadConfFile(InteractorConfig.ticker);
     web3 = new Web3(new Web3.providers.WebsocketProvider(settings.ethnode, {
         clientConfig: {
             maxReceivedFrameSize: 100000000,
@@ -78,8 +101,19 @@ function setupConf() {
     delegatorContract = new web3.eth.Contract(verusDelegatorAbi, settings.delegatorcontractaddress);
 }
 
-exports.init = async() => {
-
+/**
+ * Initializes the ETH interactor
+ * @param {{ ticker: string, debug?: boolean, debugsubmit?: boolean, debugnotarization?: boolean, noimports?: boolean, checkhash?: boolean }} config
+ */
+exports.init = async (config = {}) => {
+    InteractorConfig.init(
+        config.ticker, 
+        config.debug, 
+        config.debugsubmit, 
+        config.debugnotarization, 
+        config.noimports,
+        config.checkhash
+    )
     setupConf();
     initApiCache();
     initBlockCache();
@@ -351,7 +385,7 @@ function createComponents(transfers, startHeight, endHeight, previousExportHash,
     //elIdx
     encodedOutput = Buffer.concat([encodedOutput, util.writeUInt(0, 16)]);
     //elVchObj
-    let exportKey = constants.VDXFDATAKEY[ticker];
+    let exportKey = constants.VDXFDATAKEY[InteractorConfig.ticker];
     let serializedVDXF = Buffer.from(exportKey, 'hex');
     let version = 1;
     serializedVDXF = Buffer.concat([serializedVDXF, util.writeUInt(version, 1)]);
@@ -362,7 +396,7 @@ function createComponents(transfers, startHeight, endHeight, previousExportHash,
 
     serialized = Buffer.concat([serialized, prevhash]);
 
-    if (CHECKHASH) {
+    if (InteractorConfig.checkhash) {
         let hashofcce_reserves = ethersUtils.keccak256(serialized);
         let serialization = Buffer.concat([serializeCrossChainExport(cce),serializeCReserveTransfers(transfers).slice(1)]);
         console.log("Hash of cce+reservet: \n", hashofcce_reserves.toString('hex'));
@@ -436,20 +470,20 @@ function createOutboundTransfers(transfers) {
 function createCrossChainExport(transfers, startHeight, endHeight, jsonready = false, bridgeConverterActive) {
     let cce = {};
     let hash = ethersUtils.keccak256(serializeCReserveTransfers(transfers));
-    if (CHECKHASH) {
+    if (InteractorConfig.checkhash) {
         console.log("hash of transfers: ",hash.toString('Hex'));
         console.log("Serialize: ",serializeCReserveTransfers(transfers).slice(1).toString('Hex'));
     }
     cce.version = 1;
     cce.flags = 2;
-    cce.sourcesystemid = ETHSystemID;
+    cce.sourcesystemid = InteractorConfig.ethSystemId;
     cce.hashtransfers = hash;
-    cce.destinationsystemid = VerusSystemID;
+    cce.destinationsystemid = InteractorConfig.verusSystemId;
 
     if (bridgeConverterActive) {
-        cce.destinationcurrencyid = BridgeID;
+        cce.destinationcurrencyid = InteractorConfig.bridgeId;
     } else {
-        cce.destinationcurrencyid = VerusSystemID;
+        cce.destinationcurrencyid = InteractorConfig.verusSystemId;
     }
 
     cce.sourceheightstart = startHeight;
@@ -487,7 +521,7 @@ function createCrossChainExport(transfers, startHeight, endHeight, jsonready = f
     cce.totalburned = [{ "currency": '0x0000000000000000000000000000000000000000', "amount": 0 }]; // serialiser doesnt like empty strings or non BIgints
     cce.rewardaddress = ""; //  blank
     cce.firstinput = 1;
-    if (debugsubmit) {
+    if (InteractorConfig.debugsubmit) {
         console.log(JSON.stringify(cce.totalamounts),null,2);
         console.log("cce", JSON.stringify(cce),null,2);
     }
@@ -497,7 +531,7 @@ function createCrossChainExport(transfers, startHeight, endHeight, jsonready = f
 // function createCrossChainExportToETH(transfers, blockHeight, jsonready = false) {
 //     let cce = {};
 //     let hash = ethersUtils.keccak256(serializeCReserveTransfers(transfers));
-//     if (CHECKHASH) {
+//     if (InteractorConfig.checkhash) {
 //         console.log("hash of transfers: ",hash.toString('Hex'));
 //         console.log("Serialize: ",serializeCReserveTransfers(transfers).slice(1).toString('Hex'));
 //     }
@@ -505,7 +539,7 @@ function createCrossChainExport(transfers, startHeight, endHeight, jsonready = f
 //     cce.flags = 2;
 //     cce.sourcesystemid = util.convertVerusAddressToEthAddress(ETHSystemID);
 //     cce.hashtransfers = addHexPrefix(hash);
-//     cce.destinationsystemid = util.convertVerusAddressToEthAddress(VerusSystemID);
+//     cce.destinationsystemid = util.convertVerusAddressToEthAddress(InteractorConfig.verusSystemId);
 
 //     if (transfers[0].destcurrencyid.slice(0, 2) == "0x" && transfers[0].destcurrencyid.length == 42) {
 //         cce.destinationcurrencyid = transfers[0].destcurrencyid;
@@ -577,7 +611,7 @@ exports.getInfo = async() => {
                 "VRSCversion": constants.VERSION,
                 "blocks": blknum,
                 "tiptime": timestamp,
-                "chainid": constants.VETHCURRENCYID[ticker]
+                "chainid": constants.VETHCURRENCYID[InteractorConfig.ticker]
             }
             console.log("Command: getinfo");
             await setCachedApi(getinfo, 'getInfo');
@@ -667,7 +701,7 @@ exports.getExports = async(input) => {
         //input chainname should always be VETH
         let bridgeConverterActive;
 
-        if (chainname != constants.VERUSSYSTEMID[ticker]) throw `i-Address not ${ticker}`;
+        if (chainname != constants.VERUSSYSTEMID[InteractorConfig.ticker]) throw `i-Address not ${InteractorConfig.ticker}`;
 
         let exportSets = [];
         const previousStartHeight = await delegatorContract.methods.exportHeights(heightstart).call();
@@ -680,8 +714,8 @@ exports.getExports = async(input) => {
 
             let outputSet = {};
 
-            bridgeConverterActive = exportSet.transfers[0].feecurrencyid.toLowerCase() != constants.HEXCURRENCIES[ticker].toLowerCase() ||
-                            exportSet.transfers[0].destcurrencyid.toLowerCase() == constants.BRIDGECURRENCYHEX[ticker].toLowerCase();
+            bridgeConverterActive = exportSet.transfers[0].feecurrencyid.toLowerCase() != constants.HEXCURRENCIES[InteractorConfig.ticker].toLowerCase() ||
+                            exportSet.transfers[0].destcurrencyid.toLowerCase() == constants.BRIDGECURRENCYHEX[InteractorConfig.ticker].toLowerCase();
             outputSet.height = exportSet.endHeight;
             outputSet.txid = util.removeHexLeader(exportSet.exportHash).reversebytes(); //export hash used for txid
             outputSet.txoutnum = 0; //exportSet.position;
@@ -696,14 +730,14 @@ exports.getExports = async(input) => {
             //get the transactions at the index
             let test = await delegatorContract.methods._readyExports(outputSet.height).call();
             outputSet.transfers = createOutboundTransfers(exportSet.transfers);
-            if (debug)
+            if (InteractorConfig.debug)
                 console.log("First Ethereum Send to Verus: ", outputSet.transfers[0].currencyvalues, " to ", outputSet.transfers[0].destination);
             //loop through the
             output.push(outputSet);
 
         }
 
-        if (debugsubmit) {
+        if (InteractorConfig.debugsubmit) {
             console.log(JSON.stringify(output, null, 2));
         }
 
@@ -786,7 +820,7 @@ exports.getBestProofRoot = async(input) => {
 
         laststableproofroot = await getProofRoot(parseInt(latestBlock) - 30);
 
-        if (debug) {
+        if (InteractorConfig.debug) {
             console.log("getbestproofroot result:", { bestindex, validindexes, latestproofroot, laststableproofroot });
         }
 
@@ -825,7 +859,7 @@ async function getProofRoot(height = "latest") {
         latestproofroot.gasprice = gasPriceInSATS < BigInt(1000000000) ? "10.00000000" : util.uint64ToVerusFloat(gasPriceInSATS);
         latestproofroot.version = 1;
         latestproofroot.type = 2;
-        latestproofroot.systemid = ETHSystemID;
+        latestproofroot.systemid = InteractorConfig.ethSystemId;
         latestproofroot.height = block.number;
         latestproofroot.stateroot = util.removeHexLeader(block.stateRoot).reversebytes();
         latestproofroot.blockhash = util.removeHexLeader(block.hash).reversebytes();
@@ -839,7 +873,7 @@ async function getProofRoot(height = "latest") {
         latestproofroot = JSON.parse(cachedBlock);
     }
 
-    if (debug)
+    if (InteractorConfig.debug)
         console.log("getProofRoot GASPRICE: " + latestproofroot.gasprice + ", height: " + height)
 
     return latestproofroot;
@@ -868,7 +902,7 @@ async function checkProofRoot(height, stateroot, blockhash, power) {
         latestproofroot.gasprice = gasPriceInSATS < BigInt(1000000000) ? "10.00000000" : util.uint64ToVerusFloat(gasPriceInSATS);
         latestproofroot.version = 1;
         latestproofroot.type = 2;
-        latestproofroot.systemid = ETHSystemID;
+        latestproofroot.systemid = InteractorConfig.ethSystemId;
         latestproofroot.height = block.number;
         latestproofroot.stateroot = util.removeHexLeader(block.stateRoot).reversebytes();
         latestproofroot.blockhash = util.removeHexLeader(block.hash).reversebytes();
@@ -882,7 +916,7 @@ async function checkProofRoot(height, stateroot, blockhash, power) {
         latestproofroot = JSON.parse(cachedBlock);
     }
 
-    if (debug)
+    if (InteractorConfig.debug)
         console.log("checkProofRoot GASPRICE: " + latestproofroot.gasprice + ", height: " + height)
 
 
@@ -978,7 +1012,7 @@ exports.getNotarizationData = async() => {
             }
         }
 
-        if (debug) {
+        if (InteractorConfig.debug) {
             console.log("NOTARIZATION CONTRACT INFO \n" + JSON.stringify(Notarization, null, 2))
         }
 
@@ -1101,7 +1135,7 @@ function reshapeTransfers(CTransferArray) {
 
             CTempArray.push(subarray);
 
-            if (debug) {
+            if (InteractorConfig.debug) {
                 //let hashtest = ethersUtils.keccak2566(serializedTransfers);
                 //console.log("Transfers hash: ", hashtest.toString('hex'));
             }
@@ -1113,7 +1147,7 @@ function reshapeTransfers(CTransferArray) {
 
 exports.submitImports = async(CTransferArray) => {
 
-    if (noaccount || noimports) {
+    if (noaccount || InteractorConfig.noimports) {
         console.log("************** Submitimports: Wallet will not spend ********************");
         return { result: { error: true } };
     }
@@ -1127,7 +1161,7 @@ exports.submitImports = async(CTransferArray) => {
     CTempArray = deserializer.insertHeights(CTempArray);
 
     let submitArray = [];
-    if (debugsubmit)
+    if (InteractorConfig.debugsubmit)
         console.log(JSON.stringify(CTempArray, null, 2))
 
     try {
@@ -1175,7 +1209,7 @@ exports.submitAcceptedNotarization = async(params) => {
         return { result: { error: true } };
     }
 
-    if (debugnotarization) {
+    if (InteractorConfig.debugnotarization) {
         console.log(JSON.stringify(params[0], null, 2));
         console.log(JSON.stringify(params[1], null, 2));
     }
@@ -1277,9 +1311,9 @@ exports.getLastImportFrom = async() => {
 
             lastimport.version = constants.LIF.VERSION;
             lastimport.flags = constants.LIF.FLAGS;
-            lastimport.sourcesystemid = ETHSystemID;
+            lastimport.sourcesystemid = InteractorConfig.ethSystemId;
             lastimport.sourceheight = parseInt(lastImportInfo.height);
-            lastimport.importcurrencyid = ETHSystemID;
+            lastimport.importcurrencyid = InteractorConfig.ethSystemId;
             lastimport.valuein = {};
             lastimport.tokensout = {};
             lastimport.numoutputs = {};
