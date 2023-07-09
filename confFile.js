@@ -6,7 +6,6 @@ var ini = require('ini');
 const CONSTANTS = require('./constants');
 
 const rootPath = function (chainName, currency) {
-
     let chaintc = chainName.toUpperCase();
     const pbaasFolder = settings.pbaas[currency]; //TODO: Make modular
     const pbaasRoot = settings.pbaasRoot[chaintc];
@@ -125,7 +124,7 @@ const set_conf = (key, infuraLink, ethContract, chainName)=> {
     }
 
     if (ethContract) {
-        confKeys.upgrademanageraddress = ethContract;
+        confKeys.delegatorcontractaddress = ethContract;
     }
 
     try {
@@ -151,7 +150,7 @@ const set_conf = (key, infuraLink, ethContract, chainName)=> {
         }
     
         if (ethContract) {
-            config.upgrademanageraddress = ethContract;
+            config.delegatorcontractaddress = ethContract;
         }
         fs.truncateSync(confPath + '/' + ID + '.conf', 0);
         for (const [key, value] of Object.entries(config)) {
