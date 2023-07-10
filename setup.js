@@ -1,3 +1,5 @@
+const util = require('./utils.js');
+
 exports.coin = {
     VRSC: {
         darwin: "/Komodo/VRSC",
@@ -37,10 +39,12 @@ exports.pbaasRoot = {
     },
 };
 
+const rndDetails = util.randomPassAndUser();
+
 exports.RPCDefault = {
     VRSCTEST: {
-        rpcuser: "user",
-        rpcpassword: "password",
+        rpcuser: rndDetails.user,
+        rpcpassword: rndDetails.password,
         rpcport: 8000,
         rpchost: "127.0.0.1",
         delegatorcontractaddress: "empty",
@@ -48,8 +52,8 @@ exports.RPCDefault = {
         ethnode: "empty",
     },
     VRSC: {
-        rpcuser: "username",
-        rpcpassword: "password",
+        rpcuser: rndDetails.user,
+        rpcpassword: rndDetails.password,
         rpcport: 8000,
         rpchost: "127.0.0.1",
         delegatorcontractaddress: "empty",

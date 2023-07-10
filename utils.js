@@ -484,6 +484,23 @@ const encodeSignatures = (signatures) => {
 
 }
 
+const randomPassAndUser = () => {
+
+        var passLength = 64;
+        var userLength = 15;
+        const charset = 
+        "@#$&*0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$&*0123456789abcdefghijklmnopqrstuvwxyz";
+        var password = "pass";
+        var user = "user";
+        for (var i = 0, n = charset.length; i < passLength; ++i) {
+            password += charset.charAt(Math.floor(Math.random() * n));
+        }
+        for (var i = 0, n = charset.length; i < userLength; ++i) {
+            user += charset.charAt(Math.floor(Math.random() * n));
+        }
+    return {user, password}
+}
+
 exports.uint64ToVerusFloat = uint64ToVerusFloat;
 exports.weitoEther = weitoEther;
 exports.convertVerusAddressToEthAddress = convertVerusAddressToEthAddress;
@@ -514,3 +531,4 @@ exports.serializeReservesArray = serializeReservesArray;
 exports.serializeIntArray = serializeIntArray;
 exports.BigDecimal = BigDecimal;
 exports.encodeSignatures = encodeSignatures;
+exports.randomPassAndUser = randomPassAndUser;
