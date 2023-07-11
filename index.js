@@ -5,10 +5,11 @@ let ethInteractor = require('./ethInteractor.js');
 let checkAPI = require('./apiFunctions.js');
 const confFile = require('./confFile.js');
 
+let log = function(){};;
+
 function processPost(request, response, callback) {
     var queryData = "";
     if (typeof callback !== 'function') return null;
-    // console.log("\x1b[35m", "incoming connection");
 
     if (request.method == 'POST') {
         request.on('data', function(data) {
@@ -36,9 +37,6 @@ let rollingBuffer = [];
 const bridgeKeeperServer = http.createServer((request, response) => {
     if(request.method == 'POST') {
         processPost(request, response, function() {
-            //handle the post request based upon the url
-            //let parsedUrl = url.parse(request.url);
-            //trim the leading slash
 
             if (request.post) {
                 response.writeHead(200, "OK", { 'Content-Type': 'application/json' });
@@ -51,7 +49,7 @@ const bridgeKeeperServer = http.createServer((request, response) => {
 
                     if (command != "getinfo" && command != "getcurrency")
                     {
-                        console.log("Command: " + command);
+                        log("Command: " + command);
                         rollingBuffer.push(event.toLocaleString() + " Command: " + command);
                     }
 
@@ -70,18 +68,13 @@ const bridgeKeeperServer = http.createServer((request, response) => {
                 {
                     response.end();
                     rollingBuffer.push("Error: " + e);
-
                 }
-
             }
-            
-
         });
     } else {
         response.writeHead(200, "OK", { 'Content-Type': 'application/json' });
         response.end();
     }
-
 });
 
 exports.status = function() {
@@ -96,19 +89,20 @@ exports.status = function() {
 exports.start = async function(config) {
     try{
         const port = await ethInteractor.init(config);
+        log = ethInteractor.InteractorConfig._consolelog ? console.log : function(){};;
         bridgeKeeperServer.listen(port);
         console.log(`Bridgekeeper Started listening on port: ${port}`);
+        rollingBuffer.push(`Bridgekeeper Started listening on port: ${port}`);
         return true;
     } catch (error){
         console.error(error)
-
         return error;
     }
-
 }
 
 exports.stop = function() {
     try{
+        ethInteractor.end();
         bridgeKeeperServer.close();
         return true;
     } catch (error){
