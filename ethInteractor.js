@@ -30,6 +30,9 @@ class EthInteractorConfig {
         this._debugnotarization = debugnotarization ?? (process.argv.indexOf('-debugnotarization') > -1);
         this._noimports = noimports ?? (process.argv.indexOf('-noimports') > -1);
         this._checkhash = checkhash ?? (process.argv.indexOf('-checkhash') > -1);
+        this._consolelog = (process.argv.indexOf('-consolelog') > -1);
+
+        log = this._consolelog ? console.log : function(){};
     }
 
     get ticker() { return this._ticker };
@@ -44,6 +47,8 @@ class EthInteractorConfig {
 }
 
 const InteractorConfig = new EthInteractorConfig();
+
+exports.InteractorConfig = InteractorConfig;
 
 //Main coin ID's
 const IAddressBaseConst = constants.IAddressBaseConst;
@@ -67,7 +72,9 @@ let account = undefined;
 let delegatorContract = undefined;
 let lastblocknumber = null;
 let lasttimestamp = null
-
+let notarizationEvent = null;
+let blockEvent = null;
+let log = function(){};;
 
 Object.assign(String.prototype, {
     reversebytes() {
@@ -122,6 +129,18 @@ exports.init = async (config = {}) => {
     return settings.rpcport;
 };
 
+exports.end = async () => {
+
+    blockEvent.unsubscribe(function(error, success){
+        if(success)
+            console.log('Successfully unsubscribed from block event!');
+    });
+    notarizationEvent.unsubscribe(function(error, success){
+        if(success)
+            console.log('Successfully unsubscribed from notarization event!');
+    });
+}
+
 async function eventListener(notarizerAddress) {
 
     var options = {
@@ -137,26 +156,26 @@ async function eventListener(notarizerAddress) {
         ]
     };
 
-    web3.eth.subscribe('logs', options, function(error, result) {
-        if (!error) console.log('Notarization at ETH Height: ' +  result?.blockNumber);
+    notarizationEvent = web3.eth.subscribe('logs', options, function(error, result) {
+        if (!error) log('Notarization at ETH Height: ' +  result?.blockNumber);
         else console.log(error);
-    }).on("data", function(log) {
-        console.log('***** EVENT: New Notarization, Clearing the cache(data)*********');
+    }).on("data", function() {
+        log('***** EVENT: New Notarization, Clearing the cache(data)*********');
         clearCachedApis();
         setCachedApi(null, 'lastgetNotarizationDatatime');
         // await setCachedApi(log?.blockNumber, 'lastNotarizationHeight');
-    }).on("changed", function(log) {
-        console.log('***** EVENT: New Notarization, Clearing the cache(changed)**********');
+    }).on("changed", function() {
+        log('***** EVENT: New Notarization, Clearing the cache(changed)**********');
         clearCachedApis();
     });
 
-    web3.eth.subscribe('newBlockHeaders', (error, blockHeader) => {
+    blockEvent = web3.eth.subscribe('newBlockHeaders', (error, blockHeader) => {
         if (error) {
           console.error(error);
         } else {
             lastblocknumber = blockHeader.number;
             lasttimestamp = blockHeader.timestamp;
-          console.log("New block recieved",blockHeader.number);
+          log("New block recieved",blockHeader.number);
         }
       });
 }
@@ -613,7 +632,7 @@ exports.getInfo = async() => {
                 "tiptime": timestamp,
                 "chainid": constants.VETHCURRENCYID[InteractorConfig.ticker]
             }
-            console.log("Command: getinfo");
+            log("Command: getinfo");
             await setCachedApi(getinfo, 'getInfo');
         }
 
@@ -669,7 +688,7 @@ exports.getCurrency = async(input) => {
                 "minnotariesconfirm": decodedParams[15],
                 "gatewayconvertername": "Bridge"
             };
-            console.log("Command: getcurrency");
+            log("Command: getcurrency");
             await setCachedApi(getCurrency, 'getCurrency');
         }
 
@@ -707,7 +726,7 @@ exports.getExports = async(input) => {
         const previousStartHeight = await delegatorContract.methods.exportHeights(heightstart).call();
         exportSets = await delegatorContract.methods.getReadyExportsByRange(previousStartHeight, heightend).call();
 
-        console.log("Height end: ", heightend, "heightStart:", heightstart, {previousStartHeight});
+        log("Height end: ", heightend, "heightStart:", heightstart, {previousStartHeight});
 
         for (const exportSet of exportSets) {
             //loop through and add in the proofs for each export set and the additional fields
@@ -730,7 +749,7 @@ exports.getExports = async(input) => {
             //get the transactions at the index
             let test = await delegatorContract.methods._readyExports(outputSet.height).call();
             outputSet.transfers = createOutboundTransfers(exportSet.transfers);
-            if (InteractorConfig.debug)
+            if (InteractorConfig.debugnotarization)
                 console.log("First Ethereum Send to Verus: ", outputSet.transfers[0].currencyvalues, " to ", outputSet.transfers[0].destination);
             //loop through the
             output.push(outputSet);
@@ -820,7 +839,7 @@ exports.getBestProofRoot = async(input) => {
 
         laststableproofroot = await getProofRoot(parseInt(latestBlock) - 30);
 
-        if (InteractorConfig.debug) {
+        if (InteractorConfig.debugnotarization) {
             console.log("getbestproofroot result:", { bestindex, validindexes, latestproofroot, laststableproofroot });
         }
 
@@ -873,7 +892,7 @@ async function getProofRoot(height = "latest") {
         latestproofroot = JSON.parse(cachedBlock);
     }
 
-    if (InteractorConfig.debug)
+    if (InteractorConfig.debugnotarization)
         console.log("getProofRoot GASPRICE: " + latestproofroot.gasprice + ", height: " + height)
 
     return latestproofroot;
@@ -916,7 +935,7 @@ async function checkProofRoot(height, stateroot, blockhash, power) {
         latestproofroot = JSON.parse(cachedBlock);
     }
 
-    if (InteractorConfig.debug)
+    if (InteractorConfig.debugnotarization)
         console.log("checkProofRoot GASPRICE: " + latestproofroot.gasprice + ", height: " + height)
 
 
@@ -1012,7 +1031,7 @@ exports.getNotarizationData = async() => {
             }
         }
 
-        if (InteractorConfig.debug) {
+        if (InteractorConfig.debugnotarization) {
             console.log("NOTARIZATION CONTRACT INFO \n" + JSON.stringify(Notarization, null, 2))
         }
 
@@ -1148,7 +1167,7 @@ function reshapeTransfers(CTransferArray) {
 exports.submitImports = async(CTransferArray) => {
 
     if (noaccount || InteractorConfig.noimports) {
-        console.log("************** Submitimports: Wallet will not spend ********************");
+        log("************** Submitimports: Wallet will not spend ********************");
         return { result: { error: true } };
     }
 
@@ -1176,7 +1195,7 @@ exports.submitImports = async(CTransferArray) => {
         const testcall = await delegatorContract.methods.submitImports(submitArray[0]).call(); //test call
 
         if (CTempArray)
-        console.log("Transfer to ETH: " + JSON.stringify(CTempArray[0].transfers[0].currencyvalue, null,2) + "\nto: " + JSON.stringify(CTempArray[0].transfers[0].destination.destinationaddress, null, 2));
+        log("Transfer to ETH: " + JSON.stringify(CTempArray[0].transfers[0].currencyvalue, null,2) + "\nto: " + JSON.stringify(CTempArray[0].transfers[0].destination.destinationaddress, null, 2));
 
         await setCachedApi(CTransferArray, 'lastsubmitImports');
         if (submitArray.length > 0) {
@@ -1205,7 +1224,7 @@ exports.submitImports = async(CTransferArray) => {
 exports.submitAcceptedNotarization = async(params) => {
 
     if (noaccount ) {
-        console.log("************** submitAcceptedNotarization: Wallet will not spend ********************");
+        log("************** submitAcceptedNotarization: Wallet will not spend ********************");
         return { result: { error: true } };
     }
 
@@ -1229,7 +1248,7 @@ exports.submitAcceptedNotarization = async(params) => {
     }
 
     if (Object.keys(signatures).length < 1) {
-        console.log("submitAcceptedNotarization: Not enough signatures.");
+        log("submitAcceptedNotarization: Not enough signatures.");
         return { "result": { "txid": null } };
     }
 

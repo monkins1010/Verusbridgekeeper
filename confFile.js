@@ -18,7 +18,7 @@ const rootPath = function (chainName, currency) {
             confPath = homeDir + "/Library/Application Support" + pbaasRoot.darwin + pbaasFolder.darwin; // + '/veth.conf';
             break;
         case 'win32':
-            confPath = homeDir + pbaasRoot.win32 + pbaasFolder.win32; // + '/veth.conf' ;
+            confPath = global.HOME + pbaasRoot.win32 + pbaasFolder.win32; // + '/veth.conf' ;
             confPath = path.normalize(confPath);
             break;
         case 'linux':
