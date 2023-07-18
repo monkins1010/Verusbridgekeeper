@@ -104,6 +104,7 @@ exports.stop = function() {
     try{
         ethInteractor.end();
         bridgeKeeperServer.close();
+        rollingBuffer.push(new Date(Date.now()).toLocaleString() + ` - Bridgekeeper Stopped`);
         return true;
     } catch (error){
         return error;

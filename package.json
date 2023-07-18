@@ -4,7 +4,7 @@
     "description": "Verus Bridgekeeper",
     "main": "index.js",
     "scripts": {
-        "start": "node start.js",
+        "start": "node start.js -consolelog",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "author": "",
