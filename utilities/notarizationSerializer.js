@@ -16,7 +16,7 @@ const serializeNotarization = (notarization) => {
 
     serializedBytes = Buffer.concat([serializedBytes, new Uint8Array(util.writeVarInt(notarizationFlags(notarization)))]); 
 
-    serializedBytes = Buffer.concat([serializedBytes, serializeCTransferDestination(notarization.proposer)]); 
+    serializedBytes = Buffer.concat([serializedBytes, util.serializeCTransferDestination(notarization.proposer)]); 
 
     serializedBytes = Buffer.concat([serializedBytes, bitGoUTXO.address.fromBase58Check((notarization.currencyid), 160).hash]); 
 
@@ -50,21 +50,8 @@ function notarizationFlags(pBaasNotarization) {
     flags += pBaasNotarization.launchconfirmed == true ? constants.FLAG_LAUNCH_CONFIRMED : 0;
     flags += pBaasNotarization.launchcomplete == true ? constants.FLAG_LAUNCH_COMPLETE : 0;
     flags += pBaasNotarization.refunding  == true ? constants.FLAG_REFUNDING : 0;
+    flags += pBaasNotarization.contractupgrade  == true ? constants.FLAG_CONTRACT_UPGRADE : 0;
     return flags;
-}
-
-function serializeCTransferDestination(ctd) {
-
-    let encodedOutput = Buffer.alloc(1);
-    encodedOutput.writeUInt8(ctd.type);
-    
-    if (ctd.type == 0)
-      return encodedOutput;
-    
-    let destination = Buffer.from(bitGoUTXO.address.fromBase58Check(util.removeHexLeader(ctd.address), 160).hash , 'hex');
-    encodedOutput = Buffer.concat([encodedOutput, util.writeCompactSize(destination.length), destination]);
-
-    return encodedOutput;
 }
 
 function serializeCoinbaseCurrencyState(currencyState) {

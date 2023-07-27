@@ -27,6 +27,10 @@ const notarizationFlags = function (notarization) {
     if (parseInt(notarization.flags & constants.FLAG_ACCEPTED_MIRROR) == constants.FLAG_ACCEPTED_MIRROR) {
         notarization.ismirror = true;
     }
+
+    if (parseInt(notarization.flags & constants.FLAG_CONTRACT_UPGRADE) == constants.FLAG_CONTRACT_UPGRADE) {
+        notarization.contractupgrade = true;
+    }
    
 
     return notarization;

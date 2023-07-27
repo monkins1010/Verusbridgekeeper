@@ -41,6 +41,7 @@ module.exports = Object.freeze({
     FLAG_BLOCKONE_NOTARIZATION : 0x40,  // block 1 notarizations are auto-finalized, the blockchain itself will be worthless if it is wrong
     FLAG_SAME_CHAIN : 0x80,             // set if all currency information is verifiable on this chain
     FLAG_LAUNCH_COMPLETE : 0x100,        // set if all currency information is verifiable on this chain
+    FLAG_CONTRACT_UPGRADE: 512,
     FLAG_FRACTIONAL : 1,
     DEST_FULLID : 5,
     DEST_REGISTERCURRENCY : 6,
