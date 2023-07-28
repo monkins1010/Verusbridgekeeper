@@ -11,7 +11,7 @@ const axios = require('axios');
 const TYPE_CONTRACT = 1;
 const TYPE_REVOKE = 2;
 const TYPE_RECOVER = 3;
-
+const abi = new Web3().eth.abi
 
 axios.defaults.withCredentials = true;
 
@@ -53,29 +53,24 @@ const ContractType = {
     VerusProof: 2,
     VerusCrossChainExport: 3,
     VerusNotarizer: 4,
-    VerusBridge: 5,
-    VerusInfo: 6,
+    CreateExport: 5,
+    VerusNotaryTools: 6,
     ExportManager: 7,
-    VerusBridgeStorage: 8,
-    VerusNotarizerStorage: 9,
-    VerusBridgeMaster: 10,
-    NotarizerSerializer: 11,
-    LastIndex: 12
+    SubmitImports: 8,
+    NotarizationSerializer: 9,
+    UpgradeManager: 10
 }
 
-const verusUpgradeAbi = require('../abi/VerusUpgradeManager.json');
-const verusNotarizerAbi = require('../abi/VerusNotarizer.json');
+const verusDelegatorAbi = require('../abi/VerusDelegator.json');
+
 const { exit } = require('process');
 
-const verusUpgrade = new web3.eth.Contract(verusUpgradeAbi, "0xB62DB9F0dFfD2b977211375DDDa7DfaDb44b7bFa");
-
-const verusNotarizer = new web3.eth.Contract(verusNotarizerAbi, verusUpgrade.methods.contracts(ContractType.VerusNotarizer));
+const delegatorContract = new web3.eth.Contract(verusDelegatorAbi, "0x14e82cfe6e2c57020e46FE0512d5Dcf801ad0548");
 
 let account = web3.eth.accounts.privateKeyToAccount(settings.privatekey);
 web3.eth.accounts.wallet.add(account);
 web3.eth.handleRevert = true
 const maxGas = 6000000;
-
 
 const getSig = async(sigParams) => {
     return await verusClient["vrsctest"].post("http://localhost:25779/", {
@@ -91,18 +86,24 @@ const getSig = async(sigParams) => {
     }).catch((e) => {
         console.log(e);
     })
+}
 
+const createContractTuple = (contracts, salt) => {
+
+    let package = ["0", "0x0000000000000000000000000000000000000000000000000000000000000000", 
+                    "0x0000000000000000000000000000000000000000000000000000000000000000",
+                    contracts, TYPE_CONTRACT, salt, "0x0000000000000000000000000000000000000000", 0];
+    
+    let data = abi.encodeParameter(
+        'tuple(uint8,bytes32,bytes32,address[],uint8,bytes32,address,uint32)',
+        package);
+    
+    return data;
 }
 
 const updatecontract = async() => {
     try {
         let randomBuf = randomBytes(32);
-        const notaryIds = ["0xb26820ee0c9b1276aac834cf457026a575dfce84", "0x51f9f5f053ce16cb7ca070f5c68a1cb0616ba624", "0x65374d6a8b853a5f61070ad7d774ee54621f9638"]
-        const verusNotarizerColdStoreWallets = ["RH7h8p9LN2Yb48SkxzNQ29c1Ltfju8Cd5i", "RLXCv2dQPB4NPqKUweFx4Ua5ZRPFfN2F6D" ,"REXBEDfAz9eJMCxdexa5GnWQBAax8hwuiu"]
-        
-        // Choose notarizer to sign upgrade
-        let notarizerID = notaryIds[1];
-        const signatureAddress = verusNotarizerColdStoreWallets[1];
 
         let outBuffer = Buffer.alloc(1);
         outBuffer.writeUInt8(TYPE_CONTRACT);
@@ -111,35 +112,28 @@ const updatecontract = async() => {
 
         let contracts = [];
         // Get the list of current active contracts
-        for (let i = 0; i < 13; i++) 
+        for (let i = 0; i < 11; i++) 
         {
-            contracts.push(await verusUpgrade.methods.contracts(i).call());
+            contracts.push(await delegatorContract.methods.contracts(i).call());
         }
 
          //replace existing contract with new contract address
         contracts[ContractType.VerusNotarizer] = "0xaaF86A43e8AB027cee4a4d9e2f2F047A17F3786A"; 
 
-        for (let i = 0; i < 13; i++) 
+        for (let i = 0; i < 11; i++) 
         {
-            contractsHex = Buffer.concat([contractsHex, Buffer.from(contracts[i].substr(2, 40), 'hex')]);
+            contractsHex = Buffer.concat([contractsHex, Buffer.from(contracts[i].slice(2), 'hex')]);
         }
 
         let serialized = Buffer.concat([contractsHex, outBuffer, randomBuf]);
 
-        const signature = await getSig([signatureAddress, serialized.toString('Hex')])
-        const buffer = Buffer.from(signature, 'base64');
+        let hashedContractPackage =  web3.utils.keccak256(serialized);
 
-        const vVal = parseInt(buffer.readUIntBE(0, 1));
-        const rVal = addHexPrefix(buffer.slice(1, 33).toString('Hex')); 
-        const sVal = addHexPrefix(buffer.slice(33, 65).toString('Hex')); 
+        let contractTuple = createContractTuple(contracts, `0x${randomBuf.toString('hex')}`)
 
-        let submission = { _vs: vVal, _rs: rVal, _ss: sVal, contracts, upgradeType: TYPE_CONTRACT , salt: "0x" + randomBuf.toString('Hex'), notarizerID };
-        
-        const revv1 = await verusUpgrade.methods.upgradeContracts(submission).call();
-        console.log("Call replied with: " + revv1 + "\nKey:\n1: More Signatures required.\n2: Upgrade Complete\n\n Please wait....");
-        const revv2 = await verusUpgrade.methods.upgradeContracts(submission).send({ from: account.address, gas: maxGas });
-
-        console.log("\nsignature: ", /* signature,*/ revv2);
+        const revv1 = await delegatorContract.methods.upgradeContracts(contractTuple).call();
+        console.log("Call replied with: " + revv1 + "\n 1: Contract Upgrade complete. Please wait....");
+        const revv2 = await delegatorContract.methods.upgradeContracts(contractTuple).send({ from: account.address, gas: maxGas });
 
     } catch (e) {
         console.log(e);
