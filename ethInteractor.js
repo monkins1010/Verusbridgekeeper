@@ -1270,6 +1270,10 @@ exports.submitAcceptedNotarization = async(params) => {
     const txid = addHexPrefix(txidObj.txid.reversebytes())
     let txhash
     try {
+        if (InteractorConfig.debugnotarization) {
+            console.log(JSON.stringify({serializednotarization, txid, voutnum: txidObj.voutnum, abiencodedSigData}, null, 2));
+
+        }
         // Call contract to test for reversion.
         const testValue = await delegatorContract.methods.setLatestData(serializednotarization, txid, txidObj.voutnum, abiencodedSigData).call();
         txhash = await delegatorContract.methods.setLatestData(serializednotarization, txid, txidObj.voutnum, abiencodedSigData).send({ from: account.address, gas: maxGas });

@@ -81,6 +81,63 @@ const convertVerusAddressToEthAddress = (verusAddress) => {
     return "0x" + bitGoUTXO.address.fromBase58Check(verusAddress).hash.toString('hex');
 }
 
+const serializeCTransferDestination = (ctd) => {
+
+    let encodedOutput = Buffer.alloc(1);
+    encodedOutput.writeUInt8(ctd.type);
+
+    if (ctd.type == 0)
+        return encodedOutput;
+
+    let destination; 
+
+    if (parseInt(ctd.type & constants.R_ADDRESS_TYPE) == constants.R_ADDRESS_TYPE) {
+        destination = Buffer.from(bitGoUTXO.address.fromBase58Check(removeHexLeader(ctd.address), 160).hash , 'hex');
+    } else if (parseInt(ctd.type & constants.I_ADDRESS_TYPE) == constants.I_ADDRESS_TYPE) {
+        destination = Buffer.from(bitGoUTXO.address.fromBase58Check(removeHexLeader(ctd.address), 160).hash , 'hex');
+    } else if (parseInt(ctd.type & constants.ETH_ADDRESS_TYPE) == constants.ETH_ADDRESS_TYPE) { 
+        destination = Buffer.from(removeHexLeader(ctd.address),'hex');
+    }
+
+    encodedOutput = Buffer.concat([encodedOutput, writeCompactSize(destination.length), destination])
+
+    if (parseInt(ctd.type & constants.FLAG_DEST_AUX) == constants.FLAG_DEST_AUX)
+    {
+        let mainVecLength = ctd.auxdests.length;
+  
+        let subLength = writeCompactSize(mainVecLength);
+  
+        let subvector = Buffer.from("");
+  
+        for (let i = 0; i < mainVecLength; i++)
+        {
+            let subType = Buffer.alloc(1);
+            subType.writeUInt8(ctd.auxdests[i].type);
+            let subDestination;
+
+            if (parseInt(ctd.auxdests[i].type & constants.R_ADDRESS_TYPE) == constants.R_ADDRESS_TYPE) {
+                subDestination = Buffer.from(bitGoUTXO.address.fromBase58Check(removeHexLeader(ctd.auxdests[i].address), 160).hash , 'hex');
+            } else if (parseInt(ctd.auxdests[i].type & constants.I_ADDRESS_TYPE) == constants.I_ADDRESS_TYPE) {
+                subDestination = Buffer.from(bitGoUTXO.address.fromBase58Check(removeHexLeader(ctd.auxdests[i].address), 160).hash , 'hex');
+            } else if (parseInt(ctd.auxdests[i].type & constants.ETH_ADDRESS_TYPE) == constants.ETH_ADDRESS_TYPE) { 
+                subDestination = Buffer.from(removeHexLeader(ctd.auxdests[i].address),'hex');
+            }
+  
+            let arrayItem = Buffer.concat([subType, writeCompactSize(Buffer.byteLength(subDestination)), subDestination])
+            subvector = Buffer.concat([subvector, writeCompactSize(Buffer.byteLength(arrayItem)), arrayItem])
+  
+        }
+  
+        encodedOutput = Buffer.concat([encodedOutput, subLength, subvector]);
+  
+    }
+  
+    return encodedOutput;
+
+
+
+}
+
 const serializeCCurrencyValueMapArray = (ccvm) => {
     let encodedOutput = writeCompactSize(ccvm.length);
 
@@ -532,3 +589,4 @@ exports.serializeIntArray = serializeIntArray;
 exports.BigDecimal = BigDecimal;
 exports.encodeSignatures = encodeSignatures;
 exports.randomPassAndUser = randomPassAndUser;
+exports.serializeCTransferDestination = serializeCTransferDestination;

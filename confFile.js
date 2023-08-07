@@ -70,7 +70,6 @@ const loadConfFile = (chainName) => {
                     Config[key] = _match[1];
                 } else {
                     console.log("Empty veth.conf file value: ", `${key}:"empty" `);
-
                 }
             }
         }
@@ -98,7 +97,7 @@ const loadConfFile = (chainName) => {
 
 const set_conf = (key, infuraLink, ethContract, chainName)=> {
 
-    if (!key && !infuraLink && !ethContract)
+    if (!infuraLink && !ethContract)
     {
         return new Error("No data set, please fill in a form");
     }
@@ -159,7 +158,7 @@ const set_conf = (key, infuraLink, ethContract, chainName)=> {
         return "Conf file updated";
     }
     else {
-        if (!(key && infuraLink && ethContract)) {
+        if (!(infuraLink && ethContract)) {
             throw new Error("Please fill in all fields");
         }
         for (const [key, value] of Object.entries(confKeys)) {
