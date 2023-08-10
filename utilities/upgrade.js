@@ -5,7 +5,7 @@ const { randomBytes } = require('crypto')
 const upgradeContracts = (process.argv.indexOf('-contracts') > -1);
 const revoke = (process.argv.indexOf('-revoke') > -1);
 const recover = (process.argv.indexOf('-recover') > -1);
-
+const newContract = (process.argv.indexOf('-contractaddress') > -1);
 const util = require('../utils.js');
 const axios = require('axios');
 const TYPE_CONTRACT = 1;
@@ -88,6 +88,31 @@ const getSig = async(sigParams) => {
     })
 }
 
+function getContractAddress() {
+    const flag = '-contractaddress';
+    const index = process.argv.indexOf(flag);
+  
+    if (index !== -1 && process.argv.length > index + 1) {
+      return process.argv[index + 1];
+    } else {
+      return null;
+    }
+
+}
+
+function getContractType() {
+    const flag = '-contracttype';
+    const index = process.argv.indexOf(flag);
+  
+    if (index !== -1 && process.argv.length > index + 1) {
+      return process.argv[index + 1];
+    } else {
+      return null;
+    }
+
+}
+
+
 const createContractTuple = (contracts, salt) => {
 
     let package = ["0", "0x0000000000000000000000000000000000000000000000000000000000000000", 
@@ -134,6 +159,44 @@ const updatecontract = async() => {
         const revv1 = await delegatorContract.methods.upgradeContracts(contractTuple).call();
         console.log("Call replied with: " + revv1 + "\n 1: Contract Upgrade complete. Please wait....");
         const revv2 = await delegatorContract.methods.upgradeContracts(contractTuple).send({ from: account.address, gas: maxGas });
+
+    } catch (e) {
+        console.log(e);
+
+    }
+    process.exit(0);
+}
+
+const createContractUpdateAddress = async() => {
+    try {
+        let randomBuf = randomBytes(32);
+
+        let outBuffer = Buffer.alloc(1);
+        outBuffer.writeUInt8(TYPE_CONTRACT);
+
+        let contractsHex = Buffer.from('');
+
+        let contracts = [];
+        // Get the list of current active contracts
+        for (let i = 0; i < 11; i++) 
+        {
+            contracts.push(await delegatorContract.methods.contracts(i).call());
+        }
+        const newContract = getContractAddress();
+        const newContractType = getContractType();
+         //replace existing contract with new contract address
+        contracts[newContractType] = newContract; 
+
+        for (let i = 0; i < 11; i++) 
+        {
+            contractsHex = Buffer.concat([contractsHex, Buffer.from(contracts[i].slice(2), 'hex')]);
+        }
+
+        let serialized = Buffer.concat([contractsHex, outBuffer, randomBuf]);
+
+        let hashedContractPackage =  web3.utils.keccak256(serialized);
+
+        console.log("\nNew Ethereum contract: " + newContract + "\nSalt used: 0x" + randomBuf.toString('hex') + "\nHash for upgrade: 0x" + hashedContractPackage.toString().slice(26,66))
 
     } catch (e) {
         console.log(e);
@@ -240,6 +303,9 @@ else if(revoke)
 else if(recover)
 {
     recoverID();
+}
+else if(newContract){
+    createContractUpdateAddress();
 }
 else
 {
