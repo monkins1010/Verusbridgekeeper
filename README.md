@@ -62,3 +62,20 @@ curl  --data-binary '{"jsonrpc":"1.0","id":"curltext","method":"getinfo","params
 
 curl  --data-binary '{"jsonrpc":"1.0","id":"curltext","method":"getcurrency","params":["iCtawpxUiCc2sEupt7Z4u8SDAncGZpgSKm"]}' -H 'content-type:text/plain;' http://127.0.0.1:8000
 ```
+
+## Optional: logrotate with PM2
+As root user, create a file called /etc/logrotate.d/verusd-rpc with these contents:
+```shell
+/home/verus/.komodo/VRSC/debug.log
+/home/verusd-rpc/.pm2/logs/verusbridge-out.log
+/home/verusd-rpc/.pm2/logs/verusbridge-error.log
+{
+  rotate 14
+  daily
+  compress
+  delaycompress
+  copytruncate
+  missingok
+  notifempty
+}
+```
