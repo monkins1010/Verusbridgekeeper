@@ -54,7 +54,7 @@ cd ~/Verusbridgekeeper;  pm2 start start.js --name bridgekeeper -- --log
 EOF
 chmod +x ~/bin/startbridge.sh
 ```
-
+When using PM2, console logs are stored in `~/.pm2/logs/bridgekeeper-out.log` and the errors in `~/.pm2/logs/bridgekeeper-error.log`
 
 This will result in the service running on port 8000 it can be queried using the following examples:
 ```shell
