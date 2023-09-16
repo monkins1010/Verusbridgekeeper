@@ -6,10 +6,8 @@ To install Verus Bridgekeeper  complete the following steps:
 
 ## Installing NVM, node, yarn & pm2
 ```shell
-su - verus
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
-exit
-su - verus
+# you may need to log out and log back in or source your shell profile at this step
 nvm install 18
 npm install -g pm2 yarn
 ```
