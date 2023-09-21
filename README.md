@@ -38,13 +38,13 @@ Windows: %appdata%\Verustest\pbaas\000b090bec6c9ff28586eb7ed24e77562f0c4667\000b
 ```
 ### Running the bridgekeeper on the console:
 ```shell
-yarn start <-debug // shows extra information>  <-debugsubmit //shows information on submissions> <-debugnotarization shows notarization data>
+yarn start -log <-debug // shows extra information>  <-debugsubmit //shows information on submissions> <-debugnotarization shows notarization data>
 ```
 ### Running the bridgekeeper in PM2:
 ```shell
 cd ~/Verusbridgekeeper;  pm2 start start.js --name bridgekeeper -- --log
 ```
-or create a batchfile (in `~/bin`) for convenient starting and start that using `~/bin/startbridge.sh`:
+or create a shell script (in `~/bin`) for convenient starting and start that using `~/bin/startbridge.sh`:
 ```
 cat << EOF > ~/bin/startbridge.sh
 #!/bin/bash
