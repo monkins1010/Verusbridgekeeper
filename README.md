@@ -20,8 +20,9 @@ yarn install
 ```
 Then after the installation run the following to create the initial configuration file
 ```shell
-yarn start <-debug // shows extra information>  <-debugsubmit //shows information on submissions> <-debugnotarization shows notarization data>
+yarn start
 ```
+It will exit with an error after creating a template configuration file for you to edit/populate.
 #### In *.conf set: 
 privatekey to the address of an ethereum wallet on the mainnet (goerli on testnet) chain with sufficient funds, to provide gas for calls to the blockchain.
 ethNode to a websocket address for an Ethereum node.
