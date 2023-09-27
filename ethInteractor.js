@@ -1391,6 +1391,22 @@ exports.getclaimablefees = async(params) => {
 
 }
 
+exports.revokeidentity = async(params) => {
+
+    const TYPE_AUTO_REVOKE = "0x04";
+    let txhash
+    try {
+        const testValue = await delegatorContract.methods.revokeWithMainAddress(TYPE_AUTO_REVOKE).call();
+        txhash = await delegatorContract.methods.revokeWithMainAddress(TYPE_AUTO_REVOKE).send({ from: account.address, gas: maxGas });
+
+        return { "result": txhash };
+
+    } catch (error) {
+
+        return { "result": { "error": true, error: error.message } };
+    }
+}
+
 exports.invalid = async() => {
     console.log("\x1b[41m%s\x1b[0m", "Invalid API call");
     return { "result": { "error": true, "message": "Unrecognized API call" } }
