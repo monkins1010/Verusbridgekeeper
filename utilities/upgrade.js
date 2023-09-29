@@ -5,7 +5,7 @@ const { randomBytes } = require('crypto')
 const upgradeContracts = (process.argv.indexOf('-contracts') > -1);
 const revoke = (process.argv.indexOf('-revoke') > -1);
 const recover = (process.argv.indexOf('-recover') > -1);
-const newContract = (process.argv.indexOf('-contractaddress') > -1);
+const getContractHash = (process.argv.indexOf('-getcontracthash') > -1);
 const util = require('../utils.js');
 const axios = require('axios');
 const TYPE_CONTRACT = 1;
@@ -65,7 +65,7 @@ const verusDelegatorAbi = require('../abi/VerusDelegator.json');
 
 const { exit } = require('process');
 
-const delegatorContract = new web3.eth.Contract(verusDelegatorAbi, "0x14e82cfe6e2c57020e46FE0512d5Dcf801ad0548");
+const delegatorContract = new web3.eth.Contract(verusDelegatorAbi, "0x20818Abe8588862Fd10332AB12C4B2D4b3829c08");
 
 let account = web3.eth.accounts.privateKeyToAccount(settings.privatekey);
 web3.eth.accounts.wallet.add(account);
@@ -88,6 +88,17 @@ const getSig = async(sigParams) => {
     })
 }
 
+function exitUpgradeError() {
+
+    const key = Object.keys(ContractType);
+    let list = "";
+    for (const item of key) {
+        list += item + " : " + ContractType[item] + "\n";
+    }
+    console.log("List of contractypes:\n" + list);
+    exit(0);
+}
+
 function getContractAddress() {
     const flag = '-contractaddress';
     const index = process.argv.indexOf(flag);
@@ -95,7 +106,7 @@ function getContractAddress() {
     if (index !== -1 && process.argv.length > index + 1) {
       return process.argv[index + 1];
     } else {
-      return null;
+        return null;
     }
 
 }
@@ -107,7 +118,7 @@ function getContractType() {
     if (index !== -1 && process.argv.length > index + 1) {
       return process.argv[index + 1];
     } else {
-      return null;
+        return null;
     }
 
 }
@@ -143,7 +154,7 @@ const updatecontract = async() => {
         }
 
          //replace existing contract with new contract address
-        contracts[ContractType.VerusNotarizer] = "0xaaF86A43e8AB027cee4a4d9e2f2F047A17F3786A"; 
+        contracts[ContractType.UpgradeManager] = "0xFe1B47e4cc3A424ff04E58A409Aea3189383a20C"; 
 
         for (let i = 0; i < 11; i++) 
         {
@@ -184,6 +195,10 @@ const createContractUpdateAddress = async() => {
         }
         const newContract = getContractAddress();
         const newContractType = getContractType();
+
+        if (!newContract || !newContractType) {
+            return false;
+        }
          //replace existing contract with new contract address
         contracts[newContractType] = newContract; 
 
@@ -195,8 +210,8 @@ const createContractUpdateAddress = async() => {
         let serialized = Buffer.concat([contractsHex, outBuffer, randomBuf]);
 
         let hashedContractPackage =  web3.utils.keccak256(serialized);
-
-        console.log("\nNew Ethereum contract: " + newContract + "\nSalt used: 0x" + randomBuf.toString('hex') + "\nHash for upgrade: 0x" + hashedContractPackage.toString().slice(26,66))
+        const key = Object.keys(ContractType);
+        console.log("\nNew Ethereum contract: " + newContract + " Type: " + key[newContractType] + "\nSalt used: 0x" + randomBuf.toString('hex') + "\nHash for upgrade: 0x" + hashedContractPackage.toString().slice(26,66))
 
     } catch (e) {
         console.log(e);
@@ -292,23 +307,26 @@ const recoverID = async() => {
     process.exit(0);
 }
 
-if(upgradeContracts)
-{
-    updatecontract();
+const main = async ()=> {
+
+    let success = false;
+   if(revoke)
+        {
+            success = await revokeID();
+        }
+        else if(recover)
+        {
+            success = await recoverID();
+        }
+        else if(getContractHash){
+            success = await createContractUpdateAddress();
+        }
+
+        if(!success) {
+            console.log("Please use the flags -contracts, -revoke , -recover, or -getcontracthash");
+            console.log("To get the contract hash run:\n\nnode upgrade.js -getcontracthash -contracttype 1 -contractaddress 0x1234567890\n");
+            exitUpgradeError();
+        }
 }
-else if(revoke)
-{
-    revokeID();
-}
-else if(recover)
-{
-    recoverID();
-}
-else if(newContract){
-    createContractUpdateAddress();
-}
-else
-{
-    console.log("Please use the flags -contracts, -revoke or -recover");
-    exit(0);
-}
+
+main();

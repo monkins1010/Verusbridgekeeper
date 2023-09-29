@@ -34,3 +34,6 @@ curl  --data-binary '{"jsonrpc":"1.0","id":"curltext","method":"getinfo","params
 
 curl  --data-binary '{"jsonrpc":"1.0","id":"curltext","method":"getcurrency","params":["iCtawpxUiCc2sEupt7Z4u8SDAncGZpgSKm"]}' -H 'content-type:text/plain;' http://127.0.0.1:8000
 
+#Updgrading contracts utility
+
+Run `yarn run getcontracthash`  from the main directory.

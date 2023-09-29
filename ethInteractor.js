@@ -1189,6 +1189,8 @@ exports.submitImports = async(CTransferArray) => {
             let processed = await delegatorContract.methods.checkImport(CTempArray[0].txid).call();
             if (!processed) {
                 submitArray.push(CTempArray[0])
+            } else {
+                return { result: globalsubmitimports.transactionHash };
             }
         }
 
@@ -1315,20 +1317,13 @@ exports.getLastImportFrom = async() => {
         if (globaltimedelta + globalgetlastimport < timenow || !lastImportFrom) {
             globalgetlastimport = timenow;
 
-            let lastimporttxid = await delegatorContract.methods.lastTxIdImport().call();
-            let cachelastImportInfo = await getCachedImport('lastImportInfo');
-            let cachelastImportTxid = await getCachedImport('lastimporttxid');
-            let lastimporttxidcache = cachelastImportTxid ? JSON.parse(cachelastImportTxid) : null;
-
+            //todo: move to constants
+            const SUBMIT_IMPORTS_LAST_TXID = "0x00000000000000000000000037256eef64a0bf17344bcb0cbfcde4bea6746347";
+            let lastimporttxid = SUBMIT_IMPORTS_LAST_TXID;
             let lastImportInfo;
 
-            if (lastimporttxid != lastimporttxidcache || !cachelastImportInfo){
-                lastImportInfo = await delegatorContract.methods.lastImportInfo(lastimporttxid).call();
-                await setCachedImport(lastImportInfo, 'lastImportInfo');
-                await setCachedImport(lastimporttxid, 'lastimporttxid');
-            } else {
-                lastImportInfo = cachelastImportInfo ? JSON.parse(cachelastImportInfo) : null;
-            }
+            lastImportInfo = await delegatorContract.methods.lastImportInfo(lastimporttxid).call();
+            await setCachedImport(lastImportInfo, 'lastImportInfo');
 
             let lastimport = {};
 
