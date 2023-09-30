@@ -78,3 +78,7 @@ As root user, create a file called /etc/logrotate.d/verusd-rpc with these conten
   notifempty
 }
 ```
+=======
+#Updgrading contracts utility
+
+Run `yarn run getcontracthash`  from the main directory.

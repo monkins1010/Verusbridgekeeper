@@ -28,7 +28,7 @@ module.exports = Object.freeze({
                             VRSCTEST:"000b090bec6c9ff28586eb7ed24e77562f0c4667",
                             VRSC: "52c7a71ed15802d33778235e7988d61339b84c45"
                         },
-    VERSION: "1.1.0",
+    VERSION: "1.1.1-1",
     EMPTY_ADDRESS: "0x0000000000000000000000000000000000000000",
     CROSS_SYSTEM: 64,
     VERSION_NOTARIZATIONDATA_CURRENT : 1,
@@ -76,12 +76,12 @@ module.exports = Object.freeze({
     LIF: {
         HASHPOS: 0,
         TXIDPOS: 64,
-        NPOS: 200,
+        NPOS: 136,
         BYTES32SIZE: 64,
         HEX: 16,
         FLAGS: 68,
         VERSION: 1,
-        FORKLEN: 256
+        FORKLEN: 192 
     },
     RESERVE_TO_RESERVE: 0x400,
     CROSS_SYSTEM: 0x40

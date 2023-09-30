@@ -10,18 +10,17 @@ exports.APIs = (api) => {
         'getnotarizationdata'           : "getNotarizationData",
         'getbestproofroot'              : "getBestProofRoot",
         'getlastimportfrom'             : "getLastImportFrom",
-        'getclaimablefees'              : "getclaimablefees"
+        'getclaimablefees'              : "getclaimablefees",
+        'revokeidentity'                : "revokeidentity",
     }
 
     for ( var property in validCalls ) {
 
-        if(api == property){
+        if(api == property) {
             return validCalls[property];
         }
-
     }
 
     return "invalid"
-
 }
 
