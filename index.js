@@ -4,7 +4,7 @@ global.HOME = os.platform() === "win32" ? process.env.APPDATA : process.env.HOME
 let ethInteractor = require('./ethInteractor.js');
 let checkAPI = require('./apiFunctions.js');
 const confFile = require('./confFile.js');
-
+let RPCDetails;
 let log = function(){};;
 
 function processPost(request, response, callback) {
@@ -35,6 +35,22 @@ function processPost(request, response, callback) {
 let rollingBuffer = [];
 
 const bridgeKeeperServer = http.createServer((request, response) => {
+    const userpass = Buffer.from(
+        (request.headers.authorization || '').split(' ')[1] || '',
+        'base64'
+    ).toString();
+
+    var ip = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
+    
+    if (ip.startsWith('::ffff:')) {
+        ip = ip.substring(7);
+    }
+
+    if (userpass !== RPCDetails.userpass || ip != RPCDetails.ip) {
+        response.writeHead(401, { 'WWW-Authenticate': 'Basic realm="nope"' });
+        response.end('HTTP Error 401 Unauthorized: Access is denied');
+        return;
+    }
     if(request.method == 'POST') {
         processPost(request, response, function() {
 
@@ -89,6 +105,8 @@ exports.status = function() {
 exports.start = async function(config) {
     try{
         const port = await ethInteractor.init(config);
+
+        RPCDetails = {userpass: ethInteractor.InteractorConfig._userpass, ip: ethInteractor.InteractorConfig._rpcallowip};
         log = ethInteractor.InteractorConfig._consolelog ? console.log : function(){};;
         bridgeKeeperServer.listen(port);
         console.log(`Bridgekeeper Started listening on port: ${port}`);

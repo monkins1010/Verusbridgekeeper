@@ -23,7 +23,7 @@ const notarization = require('./utilities/notarizationSerializer.js');
 class EthInteractorConfig {
     constructor() {}
 
-    init(ticker, debug, debugsubmit, debugnotarization, noimports, checkhash) {
+    init(ticker, debug, debugsubmit, debugnotarization, noimports, checkhash, userpass, rpcallowip) {
         this._ticker = ticker ?? process.argv.indexOf('-testnet') > -1 ? "VRSCTEST" : "VRSC";
         this._debug = debug ?? (process.argv.indexOf('-debug') > -1);
         this._debugsubmit = debugsubmit ?? (process.argv.indexOf('-debugsubmit') > -1);
@@ -31,6 +31,8 @@ class EthInteractorConfig {
         this._noimports = noimports ?? (process.argv.indexOf('-noimports') > -1);
         this._checkhash = checkhash ?? (process.argv.indexOf('-checkhash') > -1);
         this._consolelog = (process.argv.indexOf('-consolelog') > -1);
+        this._userpass = userpass;
+        this._rpcallowip = rpcallowip;
 
         log = this._consolelog ? console.log : function(){};
     }
@@ -84,6 +86,9 @@ Object.assign(String.prototype, {
 
 function setupConf() {
     settings = confFile.loadConfFile(InteractorConfig.ticker);
+    InteractorConfig._userpass = `${settings.rpcuser}:${settings.rpcpassword}`;
+    // Default ip to 127.0.0.1 if not set
+    InteractorConfig._rpcallowip = settings.rpcallowip || "127.0.0.1";
     web3 = new Web3(new Web3.providers.WebsocketProvider(settings.ethnode, {
         clientConfig: {
             maxReceivedFrameSize: 100000000,
