@@ -50,6 +50,7 @@ exports.RPCDefault = {
         delegatorcontractaddress: "empty",
         privatekey: "empty",
         ethnode: "empty",
+        rpcallowip: "127.0.0.1"
     },
     VRSC: {
         rpcuser: rndDetails.user,
@@ -59,6 +60,7 @@ exports.RPCDefault = {
         delegatorcontractaddress: "empty",
         privatekey: "empty",
         ethnode: "wss://rinkeby.infura.io/ws/v3/........",
+        rpcallowip: "127.0.0.1"
     }
 }
 
@@ -70,4 +72,5 @@ exports.INIKeys = {
     delegatorcontractaddress: '',
     privatekey: '',
     ethnode: '',
+    rpcallowip: ''
 };

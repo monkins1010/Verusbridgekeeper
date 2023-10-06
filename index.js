@@ -39,7 +39,14 @@ const bridgeKeeperServer = http.createServer((request, response) => {
         (request.headers.authorization || '').split(' ')[1] || '',
         'base64'
     ).toString();
-    if (userpass !== RPCDetails) {
+
+    var ip = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
+    
+    if (ip.startsWith('::ffff:')) {
+        ip = ip.substring(7);
+    }
+
+    if (userpass !== RPCDetails.userpass || ip != RPCDetails.ip) {
         response.writeHead(401, { 'WWW-Authenticate': 'Basic realm="nope"' });
         response.end('HTTP Error 401 Unauthorized: Access is denied');
         return;
@@ -98,8 +105,8 @@ exports.status = function() {
 exports.start = async function(config) {
     try{
         const port = await ethInteractor.init(config);
-        const {rpcuser, rpcpassword } = confFile.loadConfFile(ethInteractor.InteractorConfig._ticker);
-        RPCDetails = `${rpcuser}:${rpcpassword}`;
+
+        RPCDetails = {userpass: ethInteractor.InteractorConfig._userpass, ip: ethInteractor.InteractorConfig._rpcallowip};
         log = ethInteractor.InteractorConfig._consolelog ? console.log : function(){};;
         bridgeKeeperServer.listen(port);
         console.log(`Bridgekeeper Started listening on port: ${port}`);
