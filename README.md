@@ -23,9 +23,14 @@ Then after the installation run the following to create the initial configuratio
 yarn start
 ```
 It will exit with an error after creating a template configuration file for you to edit/populate.
-#### In *.conf set: 
-privatekey to the address of an ethereum wallet on the mainnet (goerli on testnet) chain with sufficient funds, to provide gas for calls to the blockchain.
-ethNode to a websocket address for an Ethereum node.
+#### In *.conf set:
+delegatorcontractaddress= The bridge delegator contract address provided after the contracts have been launched
+
+ethnode=wss:// to a websocket address for an Ethereum node
+
+Only for witnesses:
+
+privatekey= the private key (in hex, no leading 0x) of an ethereum account on the mainnet (goerli on testnet) chain with sufficient funds, to provide gas for calls to the contracts.
 ```
 (mainnet)
 Apple: /Library/Application Support/Verus/pbaas/52c7a71ed15802d33778235e7988d61339b84c45/52c7a71ed15802d33778235e7988d61339b84c45.conf
