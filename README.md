@@ -87,3 +87,77 @@ As root user, create a file called /etc/logrotate.d/verusd-rpc with these conten
 #Updgrading contracts utility
 
 Run `yarn run getcontracthash`  from the main directory.
+
+## Using the Verus Utilities to revoke and recover addresses.
+
+In the /utiliites folder there is a file called upgrade.js .  It handles contract upgrades and also revoking
+and recovering identities.  For it to be able to revoke it needs to be able to interact with the contract
+and send a transaction using the notaries main key.
+
+
+### To revoke
+
+Your private key in you veth pbaas conf file should be your main spend address.
+
+```shell
+node upgrade.js -revoke
+```
+
+### To recover to a new main address / recover address
+
+Setup a connection between the utility and the verus daemon.  The daemon needs to have the R address in its wallet for the current
+recovery address in the notary setup on Ethereum. (The utility will look in the verus.conf file for the RPC connection details).
+e.g. in `/.komodo/VRSC/VRSC.conf`
+
+```shell
+node upgrade.js -recover 'notaries i-address' 'ETH address of main signer' 'ETH address of recover' 'R-address of current ETH recovery' [-testnet]
+```
+e.g.
+`node upgrade.js -recover iChhvvuUPn7xh41tW91Aq29ah9FNPRufnJ 0xD010dEBcBf4183188B00cafd8902e34a2C1E9f41 0xD3258AD271066B7a780C68e527A6ee69ecA15b7F RLXCv2dQPB4NPqKUweFx4Ua5ZRPFfN2F6D`
+
+
+## Multisig revoke and recover
+
+For the notaries, a quorum is required to revoke or recover another notary. The notaries first have to agree on the new notaries signing and recover ETH addresses.
+
+Once they are decided each notary can make a packet of information that when put together it makes a upgrade script that the contract can accept and upgrade.
+
+(see recovermutisig.json and revokemultisig.json for examples)
+
+## To make the revoke data
+
+```shell
+node upgrade.js -createmultisigrevoke 'your notaries i-address' 'notary to be revoked' 'R-address of your notaries primary key' [-testnet]
+```
+e.g.
+```shell
+node upgrade.js -createmultisigrevoke iKjrTCwoPFRk44fAi2nYNbPG16ZUQjv1NB iAwycBuMcPJii45bKNTEfSnD9W9iXMiKGg RH7h8p9LN2Yb48SkxzNQ29c1Ltfju8Cd5i
+```
+
+## To make the recover data
+
+```shell
+node upgrade.js -createmultisigrecover 'your notaries i-address' 'notary to be revoked' 'R-address of your notaries recovery' 'notaries new main ETH address' 'notaries new recovery ETH address' [-testnet]
+```
+e.g.
+```shell
+node upgrade.js -createmultisigrecover iKjrTCwoPFRk44fAi2nYNbPG16ZUQjv1NB iAwycBuMcPJii45bKNTEfSnD9W9iXMiKGg RH7h8p9LN2Yb48SkxzNQ29c1Ltfju8Cd5i 0x68f56bA248E23b7d5DE4Def67592a1366431d345 0xD010dEBcBf4183188B00cafd8902e34a2C1E9f41
+```
+## To revoke an address with multisig
+
+As above there needs to be a connection from the utility to a verus daemon running with the R address that can sign
+for the notaries recover key.
+
+```shell
+node upgrade.js -revokemultisig [-testnet]
+```
+
+
+## To recover an address with multisig
+
+As above there needs to be a connection from the utility to a verus daemon running with the R address that can sign
+for the notaries recover key.
+
+```shell
+node upgrade.js -recovermultisig [-testnet]
+```

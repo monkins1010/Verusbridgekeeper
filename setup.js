@@ -13,6 +13,11 @@ exports.coin = {
     },
 };
 
+exports.verusConfFile = {
+    VRSCTEST: "/vrsctest.conf",
+    VRSC: "/VRSC.conf"
+};
+
 exports.pbaas = {
     "000b090bec6c9ff28586eb7ed24e77562f0c4667": {
         darwin: "/pbaas/000b090bec6c9ff28586eb7ed24e77562f0c4667",
@@ -54,7 +59,7 @@ exports.RPCDefault = {
     VRSC: {
         rpcuser: rndDetails.user,
         rpcpassword: rndDetails.password,
-        rpcport: 8000,
+        rpcport: 8002,
         delegatorcontractaddress: "empty",
         privatekey: "empty",
         ethnode: "wss://rinkeby.infura.io/ws/v3/........",
