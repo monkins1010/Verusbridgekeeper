@@ -122,7 +122,7 @@ Once they are decided each notary can make a packet of information that when put
 ## To make the revoke data
 
 ```shell
-node upgrade.js -createmultisigrevoke 'your notaries i-address' 'notary to be revoked' 'R-address of your notaries recovery' [-testnet]
+node upgrade.js -createmultisigrevoke 'your notaries i-address' 'notary to be revoked' 'R-address of your notaries primary key' [-testnet]
 ```
 e.g.
 ```shell

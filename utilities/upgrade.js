@@ -185,7 +185,7 @@ const getRevokeWithMultisigAddresses = async() => {
 
     console.log("Your notary address: " + notaryRevoking + " -> " + yourMainRevokingNotaryHexAddress);
     console.log("Notary to revoke: " + notaryToRevoke + " -> " + notaryToRevokeHexAddress);
-    console.log("Your notarizing recovery address: " + signingRAddress);
+    console.log("Your notarizing primary address: " + signingRAddress);
 
     var answer = await Ask('Please check the above details carefully, do you agree [y] or [n] then Enter: ');
 
