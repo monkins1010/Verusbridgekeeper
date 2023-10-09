@@ -1,0 +1,17 @@
+{"signatures": [ {
+    "_vs": 31,
+    "_rs": "0x03a2ab393f0328ed67291ad08120b03f318e756273ddf2720f1b55532496738a",
+    "_ss": "0x6a3ba1eddf607e335bac582831c1ddec4b7ab8c6fe3fc8abcaceb68c4bb8de67",
+    "salt": "0x8be96d809dc3d47a682c50ecb192ff63dccfac6f6db7734648bfd5bd1531853c",
+    "notarizerID": "0xb26820ee0c9b1276aac834cf457026a575dfce84"
+  },
+  {
+    "_vs": 32,
+    "_rs": "0xe1a5ef6d74d1d2da4d74a61a1b441c495f448883ee621a8b8c58b72356da0349",
+    "_ss": "0x2e7feec9a58f73bbf720cf10e3e86a393ea45eeffc1e8e272d789e45d7ef168f",
+    "salt": "0x94963edf5df9351ccecb46ef8607f73595cc10f72caac2a077064fb7bb53b1e6",
+    "notarizerID": "0x51f9f5f053ce16cb7ca070f5c68a1cb0616ba624"
+  }
+],
+"notarytorevoke" : "0x65374d6a8b853a5f61070ad7d774ee54621f9638"
+}

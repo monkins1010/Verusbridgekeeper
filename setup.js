@@ -13,6 +13,11 @@ exports.coin = {
     },
 };
 
+exports.verusConfFile = {
+    VRSCTEST: "/vrsctest.conf",
+    VRSC: "/VRSC.conf"
+};
+
 exports.pbaas = {
     "000b090bec6c9ff28586eb7ed24e77562f0c4667": {
         darwin: "/pbaas/000b090bec6c9ff28586eb7ed24e77562f0c4667",

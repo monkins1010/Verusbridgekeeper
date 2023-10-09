@@ -15,17 +15,57 @@ const rootPath = function (chainName, currency) {
 
     switch (os.platform()) {
         case 'darwin':
-            confPath = homeDir + "/Library/Application Support" + pbaasRoot.darwin + pbaasFolder.darwin; // + '/veth.conf';
+            confPath = homeDir + "/Library/Application Support" + pbaasRoot.darwin + pbaasFolder.darwin; 
             break;
         case 'win32':
-            confPath = global.HOME + pbaasRoot.win32 + pbaasFolder.win32; // + '/veth.conf' ;
+            confPath = global.HOME + pbaasRoot.win32 + pbaasFolder.win32; 
             confPath = path.normalize(confPath);
             break;
         case 'linux':
-            confPath = homeDir + pbaasRoot.linux + pbaasFolder.linux; // + '/veth.conf'; 
+            confPath = homeDir + pbaasRoot.linux + pbaasFolder.linux; 
             break;
     }
     return confPath;
+}
+
+const getVerusConf = (chainName) => {
+    let chaintc = chainName.toUpperCase();
+    const vrscFolder = settings.coin[chaintc]; 
+    const vrscFile = settings.verusConfFile[chaintc]; 
+
+    let confPath;
+
+    let homeDir = os.homedir();
+
+    switch (os.platform()) {
+        case 'darwin':
+            confPath = homeDir + "/Library/Application Support" + vrscFolder.darwin + vrscFile;
+            break;
+        case 'win32':
+            confPath = global.HOME + vrscFolder.win32 + vrscFile;
+            confPath = path.normalize(confPath);
+            break;
+        case 'linux':
+            confPath = homeDir + vrscFolder.linux + vrscFile;
+            break;
+    }
+
+    let _data;
+    try {
+        _data = fs.readFileSync(confPath, 'utf8');
+    } catch (error) {
+        throw (error);
+
+    }
+
+    if (!_data.length) { 
+        throw (new Error("No data in veth.conf file"));
+    }
+
+    var config = ini.parse(_data);
+
+    return config;
+
 }
 
 const checkConfFileExists = function (chainName) {
@@ -170,3 +210,4 @@ const set_conf = (key, infuraLink, ethContract, chainName)=> {
 
 exports.set_conf = set_conf;
 exports.loadConfFile = loadConfFile;
+exports.getVerusConf = getVerusConf;
