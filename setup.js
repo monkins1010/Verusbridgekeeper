@@ -59,7 +59,7 @@ exports.RPCDefault = {
     VRSC: {
         rpcuser: rndDetails.user,
         rpcpassword: rndDetails.password,
-        rpcport: 8000,
+        rpcport: 8002,
         delegatorcontractaddress: "empty",
         privatekey: "empty",
         ethnode: "wss://rinkeby.infura.io/ws/v3/........",
