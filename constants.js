@@ -2,7 +2,7 @@ module.exports = Object.freeze({
     
     VDXFDATAKEY:        {
                             VRSCTEST: "bb29b6fbac51550f7bda924d73c8e0bc971fb1dc",
-                            VRSC:     "8cea50fa0fc6787f0ff3d68858b2fadd36e7a485",
+                            VRSC:     "bb29b6fbac51550f7bda924d73c8e0bc971fb1dc",
                         },
     VETHCURRENCYID:     {
                             VRSCTEST: "iCtawpxUiCc2sEupt7Z4u8SDAncGZpgSKm",
