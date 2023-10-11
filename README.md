@@ -62,10 +62,7 @@ Optional flags:
 -debug                Shows extra information
 -debugnotarization    Shows debug information
 -testnet              Runs the Bridgekeeper for the Verus testnet
-
 ```
-yarn start -consolelog <-debug // shows extra information>  <-debugsubmit //shows information on submissions> <-debugnotarization shows notarization data>
-
 
 ### Running the bridgekeeper in PM2:
 ```shell
