@@ -274,7 +274,7 @@ const createRecoverMultisigTuple = (revokeData) => {
 
     }
 
-    let package = [sigs, revokeData.notarytorevoke, revokeData.notarynewmain, revokeData.notarynewrecover];
+    let package = [sigs, revokeData.notarytorecover, revokeData.notarynewmain, revokeData.notarynewrecover];
     
     let data = abi.encodeParameters(
         ['tuple(uint8,bytes32,bytes32,bytes32,address)[]','address','address','address'],
@@ -340,7 +340,7 @@ const createContractUpdateAddress = async() => {
 const revokeID = async() => {
     try {
 
-        const revv1 = await delegatorContract.methods.revokeWithMainAddress("0xff").call();
+        //const revv1 = await delegatorContract.methods.revokeWithMainAddress("0xff").call();
         const revv2 = await delegatorContract.methods.revokeWithMainAddress("0xff").send({ from: account.address, gas: maxGas });
 
         console.log("\n Notary transaction succeeded please check on etherscan for confirmation");
@@ -468,7 +468,7 @@ const createrecoverIDWithMultisigPacket = async() => {
         let submission = {};
 
         submission = { _vs: vVal, _rs: rVal, _ss: sVal, salt: "0x" + randomBuf.toString('Hex'), notarizerID: addresses[0] };
-        console.log("Notary to recover: " , {notarytorevoke: addresses[1]});
+        console.log("Notary to recover: " , {notarytorecover: addresses[1]});
         console.log("Notaries new main ETH address: " , {notarynewmain: addresses[3]});
         console.log("Notaries new recover ETH address: " , {notarynewrecover: addresses[4]});
 

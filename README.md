@@ -108,7 +108,7 @@ e.g. in `/.komodo/VRSC/VRSC.conf`
 node upgrade.js -recover 'notaries i-address' 'ETH address of main signer' 'ETH address of recover' 'R-address of current ETH recovery' [-testnet]
 ```
 e.g.
-`node upgrade.js -recover iChhvvuUPn7xh41tW91Aq29ah9FNPRufnJ 0xD010dEBcBf4183188B00cafd8902e34a2C1E9f41 0xD3258AD271066B7a780C68e527A6ee69ecA15b7F RLXCv2dQPB4NPqKUweFx4Ua5ZRPFfN2F6D`
+`node upgrade.js -recover iKjrTCwoPFRk44fAi2nYNbPG16ZUQjv1NB 0xD3258AD271066B7a780C68e527A6ee69ecA15b7F 0x68f56bA248E23b7d5DE4Def67592a1366431d345 RH7h8p9LN2Yb48SkxzNQ29c1Ltfju8Cd5i`
 
 
 ## Multisig revoke and recover
@@ -126,7 +126,7 @@ node upgrade.js -createmultisigrevoke 'your notaries i-address' 'notary to be re
 ```
 e.g.
 ```shell
-node upgrade.js -createmultisigrevoke iKjrTCwoPFRk44fAi2nYNbPG16ZUQjv1NB iAwycBuMcPJii45bKNTEfSnD9W9iXMiKGg RH7h8p9LN2Yb48SkxzNQ29c1Ltfju8Cd5i
+node upgrade.js -createmultisigrevoke iKjrTCwoPFRk44fAi2nYNbPG16ZUQjv1NB iChhvvuUPn7xh41tW91Aq29ah9FNPRufnJ RLXCv2dQPB4NPqKUweFx4Ua5ZRPFfN2F6D
 ```
 
 ## To make the recover data
@@ -136,7 +136,7 @@ node upgrade.js -createmultisigrecover 'your notaries i-address' 'notary to be r
 ```
 e.g.
 ```shell
-node upgrade.js -createmultisigrecover iKjrTCwoPFRk44fAi2nYNbPG16ZUQjv1NB iAwycBuMcPJii45bKNTEfSnD9W9iXMiKGg RH7h8p9LN2Yb48SkxzNQ29c1Ltfju8Cd5i 0x68f56bA248E23b7d5DE4Def67592a1366431d345 0xD010dEBcBf4183188B00cafd8902e34a2C1E9f41
+node upgrade.js -createmultisigrecover iKjrTCwoPFRk44fAi2nYNbPG16ZUQjv1NB iChhvvuUPn7xh41tW91Aq29ah9FNPRufnJ REXBEDfAz9eJMCxdexa5GnWQBAax8hwuiu 0x68f56bA248E23b7d5DE4Def67592a1366431d345 0xD010dEBcBf4183188B00cafd8902e34a2C1E9f41
 ```
 ## To revoke an address with multisig
 
