@@ -42,7 +42,7 @@ Windows: %appdata%\Verustest\pbaas\000b090bec6c9ff28586eb7ed24e77562f0c4667\000b
 The following command will start the bridgekeeper from the command line 
 
 ```shell
-yarn start -log
+yarn start -log [-debug] [-debugnotarization] [-nowitnesssubmissions]
 ```
 
 ```
