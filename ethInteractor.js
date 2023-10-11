@@ -423,8 +423,8 @@ function createComponents(transfers, startHeight, endHeight, previousExportHash,
     if (InteractorConfig.checkhash) {
         let hashofcce_reserves = ethersUtils.keccak256(serialized);
         let serialization = Buffer.concat([serializeCrossChainExport(cce), prevhash]);
-        console.log("Hash of cce+reservet: \n", hashofcce_reserves.toString('hex'));
-        console.log("serialization of ccx + prevhash: \n", serialization.toString('hex'));
+        console.log("Hash of cce + prevhash: ", hashofcce_reserves.toString('hex'));
+        console.log("serialization of ccx + previous txid hash: ", serialization.toString('hex'));
     }
 
     serialized = Buffer.concat([util.writeCompactSize(serialized.length), serialized]);
