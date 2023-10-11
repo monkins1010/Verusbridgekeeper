@@ -48,7 +48,7 @@ nowitnesssubmissions=true
 The following command will start the bridgekeeper from the command line 
 
 ```shell
-yarn start -log [-debug] [-debugnotarization] [-nowitnesssubmissions]
+yarn start -log [-debug] [-debugnotarization] [-testnet]
 ```
 
 ```
