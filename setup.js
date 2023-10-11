@@ -75,5 +75,6 @@ exports.INIKeys = {
     delegatorcontractaddress: '',
     privatekey: '',
     ethnode: '',
-    rpcallowip: ''
+    rpcallowip: '',
+    nowitnesssubmissions: ''
 };
