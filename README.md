@@ -23,9 +23,14 @@ Then after the installation run the following to create the initial configuratio
 yarn start
 ```
 It will exit with an error after creating a template configuration file for you to edit/populate.
-#### In *.conf set: 
-privatekey to the address of an ethereum wallet on the mainnet (goerli on testnet) chain with sufficient funds, to provide gas for calls to the blockchain.
-ethNode to a websocket address for an Ethereum node.
+#### In *.conf set:
+delegatorcontractaddress= The bridge delegator contract address provided after the contracts have been launched
+
+ethnode=wss:// to a websocket address for an Ethereum node
+
+Only for witnesses:
+
+privatekey= the private key (in hex, no leading 0x) of an ethereum account on the mainnet (goerli on testnet) chain with sufficient funds, to provide gas for calls to the contracts.
 ```
 (mainnet)
 Apple: /Library/Application Support/Verus/pbaas/52c7a71ed15802d33778235e7988d61339b84c45/52c7a71ed15802d33778235e7988d61339b84c45.conf
@@ -59,15 +64,18 @@ Optional flags:
 -testnet              Runs the Bridgekeeper for the Verus testnet
 
 ```
+yarn start -consolelog <-debug // shows extra information>  <-debugsubmit //shows information on submissions> <-debugnotarization shows notarization data>
+
+
 ### Running the bridgekeeper in PM2:
 ```shell
-cd ~/Verusbridgekeeper;  pm2 start start.js --name bridgekeeper -- --log
+cd ~/Verusbridgekeeper;  pm2 start start.js --name bridgekeeper -- -consolelog
 ```
 or create a shell script (in `~/bin`) for convenient starting and start that using `~/bin/startbridge.sh`:
 ```
 cat << EOF > ~/bin/startbridge.sh
 #!/bin/bash
-cd ~/Verusbridgekeeper;  pm2 start start.js --name bridgekeeper -- --log
+cd ~/Verusbridgekeeper;  pm2 start start.js --name bridgekeeper -- -consolelog
 EOF
 chmod +x ~/bin/startbridge.sh
 ```

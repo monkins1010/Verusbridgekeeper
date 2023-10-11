@@ -554,7 +554,7 @@ const randomPassAndUser = () => {
         var passLength = 64;
         var userLength = 15;
         const charset = 
-        "@#$&*0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$&*0123456789abcdefghijklmnopqrstuvwxyz";
+        "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
         var password = "pass";
         var user = "user";
         for (var i = 0, n = charset.length; i < passLength; ++i) {
