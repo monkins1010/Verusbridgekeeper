@@ -10,7 +10,7 @@ module.exports = Object.freeze({
                         },
     HEXCURRENCIES:      {
                             VRSCTEST: "0xA6ef9ea235635E328124Ff3429dB9F9E91b64e2d",
-                            VRSC: "0x454cb83913d688795e237837d30258d11ea7c752",
+                            VRSC: "0x1Af5b8015C64d39Ab44C60EAd8317f9F5a9B6C4C",
                         },
     BRIDGECURRENCYHEX:  {
                             VRSCTEST: "0xffEce948b8A38bBcC813411D2597f7f8485a0689",
@@ -28,7 +28,7 @@ module.exports = Object.freeze({
                             VRSCTEST:"000b090bec6c9ff28586eb7ed24e77562f0c4667",
                             VRSC: "52c7a71ed15802d33778235e7988d61339b84c45"
                         },
-    VERSION: "1.1.1-1",
+    VERSION: "1.1.1-7",
     EMPTY_ADDRESS: "0x0000000000000000000000000000000000000000",
     CROSS_SYSTEM: 64,
     VERSION_NOTARIZATIONDATA_CURRENT : 1,

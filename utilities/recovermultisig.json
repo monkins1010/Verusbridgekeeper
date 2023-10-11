@@ -1,19 +1,18 @@
-{"signatures": [  {
-    "_vs": 31,
-    "_rs": "0x836e5adcd2a751f9ff46a16abfa5db997f132585634b93a782d14aad8b6e6bf0",
-    "_ss": "0x7bed0a7d8d382baeb38d96ccf10863934d15d116d1e2940a7cea4eb308152ec3",
-    "salt": "0x930b5c8ec072ec2c185a9b04514108a3c4a4f6455f81ae7a60791846f2b53ab2",
-    "notarizerID": "0x51f9f5f053ce16cb7ca070f5c68a1cb0616ba624"
-  },
-  {
-    "_vs": 32,
-    "_rs": "0x14c99631538e4d16f2815f69aecb3dbaa25c48c2f7bead39405fc755351ea439",
-    "_ss": "0x65e21cb56a5389b4931a39f35e70a35e04c802b5d3a084585f33f6f62a22badd",
-    "salt": "0xdc0b45d513492c94401759334aa68838d9c2b6a96e5285241109a475539cffe2",
-    "notarizerID": "0xb26820ee0c9b1276aac834cf457026a575dfce84"
-  }
+{"signatures": [ {
+  "_vs": 32,
+  "_rs": "0x5c7cfa77b0d84736ef7436742ed4199a64b4af7023d6200508d25e49818de704",
+  "_ss": "0x12474b6dd47316be7cb3c66fbbf76393f158cc8b72cfbc84b22f7d0417dd3f17",
+  "salt": "0x010f39d12a221c132fa5698ce2c9609853ca34dcc0180f874ed3c2fafd7c90fe",
+  "notarizerID": "0xb26820ee0c9b1276aac834cf457026a575dfce84"
+},{
+  "_vs": 32,
+  "_rs": "0x519a0ab4db4c52918f10229c661f3bb03dd6128fe827937e4ef1fcd3e1a3004f",
+  "_ss": "0x5430f307a48cc822a5a7eddf3fd282023b795490eb9f98b919ecaf2c9c43a235",
+  "salt": "0x621f27209fa5e5078dfd1ae41dff614721cd6e24aa7f101c3b323184d3165fb9",
+  "notarizerID": "0x51f9f5f053ce16cb7ca070f5c68a1cb0616ba624"
+}
 ],
-"notarytorevoke" : "0x65374d6a8b853a5f61070ad7d774ee54621f9638",
+"notarytorecover" : "0x65374d6a8b853a5f61070ad7d774ee54621f9638",
 "notarynewmain" : "0x68f56bA248E23b7d5DE4Def67592a1366431d345",
-"notarynewrecover" : "0xD3258AD271066B7a780C68e527A6ee69ecA15b7F"
+"notarynewrecover" : "0xD010dEBcBf4183188B00cafd8902e34a2C1E9f41"
 }
