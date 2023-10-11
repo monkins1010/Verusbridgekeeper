@@ -38,8 +38,20 @@ Linux: ~/.verustest/pbaas/000b090bec6c9ff28586eb7ed24e77562f0c4667/000b090bec6c9
 Windows: %appdata%\Verustest\pbaas\000b090bec6c9ff28586eb7ed24e77562f0c4667\000b090bec6c9ff28586eb7ed24e77562f0c4667.conf
 ```
 ### Running the bridgekeeper on the console:
+
+The following command will start the bridgekeeper from the command line 
+
 ```shell
-yarn start -log <-debug // shows extra information>  <-debugsubmit //shows information on submissions> <-debugnotarization shows notarization data>
+yarn start -log
+```
+
+```
+Optional flags:
+
+-debug                Shows extra information
+-debugnotarization    Shows debug information
+-nowitnesssubmissions Does not submit imports or notarizations
+
 ```
 ### Running the bridgekeeper in PM2:
 ```shell

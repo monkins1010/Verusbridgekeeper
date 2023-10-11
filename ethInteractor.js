@@ -31,6 +31,7 @@ class EthInteractorConfig {
         this._noimports = noimports ?? (process.argv.indexOf('-noimports') > -1);
         this._checkhash = checkhash ?? (process.argv.indexOf('-checkhash') > -1);
         this._consolelog = (process.argv.indexOf('-consolelog') > -1);
+        this._nowitnesssubmit = (process.argv.indexOf('-nowitnesssubmissions') > -1);
         this._userpass = userpass;
         this._rpcallowip = rpcallowip;
 
@@ -46,6 +47,7 @@ class EthInteractorConfig {
     get ethSystemId() { return constants.VETHCURRENCYID[this.ticker] };
     get verusSystemId() { return constants.VERUSSYSTEMID[this.ticker] };
     get bridgeId() { return constants.BRIDGEID[this.ticker] };
+    get spendDisabled()  { return this._nowitnesssubmit };
 }
 
 const InteractorConfig = new EthInteractorConfig();
@@ -1169,7 +1171,7 @@ function reshapeTransfers(CTransferArray) {
 
 exports.submitImports = async(CTransferArray) => {
 
-    if (noaccount || InteractorConfig.noimports) {
+    if (noaccount || InteractorConfig.noimports || InteractorConfig.spendDisabled) {
         log("************** Submitimports: Wallet will not spend ********************");
         return { result: { error: true } };
     }
@@ -1228,7 +1230,7 @@ exports.submitImports = async(CTransferArray) => {
 
 exports.submitAcceptedNotarization = async(params) => {
 
-    if (noaccount ) {
+    if (noaccount || InteractorConfig.spendDisabled) {
         log("************** submitAcceptedNotarization: Wallet will not spend ********************");
         return { result: { error: true } };
     }
