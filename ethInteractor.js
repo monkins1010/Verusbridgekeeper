@@ -422,9 +422,9 @@ function createComponents(transfers, startHeight, endHeight, previousExportHash,
 
     if (InteractorConfig.checkhash) {
         let hashofcce_reserves = ethersUtils.keccak256(serialized);
-        let serialization = Buffer.concat([serializeCrossChainExport(cce),serializeCReserveTransfers(transfers).slice(1)]);
-        console.log("Hash of cce+reservet: \n", hashofcce_reserves.toString('hex'));
-        console.log("serialization of ccx + prevhash: \n", serialization.toString('hex'));
+        let serialization = Buffer.concat([serializeCrossChainExport(cce), prevhash]);
+        console.log("Hash of cce + prevhash: ", hashofcce_reserves.toString('hex'));
+        console.log("serialization of ccx + previous txid hash: ", serialization.toString('hex'));
     }
 
     serialized = Buffer.concat([util.writeCompactSize(serialized.length), serialized]);
@@ -496,7 +496,6 @@ function createCrossChainExport(transfers, startHeight, endHeight, jsonready = f
     let hash = ethersUtils.keccak256(serializeCReserveTransfers(transfers));
     if (InteractorConfig.checkhash) {
         console.log("hash of transfers: ",hash.toString('Hex'));
-        console.log("Serialize: ",serializeCReserveTransfers(transfers).slice(1).toString('Hex'));
     }
     cce.version = 1;
     cce.flags = 2;

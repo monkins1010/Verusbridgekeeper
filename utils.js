@@ -141,10 +141,18 @@ const serializeCTransferDestination = (ctd) => {
 const serializeCCurrencyValueMapArray = (ccvm) => {
     let encodedOutput = writeCompactSize(ccvm.length);
 
-    for (let i = 0; i < ccvm.length; i++) {
+    let valueMapToSort = []
 
-        encodedOutput = Buffer.concat([encodedOutput, bitGoUTXO.address.fromBase58Check(ccvm[i].currency, 160).hash]);
-        encodedOutput = Buffer.concat([encodedOutput, writeUInt((ccvm[i].amount), 64)]);
+    for (let i = 0; i < ccvm.length; i++) {
+        valueMapToSort.push({[bitGoUTXO.address.fromBase58Check(ccvm[i].currency, 160).hash.toString('hex')]: writeUInt(ccvm[i].amount, 64)});
+    }
+
+    const sortedArray = valueMapToSort.sort((a, b) => BigNumber(`0x${Object.keys(a)[0]}`).minus(BigNumber(`0x${Object.keys(b)[0]}`)));
+    
+    for (let i = 0; i < sortedArray.length; i++) {
+        const currencyValueKeys = Object.keys(sortedArray[i]);
+
+        encodedOutput = Buffer.concat([encodedOutput, Buffer.from(currencyValueKeys[0], 'hex'), sortedArray[i][currencyValueKeys[0]]]);
 
     }
     return encodedOutput
