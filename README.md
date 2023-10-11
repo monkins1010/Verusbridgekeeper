@@ -37,6 +37,12 @@ Apple: /Library/Application Support/Verustest/pbaas/000b090bec6c9ff28586eb7ed24e
 Linux: ~/.verustest/pbaas/000b090bec6c9ff28586eb7ed24e77562f0c4667/000b090bec6c9ff28586eb7ed24e77562f0c4667.conf
 Windows: %appdata%\Verustest\pbaas\000b090bec6c9ff28586eb7ed24e77562f0c4667\000b090bec6c9ff28586eb7ed24e77562f0c4667.conf
 ```
+To set the wallet not to spend (but still enable revoke) please edit the above *.conf file and add:
+```ini
+nowitnesssubmissions=true
+```
+
+
 ### Running the bridgekeeper on the console:
 
 The following command will start the bridgekeeper from the command line 
@@ -50,7 +56,7 @@ Optional flags:
 
 -debug                Shows extra information
 -debugnotarization    Shows debug information
--nowitnesssubmissions Does not submit imports or notarizations
+-testnet              Runs the Bridgekeeper for the Verus testnet
 
 ```
 ### Running the bridgekeeper in PM2:
