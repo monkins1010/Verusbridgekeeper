@@ -4,7 +4,7 @@ const Long = require('long');
 var constants = require('./constants');
 const Web3 = require('web3');
 const abi = new Web3().eth.abi
-
+const { randomBytes } = require('crypto')
 class BigDecimal {
     // Configuration: constants
     static DECIMALS = 18; // number of decimals on all instances
@@ -549,20 +549,21 @@ const encodeSignatures = (signatures) => {
 
 }
 
+function generateRpcPassword (len = 32) {
+    const buf = randomBytes(len)
+    const password = Buffer.from(buf).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')
+    return password
+  }
+
 const randomPassAndUser = () => {
 
-        var passLength = 64;
-        var userLength = 15;
-        const charset = 
-        "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-        var password = "pass";
-        var user = "user";
-        for (var i = 0, n = charset.length; i < passLength; ++i) {
-            password += charset.charAt(Math.floor(Math.random() * n));
-        }
-        for (var i = 0, n = charset.length; i < userLength; ++i) {
-            user += charset.charAt(Math.floor(Math.random() * n));
-        }
+    var password = "pass";
+    var user = "user";
+
+    password += generateRpcPassword(32);
+
+    user += generateRpcPassword(10);
+
     return {user, password}
 }
 
