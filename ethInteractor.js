@@ -88,6 +88,10 @@ Object.assign(String.prototype, {
 
 function setupConf() {
     settings = confFile.loadConfFile(InteractorConfig.ticker);
+    if(!settings.delegatorcontractaddress) {
+
+        throw new Error("Delegator contract address not set in conf file");
+    }
     InteractorConfig._userpass = `${settings.rpcuser}:${settings.rpcpassword}`;
     // Default ip to 127.0.0.1 if not set
     InteractorConfig._rpcallowip = settings.rpcallowip || "127.0.0.1";
