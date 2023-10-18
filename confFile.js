@@ -200,6 +200,8 @@ const set_conf = (key, infuraLink, ethContract, chainName)=> {
     else {
         if (!(infuraLink && ethContract)) {
             throw new Error("Please fill in all fields");
+        } else if (infuraLink.slice(0,4) === "http") {
+            throw new Error("Please use the wws:// protocol for the Eth node");
         }
         for (const [key, value] of Object.entries(confKeys)) {
             fs.appendFileSync(confPath + '/' + ID + '.conf', `${key}=${value}` + "\n");
