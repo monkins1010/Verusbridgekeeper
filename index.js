@@ -83,7 +83,7 @@ const bridgeKeeperServer = http.createServer((request, response) => {
                 } catch (e)
                 {
                     response.end();
-                    rollingBuffer.push("Error: " + e);
+                    rollingBuffer.push("Error: " + e.message);
                 }
             }
         });

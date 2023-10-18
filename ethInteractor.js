@@ -1054,7 +1054,7 @@ exports.getNotarizationData = async() => {
 
     } catch (error) {
         console.log("\x1b[41m%s\x1b[0m", "getNotarizationData: (No spend tx) S" + error);
-        return { "result": { "error": true, "message": error } };
+        return { "result": { "error": true, "message": error.message } };
     }
 }
 
