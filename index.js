@@ -71,17 +71,33 @@ const bridgeKeeperServer = http.createServer((request, response) => {
 
                     if (rollingBuffer.length > 20)
                         rollingBuffer = rollingBuffer.slice(rollingBuffer.length - 20, 20);
-
-                    ethInteractor[checkAPI.APIs(command)](postData.params).then((returnData) => {
-                        response.write(JSON.stringify(returnData));
-                        response.end();
-                        if (returnData.result?.error)
-                        {
-                            rollingBuffer.push("Error: " + returnData.result?.message);
-                        }
+                    Promise.race([
+                            ethInteractor[checkAPI.APIs(command)](postData.params),
+                            new Promise((resolve, reject) => {
+                              setTimeout(() => {
+                                reject(new Error('Timeout'));
+                              }, 60000);
+                            })
+                          ])
+                          .then((returnData) => {
+                            response.write(JSON.stringify(returnData));
+                            response.end();
+                            if (returnData.result?.error) {
+                              rollingBuffer.push("Error: " + returnData.result?.message);
+                            }
+                          })
+                          .catch((error) => {
+                            if (error.message === 'Timeout') {
+                                response.writeHead(500, "Error", { 'Content-Type': 'application/json' });
+                                response.end();
+                            } else {
+                                response.writeHead(500, "Error", { 'Content-Type': 'application/json' });
+                                response.end();
+                            }
                     });
                 } catch (e)
                 {
+                    response.writeHead(500, "Error", { 'Content-Type': 'application/json' });
                     response.end();
                     rollingBuffer.push("Error: " + e.message);
                 }
