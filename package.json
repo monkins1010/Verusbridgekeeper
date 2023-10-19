@@ -11,10 +11,11 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
+        "async": "^3.2.4",
         "axios": "0.25.0",
         "base58check": "^2.0.0",
-        "blake2b-wasm": "git+https://github.com/michaeltout/blake2b-wasm.git",
         "bitgo-utxo-lib": "git+https://github.com/VerusCoin/bitgo-utxo-lib.git",
+        "blake2b-wasm": "git+https://github.com/michaeltout/blake2b-wasm.git",
         "ethers": "5.1.0",
         "ini": "2.0.0",
         "long": "5.2.0",
@@ -25,5 +26,6 @@
         "eslint": "8.11.0"
     },
     "resolutions": {
-        "blake2b-wasm": "git+https://github.com/michaeltout/blake2b-wasm.git"}
+        "blake2b-wasm": "git+https://github.com/michaeltout/blake2b-wasm.git"
+    }
 }
