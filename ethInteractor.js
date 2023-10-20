@@ -64,6 +64,7 @@ const verusDelegatorAbi = require('./abi/VerusDelegator.json');
 let settings = undefined;
 let noaccount = false;
 let web3 = undefined;
+let provider = undefined;
 let d = new Date();
 let globalsubmitimports = { "transactionHash": "" };
 let globaltimedelta = constants.globaltimedelta; //60s for getnewblocks
@@ -79,6 +80,20 @@ let lasttimestamp = null
 let notarizationEvent = null;
 let blockEvent = null;
 let log = function(){};;
+const web3Options = {
+    clientConfig: {
+        maxReceivedFrameSize: 100000000,
+        maxReceivedMessageSize: 100000000,
+        keepalive: true,
+        keepaliveInterval: -1 // ms
+    },
+    reconnect: {
+        auto: true,
+        delay: 5000, // ms
+        maxAttempts: 5,
+        onTimeout: false,
+    }
+};
 
 Object.assign(String.prototype, {
     reversebytes() {
@@ -96,20 +111,10 @@ function setupConf() {
     // Default ip to 127.0.0.1 if not set
     InteractorConfig._rpcallowip = settings.rpcallowip || "127.0.0.1";
     InteractorConfig._nowitnesssubmit = settings.nowitnesssubmissions == "true";
-    web3 = new Web3(new Web3.providers.WebsocketProvider(settings.ethnode, {
-        clientConfig: {
-            maxReceivedFrameSize: 100000000,
-            maxReceivedMessageSize: 100000000,
-            keepalive: true,
-            keepaliveInterval: -1 // ms
-        },
-        reconnect: {
-            auto: true,
-            delay: 5000, // ms
-            maxAttempts: 5,
-            onTimeout: false,
-        }
-    }));
+
+    provider = new Web3.providers.WebsocketProvider(settings.ethnode, web3Options);
+    web3 = new Web3(provider);
+
     if (settings.privatekey.length == 64) {
         account = web3.eth.accounts.privateKeyToAccount(settings.privatekey);
         web3.eth.accounts.wallet.add(account);
