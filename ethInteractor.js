@@ -1298,7 +1298,9 @@ exports.submitAcceptedNotarization = async(params) => {
         // Call contract to test for reversion.
         const testValue = await delegatorContract.methods.setLatestData(serializednotarization, txid, txidObj.voutnum, abiencodedSigData).call();
         txhash = await delegatorContract.methods.setLatestData(serializednotarization, txid, txidObj.voutnum, abiencodedSigData).send({ from: account.address, gas: notarizationMaxGas });
-
+        if (InteractorConfig.debugnotarization) {
+            log("setLatestData: success");
+        }
         await setCachedApi(txidObj.txid, 'lastNotarizationTxid');
         return { "result": txhash };
 
