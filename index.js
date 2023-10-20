@@ -35,10 +35,10 @@ function processPost(request, response, callback) {
 
 let rollingBuffer = [];
 
-const queue = async.queue((task, callback) => {
+const queue = async.queue(async (task, callback) => {
 
     const { request, response } = task;
-    processData(request, response);
+    await processData(request, response);
     callback();
 }, 1); // set concurrency to 1 to process tasks one at a time
 
@@ -59,7 +59,7 @@ const processData = async (request, response) => {
             if (rollingBuffer.length > 20)
                 rollingBuffer = rollingBuffer.slice(rollingBuffer.length - 20, 20);
 
-            Promise.race([
+            const returnData = await Promise.race([
                 ethInteractor[checkAPI.APIs(command)](postData.params),
                 new Promise((resolve, reject) => {
                     setTimeout(() => {
@@ -67,22 +67,13 @@ const processData = async (request, response) => {
                     }, 10000);
                 })
             ])
-                .then((returnData) => {
-                    response.write(JSON.stringify(returnData));
-                    response.end();
-                    if (returnData.result?.error) {
-                        rollingBuffer.push("Error: " + returnData.result?.message);
-                    }
-                })
-                .catch((error) => {
-                    if (error.message === 'Timeout') {
-                        response.writeHead(500, "Error", { 'Content-Type': 'application/json' });
-                        response.end();
-                    } else {
-                        response.writeHead(500, "Error", { 'Content-Type': 'application/json' });
-                        response.end();
-                    }
-                });
+
+            response.write(JSON.stringify(returnData));
+            response.end();
+            if (returnData.result?.error) {
+                rollingBuffer.push("Error: " + returnData.result?.message);
+            }
+ 
         } catch (e) {
             response.writeHead(500, "Error", { 'Content-Type': 'application/json' });
             response.end();
