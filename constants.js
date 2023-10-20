@@ -69,7 +69,7 @@ module.exports = Object.freeze({
     FLAG_DEST_AUX: 64,
     IAddressBaseConst: 102,
     RAddressBaseConst: 60,
-    notarizationMaxGas: 1000000,
+    notarizationMaxGas: 1500000,
     submitImportMaxGas: 3000000,
     globaltimedelta: 60000,
     TRANSFER_TYPE_ETH: 3,
