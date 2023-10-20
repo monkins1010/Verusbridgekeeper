@@ -57,7 +57,8 @@ exports.InteractorConfig = InteractorConfig;
 //Main coin ID's
 const IAddressBaseConst = constants.IAddressBaseConst;
 const RAddressBaseConst = constants.RAddressBaseConst;
-const maxGas = constants.maxGas;
+const notarizationMaxGas = constants.notarizationMaxGas;
+const submitImportMaxGas = constants.submitImportMaxGas;
 const verusDelegatorAbi = require('./abi/VerusDelegator.json');
 
 // Global settings
@@ -1219,7 +1220,7 @@ exports.submitImports = async(CTransferArray) => {
 
         await setCachedApi(CTransferArray, 'lastsubmitImports');
         if (submitArray.length > 0) {
-            globalsubmitimports = await delegatorContract.methods.submitImports(submitArray[0]).send({ from: account.address, gas: maxGas });
+            globalsubmitimports = await delegatorContract.methods.submitImports(submitArray[0]).send({ from: account.address, gas: submitImportMaxGas });
         } else {
             return { result: "false" };
         }
@@ -1296,7 +1297,7 @@ exports.submitAcceptedNotarization = async(params) => {
         }
         // Call contract to test for reversion.
         const testValue = await delegatorContract.methods.setLatestData(serializednotarization, txid, txidObj.voutnum, abiencodedSigData).call();
-        txhash = await delegatorContract.methods.setLatestData(serializednotarization, txid, txidObj.voutnum, abiencodedSigData).send({ from: account.address, gas: maxGas });
+        txhash = await delegatorContract.methods.setLatestData(serializednotarization, txid, txidObj.voutnum, abiencodedSigData).send({ from: account.address, gas: notarizationMaxGas });
 
         await setCachedApi(txidObj.txid, 'lastNotarizationTxid');
         return { "result": txhash };
@@ -1410,7 +1411,7 @@ exports.revokeidentity = async(params) => {
     let txhash
     try {
         const testValue = await delegatorContract.methods.revokeWithMainAddress(TYPE_AUTO_REVOKE).call();
-        txhash = await delegatorContract.methods.revokeWithMainAddress(TYPE_AUTO_REVOKE).send({ from: account.address, gas: maxGas });
+        txhash = await delegatorContract.methods.revokeWithMainAddress(TYPE_AUTO_REVOKE).send({ from: account.address, gas: notarizationMaxGas });
 
         return { "result": txhash };
 
