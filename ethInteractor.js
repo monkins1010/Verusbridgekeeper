@@ -19,6 +19,21 @@ const {
     setCachedImport 
 } = require('./cache/apicalls')
 const notarization = require('./utilities/notarizationSerializer.js');
+let log = function(){};
+
+const enableLog = function() {
+    var old = console.log;
+    console.log("> Log Date Format DD/MM/YY HH:MM:SS - UTCString");
+    console.log = function() {
+        var n = new Date();
+        var d = ("0" + (n.getDate().toString())).slice(-2),
+            m = ("0" + ((n.getMonth() + 1).toString())).slice(-2),
+            y = ("0" + (n.getFullYear().toString())).slice(-2),
+            t = n.toUTCString().slice(-13, -4);
+        Array.prototype.unshift.call(arguments, "[" + d + "/" + m + "/" + y + t + "]");
+        old.apply(this, arguments);
+    }
+};
 
 class EthInteractorConfig {
     constructor() {}
@@ -36,6 +51,7 @@ class EthInteractorConfig {
         this._rpcallowip = rpcallowip;
 
         log = this._consolelog ? console.log : function(){};
+        if(this._consolelog) enableLog();
     }
 
     get ticker() { return this._ticker };
@@ -80,8 +96,9 @@ let lastblocknumber = null;
 let lasttimestamp = null
 let notarizationEvent = null;
 let blockEvent = null;
-let log = function(){};;
+
 const web3Options = {
+    timeout: 7000, // ms
     clientConfig: {
         maxReceivedFrameSize: 100000000,
         maxReceivedMessageSize: 100000000,
@@ -91,7 +108,7 @@ const web3Options = {
     reconnect: {
         auto: true,
         delay: 5000, // ms
-        maxAttempts: 5,
+        maxAttempts: false,
         onTimeout: false,
     }
 };
@@ -115,6 +132,15 @@ function setupConf() {
 
     provider = new Web3.providers.WebsocketProvider(settings.ethnode, web3Options);
     web3 = new Web3(provider);
+
+    provider.on('error', e => log('WS Error', e));
+    provider.on('end', e => {
+        log('WS closed');
+    });
+
+    web3.eth.net.isListening()
+    .then(() => log('web3 is connected'))
+    .catch(e => log('web3 connection lost, Something went wrong: '+ e));
 
     if (settings.privatekey.length == 64) {
         account = web3.eth.accounts.privateKeyToAccount(settings.privatekey);
@@ -168,7 +194,7 @@ async function eventListener(notarizerAddress) {
         reconnect: {
             auto: true,
             delay: 5000, // ms
-            maxAttempts: 5,
+            maxAttempts: false,
             onTimeout: false
         },
         address: notarizerAddress,
@@ -636,6 +662,12 @@ exports.getInfo = async() => {
         var timenow = d.valueOf();
         let cacheGetInfo = await getCachedApi('getInfo');
         let getInfo = cacheGetInfo ? JSON.parse(cacheGetInfo) : null;
+
+        
+        web3.eth.net.isListening()
+        .catch(e => {
+            log('web3 connection lost: '+ e);}
+            );
 
         if (globaltimedelta + globallastinfo < timenow || !getInfo) {
             globallastinfo = timenow;
