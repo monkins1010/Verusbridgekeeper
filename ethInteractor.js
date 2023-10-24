@@ -662,6 +662,7 @@ function createCrossChainExport(transfers, startHeight, endHeight, jsonready = f
 // }
 
 /** core functions */
+const timeoutCheck = (prom, time) => Promise.race([prom, new Promise((_r, rej) => setTimeout(rej, time))]);
 
 exports.getInfo = async() => {
     //getinfo is just tested to see that its not null therefore we can just return the version
@@ -672,9 +673,21 @@ exports.getInfo = async() => {
         var timenow = d.valueOf();
         let cacheGetInfo = await getCachedApi('getInfo');
         let getInfo = cacheGetInfo ? JSON.parse(cacheGetInfo) : null;
-   
         
         if (globaltimedelta + globallastinfo < timenow || !getInfo) {
+    
+            try {
+                const value = await timeoutCheck(web3.eth.net.isListening(), 5000);
+                if (value === false) {
+                    clearCachedApis();
+                    log('web3 connection lost, reconnecting...');
+                    return { "result": {error: true} };
+                }
+            } catch (error) {
+                clearCachedApis();
+                log('web3 connection lost.');
+                return { "result": {error: true} };
+            }
             globallastinfo = timenow;
             const blknum = lastblocknumber;
             const timestamp  = lasttimestamp;
@@ -692,24 +705,9 @@ exports.getInfo = async() => {
             log("Command: getinfo");
             await setCachedApi(getinfo, 'getInfo');
         }
-
-        const timeout = (prom, time) => Promise.race([prom, new Promise((_r, rej) => setTimeout(rej, time))]);
-
-        try {
-            const value = await timeout(web3.eth.net.isListening(), 5000);
-            if (value === true) {
-                return { "result": getinfo };
-            } else {
-                clearCachedApis();
-                log('web3 connection lost, reconnecting...');
-                return { "result": {error: true} };
-            }
-        } catch (error) {
-            clearCachedApis();
-            log('web3 connection lost.');
-            return { "result": {error: true} };
-        }
-
+        return { "result": getinfo };
+        
+        
     } catch (error) {
         console.log( "Error getInfo:" + error);
         return { "result": { "error": true, "message": error } };
@@ -717,7 +715,7 @@ exports.getInfo = async() => {
 }
 
 exports.getCurrency = async(input) => {
-
+    
     try {
         let currency = input[0];
         var d = new Date();
