@@ -6,7 +6,12 @@ let ethInteractor = require('./ethInteractor.js');
 let checkAPI = require('./apiFunctions.js');
 const confFile = require('./confFile.js');
 let RPCDetails;
-let log = function () { };;
+let log = function () { };
+
+const SERVER_OFF = 0;
+const SERVER_OK = 1;
+const SERVER_RPC_FAULT = 2;
+const SERVER_WEBSOCKET_FAULT = 3;
 
 function processPost(request, response, callback) {
     var queryData = "";
@@ -63,21 +68,24 @@ const processData = async (request, response) => {
                 ethInteractor[checkAPI.APIs(command)](postData.params),
                 new Promise((resolve, reject) => {
                     setTimeout(() => {
-                        reject(new Error('Timeout'));
-                    }, 10000);
+                        reject(new Error('Websocket connection Timeout'));
+                    }, 15000);
                 })
             ])
 
-            response.write(JSON.stringify(returnData));
-            response.end();
-            if (returnData.result?.error) {
-                rollingBuffer.push("Error: " + returnData.result?.message);
+            if (returnData?.result?.error) {
+                response.writeHead(402, "Error", { 'Content-Type': 'application/json' });
+                response.write(JSON.stringify(returnData));
+                response.end();
+            } else {
+                response.write(JSON.stringify(returnData));
+                response.end();
             }
  
         } catch (e) {
             response.writeHead(500, "Error", { 'Content-Type': 'application/json' });
             response.end();
-            rollingBuffer.push("Error: " + e.message);
+            rollingBuffer.push(new Date(Date.now()).toLocaleString() + "Error: " + e.message ? e.message : e);
         }
     }
 }
@@ -110,9 +118,28 @@ const bridgeKeeperServer = http.createServer((request, response) => {
     }
 });
 
-exports.status = function () {
-    const serverstatus = bridgeKeeperServer.listening;
-    return { serverrunning: serverstatus, logs: rollingBuffer };
+exports.status = async function () {
+    let serverstatus = bridgeKeeperServer.listening;
+    let websocketOk = false;
+
+    try {
+        websocketOk = await ethInteractor.web3status();
+    } catch (error) {
+        websocketOk = false;
+        rollingBuffer.push(new Date(Date.now()).toLocaleString() + "Connection error: " + error.message);
+    }
+
+    let status;
+
+    if (!serverstatus) {
+        status = SERVER_OFF;
+    } else if (serverstatus && websocketOk) { 
+        status = SERVER_OK;
+    } else if (serverstatus && !websocketOk) {
+        status = SERVER_WEBSOCKET_FAULT;
+    }
+
+    return { serverrunning: status, logs: rollingBuffer };
 }
 
 /**
