@@ -96,10 +96,8 @@ let lastblocknumber = null;
 let lasttimestamp = null
 let notarizationEvent = null;
 let blockEvent = null;
-exports.web3 = web3;
 
 const web3Options = {
-    timeout: 4000, // ms
     clientConfig: {
         maxReceivedFrameSize: 100000000,
         maxReceivedMessageSize: 100000000,
@@ -187,6 +185,22 @@ exports.end = async () => {
         if(success)
             console.log('Successfully unsubscribed from notarization event!');
     });
+    if(web3) {
+        web3.eth.currentProvider.disconnect();
+    }
+
+}
+
+exports.web3status = async () => {
+    let websocketOk = false;
+    try {
+        if(web3) {
+            websocketOk = await Promise.race([web3.eth.net.isListening(), new Promise((_r, rej) => setTimeout(rej, 3000))])
+        }
+    } catch (error) {
+        websocketOk = false;
+    }
+    return websocketOk;
 }
 
 async function eventListener(notarizerAddress) {

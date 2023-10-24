@@ -6,7 +6,12 @@ let ethInteractor = require('./ethInteractor.js');
 let checkAPI = require('./apiFunctions.js');
 const confFile = require('./confFile.js');
 let RPCDetails;
-let log = function () { };;
+let log = function () { };
+
+const SERVER_OFF = 0;
+const SERVER_OK = 1;
+const SERVER_RPC_FAULT = 2;
+const SERVER_WEBSOCKET_FAULT = 3;
 
 function processPost(request, response, callback) {
     var queryData = "";
@@ -63,13 +68,12 @@ const processData = async (request, response) => {
                 ethInteractor[checkAPI.APIs(command)](postData.params),
                 new Promise((resolve, reject) => {
                     setTimeout(() => {
-                        reject(new Error('Timeout'));
+                        reject(new Error('Websocket connection Timeout'));
                     }, 15000);
                 })
             ])
 
             if (returnData?.result?.error) {
-                rollingBuffer.push("Error: " + returnData.result?.message);
                 response.writeHead(402, "Error", { 'Content-Type': 'application/json' });
                 response.write(JSON.stringify(returnData));
                 response.end();
@@ -81,7 +85,7 @@ const processData = async (request, response) => {
         } catch (e) {
             response.writeHead(500, "Error", { 'Content-Type': 'application/json' });
             response.end();
-            rollingBuffer.push("Error: " + e.message);
+            rollingBuffer.push(new Date(Date.now()).toLocaleString() + "Error: " + e.message ? e.message : e);
         }
     }
 }
@@ -118,16 +122,24 @@ exports.status = async function () {
     let serverstatus = bridgeKeeperServer.listening;
     let websocketOk = false;
 
-    const timeout = (prom, time) => Promise.race([prom, new Promise((_r, rej) => setTimeout(rej, time))]);
-
     try {
-        websocketOk = await timeout(web3.eth.net.isListening(), 3000);
+        websocketOk = await ethInteractor.web3status();
     } catch (error) {
         websocketOk = false;
-        rollingBuffer.push("Connection error: " + error.message);
+        rollingBuffer.push(new Date(Date.now()).toLocaleString() + "Connection error: " + error.message);
     }
 
-    return { serverrunning: (serverstatus && websocketOk), logs: rollingBuffer };
+    let status;
+
+    if (!serverstatus) {
+        status = SERVER_OFF;
+    } else if (serverstatus && websocketOk) { 
+        status = SERVER_OK;
+    } else if (serverstatus && !websocketOk) {
+        status = SERVER_WEBSOCKET_FAULT;
+    }
+
+    return { serverrunning: status, logs: rollingBuffer };
 }
 
 /**
