@@ -64,14 +64,18 @@ const processData = async (request, response) => {
                 new Promise((resolve, reject) => {
                     setTimeout(() => {
                         reject(new Error('Timeout'));
-                    }, 10000);
+                    }, 15000);
                 })
             ])
 
-            response.write(JSON.stringify(returnData));
-            response.end();
-            if (returnData.result?.error) {
+            if (returnData?.result?.error) {
                 rollingBuffer.push("Error: " + returnData.result?.message);
+                response.writeHead(402, "Error", { 'Content-Type': 'application/json' });
+                response.write(JSON.stringify(returnData));
+                response.end();
+            } else {
+                response.write(JSON.stringify(returnData));
+                response.end();
             }
  
         } catch (e) {
@@ -110,9 +114,20 @@ const bridgeKeeperServer = http.createServer((request, response) => {
     }
 });
 
-exports.status = function () {
-    const serverstatus = bridgeKeeperServer.listening;
-    return { serverrunning: serverstatus, logs: rollingBuffer };
+exports.status = async function () {
+    let serverstatus = bridgeKeeperServer.listening;
+    let websocketOk = false;
+
+    const timeout = (prom, time) => Promise.race([prom, new Promise((_r, rej) => setTimeout(rej, time))]);
+
+    try {
+        websocketOk = await timeout(web3.eth.net.isListening(), 3000);
+    } catch (error) {
+        websocketOk = false;
+        rollingBuffer.push("Connection error: " + error.message);
+    }
+
+    return { serverrunning: (serverstatus && websocketOk), logs: rollingBuffer };
 }
 
 /**

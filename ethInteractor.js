@@ -33,6 +33,7 @@ const enableLog = function() {
         Array.prototype.unshift.call(arguments, "[" + d + "/" + m + "/" + y + t + "]");
         old.apply(this, arguments);
     }
+    log = console.log;
 };
 
 class EthInteractorConfig {
@@ -50,7 +51,6 @@ class EthInteractorConfig {
         this._userpass = userpass;
         this._rpcallowip = rpcallowip;
 
-        log = this._consolelog ? console.log : function(){};
         if(this._consolelog) enableLog();
     }
 
@@ -96,9 +96,10 @@ let lastblocknumber = null;
 let lasttimestamp = null
 let notarizationEvent = null;
 let blockEvent = null;
+exports.web3 = web3;
 
 const web3Options = {
-    timeout: 7000, // ms
+    timeout: 4000, // ms
     clientConfig: {
         maxReceivedFrameSize: 100000000,
         maxReceivedMessageSize: 100000000,
@@ -205,7 +206,7 @@ async function eventListener(notarizerAddress) {
 
     notarizationEvent = web3.eth.subscribe('logs', options, function(error, result) {
         if (!error) log('Notarization at ETH Height: ' +  result?.blockNumber);
-        else console.log(error);
+        else console.log(error.message);
     }).on("data", function() {
         log('***** EVENT: New Notarization, Clearing the cache(data)*********');
         clearCachedApis();
@@ -218,7 +219,7 @@ async function eventListener(notarizerAddress) {
 
     blockEvent = web3.eth.subscribe('newBlockHeaders', (error, blockHeader) => {
         if (error) {
-          console.error(error);
+          console.error(error.message);
         } else {
             lastblocknumber = blockHeader.number;
             lasttimestamp = blockHeader.timestamp;
@@ -429,14 +430,9 @@ async function getProof(eIndex, blockHeight) {
 
     let key = web3.utils.sha3("0x" + posString + index, { "encoding": "hex" });
 
-    try {
-
-        let proof = await web3.eth.getProof(settings.delegatorcontractaddress, [key], blockHeight);
-        return proof;
-    } catch (error) {
-        console.log("error:", error);
-        return { status: false, error: error };
-    }
+    // If error thrown, it is caught in the calling function
+    let proof = await web3.eth.getProof(settings.delegatorcontractaddress, [key], blockHeight);
+    return proof;
 }
 
 // create the component parts for the proof
@@ -662,13 +658,8 @@ exports.getInfo = async() => {
         var timenow = d.valueOf();
         let cacheGetInfo = await getCachedApi('getInfo');
         let getInfo = cacheGetInfo ? JSON.parse(cacheGetInfo) : null;
-
+   
         
-        web3.eth.net.isListening()
-        .catch(e => {
-            log('web3 connection lost: '+ e);}
-            );
-
         if (globaltimedelta + globallastinfo < timenow || !getInfo) {
             globallastinfo = timenow;
             const blknum = lastblocknumber;
@@ -688,9 +679,25 @@ exports.getInfo = async() => {
             await setCachedApi(getinfo, 'getInfo');
         }
 
-        return { "result": getinfo };
+        const timeout = (prom, time) => Promise.race([prom, new Promise((_r, rej) => setTimeout(rej, time))]);
+
+        try {
+            const value = await timeout(web3.eth.net.isListening(), 5000);
+            if (value === true) {
+                return { "result": getinfo };
+            } else {
+                clearCachedApis();
+                log('web3 connection lost, reconnecting...');
+                return { "result": {error: true} };
+            }
+        } catch (error) {
+            clearCachedApis();
+            log('web3 connection lost.');
+            return { "result": {error: true} };
+        }
+
     } catch (error) {
-        console.log("\x1b[41m%s\x1b[0m", "Error getInfo:" + error);
+        console.log( "Error getInfo:" + error);
         return { "result": { "error": true, "message": error } };
     }
 }
@@ -746,7 +753,7 @@ exports.getCurrency = async(input) => {
 
         return { "result": getCurrency };
     } catch (error) {
-        console.log("\x1b[41m%s\x1b[0m", "getCurrency:" + error);
+        console.log( "getCurrency:" + error);
         return { "result": { "error": true, "message": error } };
     }
 }
@@ -818,8 +825,8 @@ exports.getExports = async(input) => {
         if (error.message == "Returned error: execution reverted" && heightstart == 0)
             console.log("First get Export call, no exports found.");
         else
-            console.log("\x1b[41m%s\x1b[0m", "GetExports error:" + error);
-        return { "result": { "error": true, "message": error } };
+            console.log( "GetExports error:" + error.message);
+        return { "result": { "error": true, "message": error.message } };
     }
 }
 
@@ -899,8 +906,8 @@ exports.getBestProofRoot = async(input) => {
         return retval;
 
     } catch (error) {
-        console.log("\x1b[41m%s\x1b[0m", "getBestProofRoot error:" + error);
-        return { "result": { "error": true, "message": error } };
+        console.log( "getBestProofRoot error:" + error.message);
+        return { "result": { "error": true, "message": error.message } };
     }
 }
 
@@ -921,7 +928,7 @@ async function getProofRoot(height = "latest") {
 
             transaction = await web3.eth.getTransaction(block.transactions[blockTransactionNum]);
         } catch (error) {
-            throw "[getProofRoot] " + error;
+            throw new Error("[getProofRoot] " + error?.message ? error.message : error);
         }
 
         let gasPriceInSATS = (BigInt(transaction.gasPrice) / BigInt(10))
@@ -964,7 +971,7 @@ async function checkProofRoot(height, stateroot, blockhash, power) {
             block = await web3.eth.getBlock(height);
             transaction = await web3.eth.getTransaction(block.transactions[Math.ceil(block.transactions.length / 2)]);
         } catch (error) {
-            throw "getProofRoot error:" + error + height;
+            throw new Error("getProofRoot error:" + error.message + height);
         }
 
         let gasPriceInSATS = (BigInt(transaction.gasPrice) / BigInt(10))
@@ -1091,7 +1098,7 @@ exports.getNotarizationData = async() => {
         return { "result": Notarization };
 
     } catch (error) {
-        console.log("\x1b[41m%s\x1b[0m", "getNotarizationData: (No spend tx) S" + error);
+        console.log( "getNotarizationData: (No spend tx) S" + error.message);
         return { "result": { "error": true, "message": error.message } };
     }
 }
@@ -1250,25 +1257,24 @@ exports.submitImports = async(CTransferArray) => {
         if (CTempArray)
         log("Transfer to ETH: " + JSON.stringify(CTempArray[0].transfers[0].currencyvalue, null,2) + "\nto: " + JSON.stringify(CTempArray[0].transfers[0].destination.destinationaddress, null, 2));
 
-        await setCachedApi(CTransferArray, 'lastsubmitImports');
         if (submitArray.length > 0) {
             globalsubmitimports = await delegatorContract.methods.submitImports(submitArray[0]).send({ from: account.address, gas: submitImportMaxGas });
+            // if the submit import spend  succeeds then we can cache the last submit import.
+            await setCachedApi(CTransferArray, 'lastsubmitImports');
         } else {
-            return { result: "false" };
+            return { result: {error: true} };
         }
     } catch (error) {
 
-        //console.log(error);
-
         if (error.reason)
-            console.log("\x1b[41m%s\x1b[0m", "submitImports:" + error.reason);
+            console.log( "submitImports:" + error.reason);
         else {
             if (error.receipt)
-                console.log("\x1b[41m%s\x1b[0m", "submitImports:" + error.receipt);
+                console.log( "submitImports:" + error.receipt);
 
-            console.log("\x1b[41m%s\x1b[0m", "submitImports:" + error);
+            console.log( "submitImports:" + error.message);
         }
-        return { result: { result: error.message } };
+        return { result: { result: error.message, error: true } };
     }
 
     return { result: globalsubmitimports.transactionHash };
@@ -1302,7 +1308,7 @@ exports.submitAcceptedNotarization = async(params) => {
 
     if (Object.keys(signatures).length < 1) {
         log("submitAcceptedNotarization: Not enough signatures.");
-        return { "result": { "txid": null } };
+        return { "result": { "txid": null, "error": true } };
     }
 
     let txidObj = params[1].output;
@@ -1315,7 +1321,7 @@ exports.submitAcceptedNotarization = async(params) => {
         }
 
     } catch (error) {
-        console.log("submitAcceptedNotarization Error:\n", error);
+        console.log("submitAcceptedNotarization Error:\n", error.message);
         return null;
     }
 
@@ -1344,15 +1350,15 @@ exports.submitAcceptedNotarization = async(params) => {
             console.log(`Notarization reverted... ${params[0].isdefinition ? "Chain definition skipping.." : ""}`);
         }
         else if (error.reason) {
-            console.log("\x1b[41m%s\x1b[0m", "submitAcceptedNotarization:" + error.reason);
+            console.log( "submitAcceptedNotarization:" + error.reason);
         }
         else if (error.message && error.message == "Returned error: already known") {
             console.log("Notarization already Submitted, transaction cancelled");
         }
         else {
-            console.log(error);
+            console.log(error.message);
         }
-        return { "result": { "txid": error } };
+        return { "result": { "error" : true } };
     }
 }
 
@@ -1407,7 +1413,7 @@ exports.getLastImportFrom = async() => {
                 lastconfirmedutxo = { txid: util.removeHexLeader(txid), voutnum: n }
 
             } catch (e) {
-                console.log("\x1b[41m%s\x1b[0m", "No Notarizations recieved yet");
+                console.log( "No Notarizations recieved yet");
             }
             lastImportFrom = { "result": { lastimport, lastconfirmednotarization, lastconfirmedutxo } }
             await setCachedImport(lastImportFrom, 'lastImportFrom');
@@ -1415,8 +1421,8 @@ exports.getLastImportFrom = async() => {
 
         return lastImportFrom;
     } catch (error) {
-        console.log("\x1b[41m%s\x1b[0m", "getLastImportFrom:" + error);
-        return { "result": { "error": true, "message": error } };
+        console.log( "getLastImportFrom:" + error.message);
+        return { "result": { "error": true, "message": error.message } };
     }
 
 }
@@ -1450,12 +1456,12 @@ exports.revokeidentity = async(params) => {
 
     } catch (error) {
 
-        return { "result": { "error": true, error: error.message } };
+        return { "result": { "error": true } };
     }
 }
 
 exports.invalid = async() => {
-    console.log("\x1b[41m%s\x1b[0m", "Invalid API call");
+    console.log( "Invalid API call");
     return { "result": { "error": true, "message": "Unrecognized API call" } }
 
 }
