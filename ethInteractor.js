@@ -935,12 +935,12 @@ async function getProofRoot(height = "latest") {
         try {
             block = await web3.eth.getBlock(height);
             if (block.transactions.length == 0)
-                throw `No Transactions for Block: ${height}`
+                throw  new Error(`No Transactions for Block: ${height}`)
             const blockTransactionNum = block.transactions.length == 1 ? 1 : Math.ceil(block.transactions.length / 2);
 
             transaction = await web3.eth.getTransaction(block.transactions[blockTransactionNum]);
         } catch (error) {
-            throw new Error("[getProofRoot] " + error?.message ? error.message : error);
+            throw new Error("[getProofRoot] " + (error.message ? error.message : error));
         }
 
         let gasPriceInSATS = (BigInt(transaction.gasPrice) / BigInt(10))
