@@ -1040,18 +1040,21 @@ exports.getNotarizationData = async() => {
         let largestIndex = 0;
 
         let calcIndex = 0;
+
+        const voutPosition = InteractorConfig.ticker == "VRSC" ? constants.LIF.NPOS : constants.LIF.NPOS_VRSCTEST;
+        const forkLength = InteractorConfig.ticker == "VRSC" ? constants.LIF.FORKLEN : constants.LIF.FORKLEN_VRSCTEST;
         try {
             while (true) {
                 let notarization = await delegatorContract.methods.bestForks(j).call();
                 notarization = util.removeHexLeader(notarization);
-                if (notarization && notarization.length >= constants.LIF.FORKLEN) {
-                    let length = notarization.length / constants.LIF.FORKLEN;
+                if (notarization && notarization.length >= forkLength) {
+                    let length = notarization.length / forkLength;
 
                     for (let i = 0; length > i; i++) {
 
-                        let hashPos = constants.LIF.HASHPOS + (i * constants.LIF.FORKLEN);
-                        let txidPos = constants.LIF.TXIDPOS + (i * constants.LIF.FORKLEN);
-                        let nPos = constants.LIF.NPOS + (i * constants.LIF.FORKLEN);
+                        let hashPos = constants.LIF.HASHPOS + (i * forkLength);
+                        let txidPos = constants.LIF.TXIDPOS + (i * forkLength);
+                        let nPos = voutPosition + (i * forkLength);
                         if (largestIndex < calcIndex)
                         {
                             largestIndex = calcIndex;
@@ -1418,7 +1421,7 @@ exports.getLastImportFrom = async() => {
                 forksData = util.removeHexLeader(forksData);
 
                 let txidPos = constants.LIF.TXIDPOS;
-                let nPos = constants.LIF.NPOS;
+                let nPos = InteractorConfig.ticker == "VRSC" ? constants.LIF.NPOS : constants.LIF.NPOS_VRSCTEST;
                 let txid = "0x" + forksData.substring(txidPos, txidPos + constants.LIF.BYTES32SIZE).reversebytes();
                 let n = parseInt(forksData.substring(nPos, nPos + 8), constants.LIF.HEX);
 
