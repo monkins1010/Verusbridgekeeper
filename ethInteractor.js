@@ -96,6 +96,7 @@ let lastblocknumber = null;
 let lasttimestamp = null
 let notarizationEvent = null;
 let blockEvent = null;
+let webSocketFault = false;
 
 const web3Options = {
     clientConfig: {
@@ -682,10 +683,17 @@ exports.getInfo = async() => {
                     clearCachedApis();
                     log('web3 connection lost, reconnecting...');
                     return { "result": {error: true} };
+                } else if(webSocketFault === true) {
+                    exports.end();
+                    setupConf();
+                    eventListener(settings.delegatorcontractaddress);
+                    webSocketFault = false;
+                    log('web3 connection restored.');
                 }
             } catch (error) {
                 clearCachedApis();
-                log('web3 connection lost.');
+                log('web3 connection lost.' + error.message ? error.message : error);
+                webSocketFault = true;
                 return { "result": {error: true} };
             }
             globallastinfo = timenow;

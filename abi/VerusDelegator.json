@@ -1074,7 +1074,7 @@
     "inputs": [],
     "name": "claimfees",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "payable",
     "type": "function"
   },
   {
