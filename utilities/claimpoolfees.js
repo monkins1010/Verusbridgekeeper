@@ -28,6 +28,7 @@ const main = async () => {
     log("The claim will cost: ", web3.utils.fromWei(gasCost), "ETH in GAS FEES, GAS is: ", web3.utils.fromWei(gasPrice, "gwei"), " gwei");
     
     if (process.argv.indexOf('-claim') > -1) {
+        web3.eth.accounts.wallet.add(account);
         log("Please wait this can take a while...");
         await delegatorContract.methods.claimfees().send({ from: account.address, gas: 500000 });
     } else {
