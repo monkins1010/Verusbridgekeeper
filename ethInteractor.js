@@ -238,7 +238,7 @@ async function eventListener(notarizerAddress) {
         } else {
             lastblocknumber = blockHeader.number;
             lasttimestamp = blockHeader.timestamp;
-          log("New block recieved",blockHeader.number);
+          log("New block received",blockHeader.number);
         }
       });
 }
@@ -1436,7 +1436,7 @@ exports.getLastImportFrom = async() => {
                 lastconfirmedutxo = { txid: util.removeHexLeader(txid), voutnum: n }
 
             } catch (e) {
-                console.log( "No Notarizations recieved yet");
+                console.log( "No Notarizations received yet");
             }
             lastImportFrom = { "result": { lastimport, lastconfirmednotarization, lastconfirmedutxo } }
             await setCachedImport(lastImportFrom, 'lastImportFrom');
