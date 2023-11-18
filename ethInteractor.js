@@ -1049,12 +1049,15 @@ exports.getNotarizationData = async() => {
 
         let calcIndex = 0;
 
-        const voutPosition = InteractorConfig.ticker == "VRSC" ? constants.LIF.NPOS : constants.LIF.NPOS_VRSCTEST;
-        const forkLength = InteractorConfig.ticker == "VRSC" ? constants.LIF.FORKLEN : constants.LIF.FORKLEN_VRSCTEST;
         try {
             while (true) {
                 let notarization = await delegatorContract.methods.bestForks(j).call();
                 notarization = util.removeHexLeader(notarization);
+                //if mod is 0 then the length is the new type of notarization.
+                const lengthMod = notarization.length % constants.LIF.FORKLEN;
+                const voutPosition = lengthMod == 0 ? constants.LIF.NPOS : constants.LIF.NPOS_VRSCTEST;
+                const forkLength = lengthMod == 0 ? constants.LIF.FORKLEN : constants.LIF.FORKLEN_VRSCTEST;
+                
                 if (notarization && notarization.length >= forkLength) {
                     let length = notarization.length / forkLength;
 
@@ -1274,17 +1277,31 @@ exports.submitImports = async(CTransferArray) => {
                 return { result: globalsubmitimports.transactionHash };
             }
         }
-
+        // catch any errors and return
         const testcall = await delegatorContract.methods.submitImports(submitArray[0]).call(); //test call
-
+        // prevent revert if gas limit is exceeded
+        const gascalc = await delegatorContract.methods.submitImports(submitArray[0]).estimateGas({ from: account.address });
         if (CTempArray)
-        log("Transfer to ETH: " + JSON.stringify(CTempArray[0].transfers[0].currencyvalue, null,2) + "\nto: " + JSON.stringify(CTempArray[0].transfers[0].destination.destinationaddress, null, 2));
+        log("Submitting transfers to ETH, total: " + CTempArray[0].transfers.length);
 
-        if (submitArray.length > 0) {
+        const pendingTransactions = await web3.eth.getBlock('pending', true);
+        let found = false;
+    
+        for (const tx of pendingTransactions.transactions) {
+            if(tx.to == settings.delegatorcontractaddress) {
+                found = true;
+                break;
+            }
+        };
+        
+        if(found) {
+            log("Submitimports: Pending transaction found, skipping...");
+        } else if (submitArray.length > 0 && (parseInt(gascalc) < parseInt(submitImportMaxGas))) {
             globalsubmitimports = await delegatorContract.methods.submitImports(submitArray[0]).send({ from: account.address, gas: submitImportMaxGas });
             // if the submit import spend  succeeds then we can cache the last submit import.
             await setCachedApi(CTransferArray, 'lastsubmitImports');
         } else {
+            log("GAS LIMIT EXCEEDED: " + gascalc + " > " + submitImportMaxGas);
             return { result: {error: true} };
         }
     } catch (error) {
@@ -1358,9 +1375,23 @@ exports.submitAcceptedNotarization = async(params) => {
         }
         // Call contract to test for reversion.
         const testValue = await delegatorContract.methods.setLatestData(serializednotarization, txid, txidObj.voutnum, abiencodedSigData).call();
-        txhash = await delegatorContract.methods.setLatestData(serializednotarization, txid, txidObj.voutnum, abiencodedSigData).send({ from: account.address, gas: notarizationMaxGas });
-        log("notarization tx: success");
 
+        const pendingTransactions = await web3.eth.getBlock('pending', true);
+        let found = false;
+
+        for (const tx of pendingTransactions.transactions) {
+            if(tx.to == settings.delegatorcontractaddress) {
+                found = true;
+                break;
+            }
+        };
+
+        if(found) {
+            log("Submitacceptednotarization: Pending transaction found, skipping...");
+        } else {
+            txhash = await delegatorContract.methods.setLatestData(serializednotarization, txid, txidObj.voutnum, abiencodedSigData).send({ from: account.address, gas: notarizationMaxGas });
+            log("notarization tx: success");
+        }
         await setCachedApi(txidObj.txid, 'lastNotarizationTxid');
         return { "result": txhash };
 
@@ -1428,8 +1459,10 @@ exports.getLastImportFrom = async() => {
                 forksData = await delegatorContract.methods.bestForks(0).call();
                 forksData = util.removeHexLeader(forksData);
 
+                const lengthMod = forksData.length % constants.LIF.FORKLEN;
+
                 let txidPos = constants.LIF.TXIDPOS;
-                let nPos = InteractorConfig.ticker == "VRSC" ? constants.LIF.NPOS : constants.LIF.NPOS_VRSCTEST;
+                let nPos = lengthMod === 0 ? constants.LIF.NPOS : constants.LIF.NPOS_VRSCTEST;
                 let txid = "0x" + forksData.substring(txidPos, txidPos + constants.LIF.BYTES32SIZE).reversebytes();
                 let n = parseInt(forksData.substring(nPos, nPos + 8), constants.LIF.HEX);
 
