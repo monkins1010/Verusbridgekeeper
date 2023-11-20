@@ -179,3 +179,20 @@ for the notaries recover key.
 ```shell
 node upgrade.js -recovermultisig [-testnet]
 ```
+
+## To Create a contract upgrade hash
+
+```shell
+node upgrade.js -getcontracthash -contracttype 0 -contractaddress 0xe20Aa3a102e4326B1D86683d493E854A792baB41 [-testnet]
+```
+NOTE: the upgraded contract MUST have a `initialize()` function in it as below to be able to upgrade.
+
+```js
+function initialize() external { }
+```
+
+## To execute a contract upgrade once there is more than 51 votes
+
+```shell
+ node upgrade.js -upgradecontracts -contracttype 0 -contractaddress 0xf2bF96D603b54f96a0BF6F72305A84813C90b345 [-testnet] -salt 0xaae83c4ccbadca1ce6478b031bb4444ac0d375a56886a9d4a8dfe2116763dcbf
+```

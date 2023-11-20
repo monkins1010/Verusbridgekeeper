@@ -3,7 +3,7 @@ const { addHexPrefix } = require('../utils');
 const confFile = require('../confFile.js')
 const { randomBytes } = require('crypto')
 const bitGoUTXO = require('bitgo-utxo-lib');
-const upgradeContracts = (process.argv.indexOf('-contracts') > -1);
+const upgradeContracts = (process.argv.indexOf('-upgradecontracts') > -1);
 const revoke = (process.argv.indexOf('-revoke') > -1);
 const recover = (process.argv.indexOf('-recover') > -1);
 const recovermultisig = (process.argv.indexOf('-recovermultisig') > -1);
@@ -133,6 +133,18 @@ function getContractAddress() {
 
 function getContractType() {
     const flag = '-contracttype';
+    const index = process.argv.indexOf(flag);
+  
+    if (index !== -1 && process.argv.length > index + 1) {
+      return process.argv[index + 1];
+    } else {
+        return null;
+    }
+
+}
+
+function getSalt() {
+    const flag = '-salt';
     const index = process.argv.indexOf(flag);
   
     if (index !== -1 && process.argv.length > index + 1) {
@@ -295,9 +307,21 @@ const createRevokeTuple = (addresses, salt, signature) => {
     return data;
 }
 
+const createUpgradeTuple = (addresses, salt, upgradetype) => {
+
+    let package = [0, "0x00", "0x00",
+                    addresses, upgradetype, salt, "0x0000000000000000000000000000000000000000", 0];
+    
+    let data = abi.encodeParameter(
+        'tuple(uint8,bytes32,bytes32,address[],uint8,bytes32,address,uint32)',
+        package);
+    
+    return data;
+}
+
 const createContractUpdateAddress = async() => {
     try {
-        let randomBuf = randomBytes(32);
+        let randomBuf = Buffer.from('aae83c4ccbadca1ce6478b031bb4444ac0d375a56886a9d4a8dfe2116763dcbf', 'hex'); //randomBytes(32);
 
         let outBuffer = Buffer.alloc(1);
         outBuffer.writeUInt8(TYPE_CONTRACT);
@@ -530,6 +554,42 @@ const recoverIDWithMultisig = async() => {
     process.exit(0);
 }
 
+const upgradeContractSend = async() => {
+    try {
+       
+        let contracts = [];
+        // Get the list of current active contracts
+        for (let i = 0; i < 11; i++) 
+        {
+            contracts.push(await delegatorContract.methods.contracts(i).call());
+        }
+        const newContract = getContractAddress();
+        const newContractType = getContractType();
+        const salt = getSalt();
+
+        if (!newContract || !newContractType || !salt) {
+            return false;
+        }
+         //replace existing contract with new contract address
+        contracts[newContractType] = newContract; 
+
+        const key = Object.keys(ContractType);
+        console.log("\nNew Ethereum contract: " + newContract + " Type: " + key[newContractType] + "\nSalt used: 0x" + salt)
+
+        const upgradeTupleSerialized = createUpgradeTuple(contracts, salt, TYPE_CONTRACT);
+
+        const revv1 = await delegatorContract.methods.upgradeContracts(upgradeTupleSerialized).call();
+        const revv2 = await delegatorContract.methods.upgradeContracts(upgradeTupleSerialized).send({ from: account.address, gas: maxGas });
+        console.log("Upgrade completed, please check with etherscan : ", revv2);
+    } catch (e) {
+        console.log(e);
+
+    }
+    process.exit(0);
+
+
+}
+
 const main = async ()=> {
 
     let success = false;
@@ -556,8 +616,11 @@ const main = async ()=> {
         else if(createrecovermultisigpacket){
             success = await createrecoverIDWithMultisigPacket();
         }
+        else if(upgradeContracts){
+            success = upgradeContractSend();
+        }
         if(!success) {
-            console.log("Please use the flags -contracts, -revoke , -recover, or -getcontracthash");
+            console.log("Please use the flags -contractupgrade, -revoke , -recover, or -getcontracthash");
             console.log("To get the contract hash run:\n\nnode upgrade.js -getcontracthash -contracttype 1 -contractaddress 0x1234567890\n");
             exitUpgradeError();
         }
