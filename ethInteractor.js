@@ -692,7 +692,7 @@ exports.getInfo = async() => {
                 }
             } catch (error) {
                 clearCachedApis();
-                log('web3 connection lost.' + error.message ? error.message : error);
+                log('web3 connection lost:', error);
                 webSocketFault = true;
                 return { "result": {error: true} };
             }
