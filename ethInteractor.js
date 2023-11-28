@@ -1434,6 +1434,11 @@ exports.getLastImportFrom = async() => {
             let lastimporttxid = SUBMIT_IMPORTS_LAST_TXID;
             let lastImportInfo;
 
+            // if Main testnet use call to get last import txid
+            if (delegatorContract._address === "0x85a7dE2278E52327471e174AeeB280cdFdC6A68a") {
+                lastimporttxid = await delegatorContract.methods.lastTxIdImport().call();
+            }
+
             lastImportInfo = await delegatorContract.methods.lastImportInfo(lastimporttxid).call();
             await setCachedImport(lastImportInfo, 'lastImportInfo');
 
