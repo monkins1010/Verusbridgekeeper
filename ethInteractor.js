@@ -692,7 +692,7 @@ exports.getInfo = async() => {
                 }
             } catch (error) {
                 clearCachedApis();
-                log('web3 connection lost.' + error.message ? error.message : error);
+                log('web3 connection lost:', error);
                 webSocketFault = true;
                 return { "result": {error: true} };
             }
@@ -1433,6 +1433,11 @@ exports.getLastImportFrom = async() => {
             const SUBMIT_IMPORTS_LAST_TXID = "0x00000000000000000000000037256eef64a0bf17344bcb0cbfcde4bea6746347";
             let lastimporttxid = SUBMIT_IMPORTS_LAST_TXID;
             let lastImportInfo;
+
+            // if Main testnet use call to get last import txid
+            if (delegatorContract._address === "0x85a7dE2278E52327471e174AeeB280cdFdC6A68a") {
+                lastimporttxid = await delegatorContract.methods.lastTxIdImport().call();
+            }
 
             lastImportInfo = await delegatorContract.methods.lastImportInfo(lastimporttxid).call();
             await setCachedImport(lastImportInfo, 'lastImportInfo');
