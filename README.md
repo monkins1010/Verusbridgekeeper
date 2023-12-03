@@ -196,3 +196,12 @@ function initialize() external { }
 ```shell
  node upgrade.js -upgradecontracts -contracttype 0 -contractaddress 0xf2bF96D603b54f96a0BF6F72305A84813C90b345 [-testnet] -salt 0xaae83c4ccbadca1ce6478b031bb4444ac0d375a56886a9d4a8dfe2116763dcbf
 ```
+
+## To check the balance of the DAI DSR Interest and burn it back
+
+Only put the `-burn` flag on to actually execute the transaction.
+
+```shell
+node burndai.js [-burn]
+
+```
