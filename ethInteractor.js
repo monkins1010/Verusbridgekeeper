@@ -98,19 +98,21 @@ let notarizationEvent = null;
 let blockEvent = null;
 let webSocketFault = false;
 
+const reconnectOptions = {
+  auto: false,
+  delay: 5000, // ms
+  maxAttempts: 0,
+  onTimeout: false,
+}
+
 const web3Options = {
     clientConfig: {
         maxReceivedFrameSize: 100000000,
         maxReceivedMessageSize: 100000000,
         keepalive: true,
-        keepaliveInterval: -1 // ms
+        keepaliveInterval: 60000 // ms
     },
-    reconnect: {
-        auto: true,
-        delay: 5000, // ms
-        maxAttempts: false,
-        onTimeout: false,
-    }
+    reconnect: reconnectOptions
 };
 
 Object.assign(String.prototype, {
@@ -119,35 +121,54 @@ Object.assign(String.prototype, {
     }
 });
 
-function setupConf() {
-    settings = confFile.loadConfFile(InteractorConfig.ticker);
-    if(!settings.delegatorcontractaddress) {
-
-        throw new Error("Delegator contract address not set in conf file");
+async function setupConf() {
+    if (!settings) {
+      settings = confFile.loadConfFile(InteractorConfig.ticker);
+      if(!settings.delegatorcontractaddress) {
+          throw new Error("Delegator contract address not set in conf file");
+      }
     }
+    
     InteractorConfig._userpass = `${settings.rpcuser}:${settings.rpcpassword}`;
     // Default ip to 127.0.0.1 if not set
     InteractorConfig._rpcallowip = settings.rpcallowip || "127.0.0.1";
     InteractorConfig._nowitnesssubmit = settings.nowitnesssubmissions == "true";
 
+    if (web3) {
+      await disconnectProviderSocket();
+    }
+
+    // create new provider connection    
     provider = new Web3.providers.WebsocketProvider(settings.ethnode, web3Options);
-    web3 = new Web3(provider);
+    provider.on('error', e => { log('web3 provider socket error'); });
+    provider.on('end',   e => { log('web3 provider socket closed'); });
 
-    provider.on('error', e => log('WS Error', e));
-    provider.on('end', e => {
-        log('WS closed');
-    });
-
-    web3.eth.net.isListening()
-    .then(() => log('web3 is connected'))
-    .catch(e => log('web3 connection lost, Something went wrong: '+ e));
+    if (web3 === undefined) {
+      // create new web3 object
+      web3 = new Web3(provider);
+    } else {
+      // update provider on existing web3 object
+      web3.setProvider(provider);
+      console.log('web3 provider socket updated');
+    }
+    
+    try {
+      let isListening = await web3.eth.net.isListening();
+      if (isListening === true) {
+        log('web3 provider socket is connected');
+      }
+    } catch (e) {
+      webSocketFault = true;
+      log('web3 provider socket error', e.reason?e.reason:e);
+    }
 
     if (settings.privatekey.length == 64) {
-        account = web3.eth.accounts.privateKeyToAccount(settings.privatekey);
-        web3.eth.accounts.wallet.add(account);
+      account = web3.eth.accounts.privateKeyToAccount(settings.privatekey);
+      web3.eth.accounts.wallet.add(account);
     } else {
-        noaccount = true;
+      noaccount = true;
     }
+
     web3.eth.handleRevert = false;
     delegatorContract = new web3.eth.Contract(verusDelegatorAbi, settings.delegatorcontractaddress);
 }
@@ -168,7 +189,9 @@ exports.init = async (config = {}) => {
         config.rpcallowip,
         config.nowitnesssubmissions,
     )
-    setupConf();
+    
+    await setupConf();
+    
     initApiCache();
     initBlockCache();
     eventListener(settings.delegatorcontractaddress);
@@ -176,21 +199,26 @@ exports.init = async (config = {}) => {
     return settings.rpcport;
 };
 
-exports.end = async () => {
-
-    blockEvent.unsubscribe(function(error, success){
+async function disconnectProviderSocket() {
+    if (blockEvent) {
+      blockEvent.unsubscribe(function(error, success){
         if(success)
             console.log('Successfully unsubscribed from block event!');
-    });
-    notarizationEvent.unsubscribe(function(error, success){
+      });
+    }
+    if (notarizationEvent) {
+      notarizationEvent.unsubscribe(function(error, success){
         if(success)
             console.log('Successfully unsubscribed from notarization event!');
-    });
-    if(web3) {
-        web3.eth.currentProvider.disconnect();
+      });
     }
-
+    if(web3) {
+      await web3.eth.currentProvider.disconnect();
+      console.log('web3 provider socket disconnect');
+    }
 }
+
+exports.end = disconnectProviderSocket;
 
 exports.web3status = async () => {
     let websocketOk = false;
@@ -207,12 +235,7 @@ exports.web3status = async () => {
 async function eventListener(notarizerAddress) {
 
     var options = {
-        reconnect: {
-            auto: true,
-            delay: 5000, // ms
-            maxAttempts: false,
-            onTimeout: false
-        },
+        reconnect: reconnectOptions,
         address: notarizerAddress,
         topics: [
             '0x680ce19d19cb7479bae869cebd27efcca33f6f22a43fd4d52d6c62a64890b7fd'
@@ -221,7 +244,8 @@ async function eventListener(notarizerAddress) {
 
     notarizationEvent = web3.eth.subscribe('logs', options, function(error, result) {
         if (!error) log('Notarization at ETH Height: ' +  result?.blockNumber);
-        else console.log(error.message);
+        else console.log("notarizationEvent", error.message);
+        
     }).on("data", function() {
         log('***** EVENT: New Notarization, Clearing the cache(data)*********');
         clearCachedApis();
@@ -233,14 +257,14 @@ async function eventListener(notarizerAddress) {
     });
 
     blockEvent = web3.eth.subscribe('newBlockHeaders', (error, blockHeader) => {
-        if (error) {
-          console.error(error.message);
-        } else {
-            lastblocknumber = blockHeader.number;
-            lasttimestamp = blockHeader.timestamp;
-          log("New block received",blockHeader.number);
-        }
-      });
+      if (error) {
+        console.error(error.message);
+      } else {
+          lastblocknumber = blockHeader.number;
+          lasttimestamp = blockHeader.timestamp;
+        log("New block received",blockHeader.number);
+      }
+    });
 }
 
 function amountFromValue(incoming) {
@@ -662,40 +686,49 @@ function createCrossChainExport(transfers, startHeight, endHeight, jsonready = f
 //     return cce;
 // }
 
+async function restoreSocketOnFault() {
+  if(webSocketFault === true) {
+    clearCachedApis();
+    await setupConf();
+    eventListener(settings.delegatorcontractaddress);
+    webSocketFault = false;
+  }
+}
+
 /** core functions */
 const timeoutCheck = (prom, time) => Promise.race([prom, new Promise((_r, rej) => setTimeout(rej, time))]);
+
+async function isProviderSocketOK() {
+  try {
+    const v = await timeoutCheck(web3.eth.net.isListening(), 5000);
+    if (v === false) {
+        log('web3 provider socket timeout');
+    }
+    return v;
+
+  } catch (e) {
+    log('web3 provider socket error');
+    return false;
+  }
+}
 
 exports.getInfo = async() => {
     //getinfo is just tested to see that its not null therefore we can just return the version
     //check that we can connect to Ethereum if not return null to kill the connection
     try {
-
         var d = new Date();
         var timenow = d.valueOf();
         let cacheGetInfo = await getCachedApi('getInfo');
         let getInfo = cacheGetInfo ? JSON.parse(cacheGetInfo) : null;
         
         if (globaltimedelta + globallastinfo < timenow || !getInfo) {
-    
-            try {
-                const value = await timeoutCheck(web3.eth.net.isListening(), 5000);
-                if (value === false) {
-                    clearCachedApis();
-                    log('web3 connection lost, reconnecting...');
-                    return { "result": {error: true} };
-                } else if(webSocketFault === true) {
-                    exports.end();
-                    setupConf();
-                    eventListener(settings.delegatorcontractaddress);
-                    webSocketFault = false;
-                    log('web3 connection restored.');
-                }
-            } catch (error) {
-                clearCachedApis();
-                log('web3 connection lost:', error);
-                webSocketFault = true;
-                return { "result": {error: true} };
+            await restoreSocketOnFault();
+            let isOK = await isProviderSocketOK();
+            if (isOK !== true) {
+              webSocketFault = true;
+              return { "result": { error: true, message: "web3 provider socket is not connected" } };
             }
+
             globallastinfo = timenow;
             const blknum = lastblocknumber;
             const timestamp  = lasttimestamp;
@@ -713,6 +746,7 @@ exports.getInfo = async() => {
             log("Command: getinfo");
             await setCachedApi(getinfo, 'getInfo');
         }
+
         return { "result": getinfo };
         
         
@@ -779,7 +813,6 @@ exports.getCurrency = async(input) => {
 }
 
 exports.getExports = async(input) => {
-
     let output = [];
     const lastCTransferArray = await getCachedApi('lastgetExports');
     const lastGetExport = await getCachedApi('lastgetExportResult');
@@ -789,8 +822,15 @@ exports.getExports = async(input) => {
 
     let srtInput = JSON.stringify(input);
     if (lastCTransferArray == srtInput && lastGetExport) {
-
         return { "result": JSON.parse(lastGetExport) };
+    }
+
+    // web3 connection management
+    await restoreSocketOnFault();
+    let isOK = await isProviderSocketOK();
+    if (isOK !== true) {
+      webSocketFault = true;
+      return { "result": { error: true, message: "web3 provider socket is not connected" } };
     }
 
     heightstart = heightstart == 1 ? 0 : heightstart;
@@ -841,12 +881,18 @@ exports.getExports = async(input) => {
         await setCachedApi(input, 'lastgetExports');
         await setCachedApi(output, 'lastgetExportResult');
         return { "result": output };
+
     } catch (error) {
-        if (error.message == "Returned error: execution reverted" && heightstart == 0)
-            console.log("First get Export call, no exports found.");
-        else
-            console.log( "GetExports error:" + error.message);
-        return { "result": { "error": true, "message": error.message } };
+        let message = "unknown";
+        if (error && error.message == "Returned error: execution reverted" && heightstart == 0)
+            message = "First get Export call, no exports found.";
+        else if (error && error.message)
+            message = error.message;
+        else if (error)
+          message = JSON.stringify(error);
+        
+        console.log("getExports error:", message);
+        return { "result": { "error": true, "message": message } };
     }
 }
 
@@ -926,27 +972,39 @@ exports.getBestProofRoot = async(input) => {
         return retval;
 
     } catch (error) {
-        console.log( "getBestProofRoot error:" + error.message);
-        return { "result": { "error": true, "message": error.message } };
+        let message = "unknown";
+        if (error && error.message)
+            message = error.message;
+        else if (error)
+          message = JSON.stringify(error);
+        
+        console.log("getBestProofRoot error:", message);
+        return { "result": { "error": true, "message": message } };
     }
 }
 
 async function getProofRoot(height = "latest") {
-
     let block;
     let transaction;
     let latestproofroot = {};
-
     const cachedBlock = await getCachedBlock(`${height}`);
     if (!cachedBlock)
     {
+        await restoreSocketOnFault();
+        let isOK = await isProviderSocketOK();
+        if (isOK !== true) {
+          webSocketFault = true;
+          throw new Error("[getProofRoot] web3 provider socket is not connected");
+        }
+      
         try {
             block = await web3.eth.getBlock(height);
-            if (block.transactions.length == 0)
-                throw  new Error(`No Transactions for Block: ${height}`)
+            if (block.transactions.length == 0) {
+                throw  new Error(`No Transactions for Block: ${height}`);
+            }
             const blockTransactionNum = block.transactions.length == 1 ? 1 : Math.ceil(block.transactions.length / 2);
-
             transaction = await web3.eth.getTransaction(block.transactions[blockTransactionNum]);
+
         } catch (error) {
             throw new Error("[getProofRoot] " + (error.message ? error.message : error));
         }
@@ -978,20 +1036,25 @@ async function getProofRoot(height = "latest") {
 }
 
 async function checkProofRoot(height, stateroot, blockhash, power) {
-
-
     let block;
     let transaction;
     let latestproofroot = {};
 
     const cachedBlock = await getCachedBlock(`${height}`);
-    if (!cachedBlock)
-    {
+    if (!cachedBlock) {
+
+        await restoreSocketOnFault();
+        let isOK = await isProviderSocketOK();
+        if (isOK !== true) {
+          webSocketFault = true;
+          throw new Error("[checkProofRoot] web3 provider socket is not connected");
+        }
+      
         try {
             block = await web3.eth.getBlock(height);
             transaction = await web3.eth.getTransaction(block.transactions[Math.ceil(block.transactions.length / 2)]);
         } catch (error) {
-            throw new Error("getProofRoot error:" + error.message + height);
+            throw new Error("checkProofRoot error:", (error.message?error.message:error), height);
         }
 
         let gasPriceInSATS = (BigInt(transaction.gasPrice) / BigInt(10))
