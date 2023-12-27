@@ -142,7 +142,7 @@ async function setupConf() {
     // create new provider connection    
     provider = new Web3.providers.WebsocketProvider(settings.ethnode, web3Options);
     provider.on('error', e => { log('web3 provider socket error'); });
-    provider.on('end',   e => { log('web3 provider socker end'); });
+    provider.on('end',   e => { log('web3 provider socket end'); });
 
     if (web3 === undefined) {
       // create new web3 object
