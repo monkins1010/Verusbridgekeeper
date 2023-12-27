@@ -94,8 +94,8 @@ let account = undefined;
 let delegatorContract = undefined;
 let lastblocknumber = null;
 let lasttimestamp = null
-let notarizationEvent = null;
-let blockEvent = null;
+let notarizationEvent = undefined;
+let blockEvent = undefined;
 let webSocketFault = false;
 
 const reconnectOptions = {
@@ -127,12 +127,13 @@ async function setupConf() {
       if(!settings.delegatorcontractaddress) {
           throw new Error("Delegator contract address not set in conf file");
       }
+
+      InteractorConfig._userpass = `${settings.rpcuser}:${settings.rpcpassword}`;
+
+      // Default ip to 127.0.0.1 if not set
+      InteractorConfig._rpcallowip = settings.rpcallowip || "127.0.0.1";
+      InteractorConfig._nowitnesssubmit = settings.nowitnesssubmissions == "true";
     }
-    
-    InteractorConfig._userpass = `${settings.rpcuser}:${settings.rpcpassword}`;
-    // Default ip to 127.0.0.1 if not set
-    InteractorConfig._rpcallowip = settings.rpcallowip || "127.0.0.1";
-    InteractorConfig._nowitnesssubmit = settings.nowitnesssubmissions == "true";
 
     if (web3) {
       await disconnectProviderSocket();
@@ -141,36 +142,44 @@ async function setupConf() {
     // create new provider connection    
     provider = new Web3.providers.WebsocketProvider(settings.ethnode, web3Options);
     provider.on('error', e => { log('web3 provider socket error'); });
-    provider.on('end',   e => { log('web3 provider socket closed'); });
+    provider.on('end',   e => { log('web3 provider socker end'); });
 
     if (web3 === undefined) {
       // create new web3 object
       web3 = new Web3(provider);
+      
+      // add our wallet only once
+      if (settings.privatekey.length == 64) {
+        account = web3.eth.accounts.privateKeyToAccount(settings.privatekey);
+        web3.eth.accounts.wallet.add(account);
+      } else {
+        noaccount = true;
+      }
+      
+      web3.eth.handleRevert = false;
+      delegatorContract = new web3.eth.Contract(verusDelegatorAbi, settings.delegatorcontractaddress);
+
     } else {
       // update provider on existing web3 object
       web3.setProvider(provider);
-      console.log('web3 provider socket updated');
     }
-    
+
     try {
       let isListening = await web3.eth.net.isListening();
       if (isListening === true) {
-        log('web3 provider socket is connected');
+        webSocketFault = false;
+        log('web3 provider is connected');
+        return true;
+      } else {
+        webSocketFault = true;
       }
     } catch (e) {
       webSocketFault = true;
-      log('web3 provider socket error', e.reason?e.reason:e);
     }
-
-    if (settings.privatekey.length == 64) {
-      account = web3.eth.accounts.privateKeyToAccount(settings.privatekey);
-      web3.eth.accounts.wallet.add(account);
-    } else {
-      noaccount = true;
+    if (webSocketFault === true) {
+      log('web3 provider is offline');
     }
-
-    web3.eth.handleRevert = false;
-    delegatorContract = new web3.eth.Contract(verusDelegatorAbi, settings.delegatorcontractaddress);
+    return false;
 }
 
 /**
@@ -194,28 +203,26 @@ exports.init = async (config = {}) => {
     
     initApiCache();
     initBlockCache();
+
     eventListener(settings.delegatorcontractaddress);
 
     return settings.rpcport;
 };
 
 async function disconnectProviderSocket() {
-    if (blockEvent) {
-      blockEvent.unsubscribe(function(error, success){
-        if(success)
-            console.log('Successfully unsubscribed from block event!');
-      });
-    }
-    if (notarizationEvent) {
-      notarizationEvent.unsubscribe(function(error, success){
-        if(success)
-            console.log('Successfully unsubscribed from notarization event!');
-      });
-    }
-    if(web3) {
-      await web3.eth.currentProvider.disconnect();
-      console.log('web3 provider socket disconnect');
-    }
+  if (notarizationEvent) {
+    notarizationEvent.unsubscribe(function(error, success){});
+    notarizationEvent = undefined;
+  }
+  if (blockEvent) {
+    blockEvent.unsubscribe(function(error, success){});
+    blockEvent = undefined;
+  }
+  if(web3) {
+    web3.eth.clearSubscriptions();
+    await web3.eth.currentProvider.disconnect();
+    log("web3 provider disconnect");
+  }
 }
 
 exports.end = disconnectProviderSocket;
@@ -234,7 +241,7 @@ exports.web3status = async () => {
 
 async function eventListener(notarizerAddress) {
 
-    var options = {
+    let options = {
         reconnect: reconnectOptions,
         address: notarizerAddress,
         topics: [
@@ -242,29 +249,32 @@ async function eventListener(notarizerAddress) {
         ]
     };
 
-    notarizationEvent = web3.eth.subscribe('logs', options, function(error, result) {
-        if (!error) log('Notarization at ETH Height: ' +  result?.blockNumber);
-        else console.log("notarizationEvent", error.message);
-        
-    }).on("data", function() {
-        log('***** EVENT: New Notarization, Clearing the cache(data)*********');
-        clearCachedApis();
-        setCachedApi(null, 'lastgetNotarizationDatatime');
-        // await setCachedApi(log?.blockNumber, 'lastNotarizationHeight');
-    }).on("changed", function() {
-        log('***** EVENT: New Notarization, Clearing the cache(changed)**********');
-        clearCachedApis();
-    });
+    if (notarizationEvent === undefined) {
+      notarizationEvent = web3.eth.subscribe('logs', options, function(error, result) {
+          if (!error) log('Notarization at ETH Height: ' +  result?.blockNumber);
+          else console.log("notarizationEvent", error);
+      }).on("data", function() {
+          log('***** EVENT: New Notarization, Clearing the cache(data)*********');
+          clearCachedApis();
+          setCachedApi(null, 'lastgetNotarizationDatatime');
+          // await setCachedApi(log?.blockNumber, 'lastNotarizationHeight');
+      }).on("changed", function() {
+          log('***** EVENT: New Notarization, Clearing the cache(changed)**********');
+          clearCachedApis();
+      });
+    }
 
-    blockEvent = web3.eth.subscribe('newBlockHeaders', (error, blockHeader) => {
-      if (error) {
-        console.error(error.message);
-      } else {
+    if (blockEvent === undefined) {
+      blockEvent = web3.eth.subscribe('newBlockHeaders', (error, blockHeader) => {
+        if (error) {
+          console.error("blockEvent error:", error);
+        } else {
           lastblocknumber = blockHeader.number;
           lasttimestamp = blockHeader.timestamp;
-        log("New block received",blockHeader.number);
-      }
-    });
+          log("New block received", blockHeader.number);
+        }
+      });
+    }
 }
 
 function amountFromValue(incoming) {
@@ -686,30 +696,39 @@ function createCrossChainExport(transfers, startHeight, endHeight, jsonready = f
 //     return cce;
 // }
 
-async function restoreSocketOnFault() {
-  if(webSocketFault === true) {
-    clearCachedApis();
-    await setupConf();
-    eventListener(settings.delegatorcontractaddress);
-    webSocketFault = false;
+var restoringProviderSocket = false;
+
+async function restoreProviderSocket() {
+  if(restoringProviderSocket === false) {
+    restoringProviderSocket = true;
+    let online = await setupConf();
+    if (online) {
+      clearCachedApis();
+      eventListener(settings.delegatorcontractaddress);
+      log("web3 provider restored");
+    }
+    restoringProviderSocket = false;
+    return online;
   }
+  log("web3 provider is already being restored...");
+  return false;
 }
 
 /** core functions */
 const timeoutCheck = (prom, time) => Promise.race([prom, new Promise((_r, rej) => setTimeout(rej, time))]);
 
-async function isProviderSocketOK() {
+async function isProviderSocketOnline() {
+  let online = false;
   try {
-    const v = await timeoutCheck(web3.eth.net.isListening(), 5000);
-    if (v === false) {
-        log('web3 provider socket timeout');
-    }
-    return v;
-
+    online = await timeoutCheck(web3.eth.net.isListening(), 5000);
   } catch (e) {
-    log('web3 provider socket error');
-    return false;
+    online = false;
   }
+  if (!online) {
+    // attempt to restore/re-connect
+    online = await restoreProviderSocket();
+  }
+  return online?true:false;
 }
 
 exports.getInfo = async() => {
@@ -722,11 +741,9 @@ exports.getInfo = async() => {
         let getInfo = cacheGetInfo ? JSON.parse(cacheGetInfo) : null;
         
         if (globaltimedelta + globallastinfo < timenow || !getInfo) {
-            await restoreSocketOnFault();
-            let isOK = await isProviderSocketOK();
-            if (isOK !== true) {
-              webSocketFault = true;
-              return { "result": { error: true, message: "web3 provider socket is not connected" } };
+            let isOnline = await isProviderSocketOnline();
+            if (isOnline !== true) {
+              return { "result": { error: true, message: "web3 provider is not connected" } };
             }
 
             globallastinfo = timenow;
@@ -826,11 +843,9 @@ exports.getExports = async(input) => {
     }
 
     // web3 connection management
-    await restoreSocketOnFault();
-    let isOK = await isProviderSocketOK();
-    if (isOK !== true) {
-      webSocketFault = true;
-      return { "result": { error: true, message: "web3 provider socket is not connected" } };
+    let isOnline = await isProviderSocketOnline();
+    if (isOnline !== true) {
+      return { "result": { error: true, message: "web3 provider is not connected" } };
     }
 
     heightstart = heightstart == 1 ? 0 : heightstart;
@@ -990,11 +1005,9 @@ async function getProofRoot(height = "latest") {
     const cachedBlock = await getCachedBlock(`${height}`);
     if (!cachedBlock)
     {
-        await restoreSocketOnFault();
-        let isOK = await isProviderSocketOK();
-        if (isOK !== true) {
-          webSocketFault = true;
-          throw new Error("[getProofRoot] web3 provider socket is not connected");
+        let isOnline = await isProviderSocketOnline();
+        if (isOnline !== true) {
+          throw new Error("[getProofRoot] web3 provider is not connected");
         }
       
         try {
@@ -1042,12 +1055,9 @@ async function checkProofRoot(height, stateroot, blockhash, power) {
 
     const cachedBlock = await getCachedBlock(`${height}`);
     if (!cachedBlock) {
-
-        await restoreSocketOnFault();
-        let isOK = await isProviderSocketOK();
-        if (isOK !== true) {
-          webSocketFault = true;
-          throw new Error("[checkProofRoot] web3 provider socket is not connected");
+        let isOnline = await isProviderSocketOnline();
+        if (isOnline !== true) {
+          throw new Error("[checkProofRoot] web3 provider is not connected");
         }
       
         try {
