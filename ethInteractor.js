@@ -598,7 +598,6 @@ function createCrossChainExport(transfers, startHeight, endHeight, jsonready = f
     cce.rewardaddress = ""; //  blank
     cce.firstinput = 1;
     if (InteractorConfig.debugsubmit) {
-        console.log(JSON.stringify(cce.totalamounts),null,2);
         console.log("cce", JSON.stringify(cce),null,2);
     }
     return cce;
@@ -812,7 +811,8 @@ exports.getExports = async(input) => {
 
             let outputSet = {};
 
-            bridgeConverterActive = exportSet.transfers[0].destcurrencyid.toLowerCase() == constants.BRIDGECURRENCYHEX[InteractorConfig.ticker].toLowerCase();
+            bridgeConverterActive = exportSet.transfers[0].destcurrencyid.toLowerCase() === constants.BRIDGECURRENCYHEX[InteractorConfig.ticker].toLowerCase()
+                                        || exportSet.transfers[0].feecurrencyid.toLowerCase() === constants.VETHIDHEX[InteractorConfig.ticker].toLowerCase();
             outputSet.height = exportSet.endHeight;
             outputSet.txid = util.removeHexLeader(exportSet.exportHash).reversebytes(); //export hash used for txid
             outputSet.txoutnum = 0; //exportSet.position;

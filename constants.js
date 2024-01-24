@@ -24,6 +24,10 @@ module.exports = Object.freeze({
                             VRSCTEST: "iSojYsotVzXz4wh2eJriASGo6UidJDDhL2", 
                             VRSC: "i3f7tSctFkiPpiedY8QR5Tep9p4qDVebDx"
                         },
+    VETHIDHEX:          {
+                            VRSCTEST:"0x67460C2f56774eD27EeB8685f29f6CEC0B090B00",
+                            VRSC: "0x454cb83913d688795e237837d30258d11ea7c752"
+                        },
     VETHIDHEXREVERSED:  {
                             VRSCTEST:"000b090bec6c9ff28586eb7ed24e77562f0c4667",
                             VRSC: "52c7a71ed15802d33778235e7988d61339b84c45"
