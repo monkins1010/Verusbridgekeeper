@@ -811,8 +811,11 @@ exports.getExports = async(input) => {
 
             let outputSet = {};
 
-            bridgeConverterActive = exportSet.transfers[0].destcurrencyid.toLowerCase() === constants.BRIDGECURRENCYHEX[InteractorConfig.ticker].toLowerCase()
-                                        || exportSet.transfers[0].feecurrencyid.toLowerCase() === constants.VETHIDHEX[InteractorConfig.ticker].toLowerCase();
+            const importCurrency = (parseInt(exportSet.transfers[0].flags) & constants.FLAG_IMPORT_TO_SOURCE) > 0 ? 
+                                        exportSet.transfers[0].currencyvalue.currency : 
+                                          exportSet.transfers[0].destcurrencyid ;
+            bridgeConverterActive = (importCurrency.toLowerCase() === constants.BRIDGECURRENCYHEX[InteractorConfig.ticker].toLowerCase())
+                                   
             outputSet.height = exportSet.endHeight;
             outputSet.txid = util.removeHexLeader(exportSet.exportHash).reversebytes(); //export hash used for txid
             outputSet.txoutnum = 0; //exportSet.position;

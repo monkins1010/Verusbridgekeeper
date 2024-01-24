@@ -47,6 +47,7 @@ module.exports = Object.freeze({
     FLAG_LAUNCH_COMPLETE : 0x100,        // set if all currency information is verifiable on this chain
     FLAG_CONTRACT_UPGRADE: 512,
     FLAG_FRACTIONAL : 1,
+    FLAG_IMPORT_TO_SOURCE: 512,
     DEST_FULLID : 5,
     DEST_REGISTERCURRENCY : 6,
     UINT160_LENGTH: 20,
