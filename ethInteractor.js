@@ -1072,7 +1072,17 @@ async function checkProofRoot(height, stateroot, blockhash, power) {
 
         let gasPriceInSATS = (BigInt(transaction.gasPrice) / BigInt(10))
 
-        latestproofroot.gasprice = gasPriceInSATS < BigInt(1000000000) ? "10.00000000" : util.uint64ToVerusFloat(gasPriceInSATS);
+        let ETHGasReductionHeight = 20798885
+
+        if (height < ETHGasReductionHeight)
+        {
+            latestproofroot.gasprice = gasPriceInSATS < BigInt(1000000000) ? "10.00000000" : util.uint64ToVerusFloat(gasPriceInSATS);
+        }
+        else
+        {
+            latestproofroot.gasprice = gasPriceInSATS < BigInt(500000000) ? "5.00000000" : util.uint64ToVerusFloat(gasPriceInSATS);
+        }
+
         latestproofroot.version = 1;
         latestproofroot.type = 2;
         latestproofroot.systemid = InteractorConfig.ethSystemId;
