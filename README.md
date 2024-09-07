@@ -205,3 +205,19 @@ Only put the `-burn` flag on to actually execute the transaction.
 node burndai.js [-burn]
 
 ```
+
+## To send Eth from your wallet in the .conf file or from a pk
+
+This uses your infura or Alchamy node to connect to, to make ETH sends from your ETH address derived from your private key in the .conf file or a Private key used as a flag.
+
+```shell
+node sendeth.js -address 0x345.... -amount 0.4 [-exe] [-pk a74c4..2ba] [-testnet]
+```
+flags:
+```
+-address            : Ethereum send to address
+-amount             : amount in Ether
+-exe (optional)     : execute the command, otherwise just dry run/
+-pk  (optional)     : 234...ab8ad8e99f   must be 64 characters and no 0x prefix
+-testnet (optional) : set this to use Sepolia testnet sends
+```

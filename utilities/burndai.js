@@ -36,9 +36,15 @@ const main = async () => {
     const fees = web3.utils.fromWei(totalfees, "ether");
 
     log("Amount to Burn: ", fees, " DAI");
-    
-    const gasfee = await delegatorContract.methods.burnFees("0x00").estimateGas({ from: account.address });
-    
+    let gasfee;
+    try {
+      gasfee = await delegatorContract.methods.burnFees("0x00").estimateGas({ from: account.address });
+    } catch (error) {
+      console.error("estimating gas error, probably to soon after last burn, try again later.")
+      exit(0);
+
+     }
+
     const gasPrice = await web3.eth.getGasPrice();
     
     const gasCost = web3.utils.toBN(gasfee).mul(web3.utils.toBN(gasPrice));
