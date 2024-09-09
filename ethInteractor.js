@@ -1028,7 +1028,7 @@ async function getProofRoot(height = "latest") {
         let gasPriceInSATS = (BigInt(transaction.gasPrice) / BigInt(10))
 
         latestproofroot.height = block.number;
-        if (latestproofroot.height < (config.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT : constants.ETH_GAS_REDUCTION_HEIGHT))
+        if (latestproofroot.height < (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT : constants.ETH_GAS_REDUCTION_HEIGHT))
         {
             latestproofroot.gasprice = gasPriceInSATS < BigInt(1000000000) ? "10.00000000" : util.uint64ToVerusFloat(gasPriceInSATS);
         }
