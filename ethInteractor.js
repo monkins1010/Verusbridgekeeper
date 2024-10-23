@@ -953,7 +953,7 @@ exports.getBestProofRoot = async(input) => {
     try {
         if (input.length && proofroots) {
             for (let i = 0; i < proofroots.length; i++) {
-                if ((parseInt(proofroots[i].height) > 1) && await checkProofRoot(proofroots[i].height, proofroots[i].stateroot, proofroots[i].blockhash, BigInt(util.addBytesIndicator(proofroots[i].power)))) {
+                if ((parseInt(proofroots[i].height) > 1) && await checkProofRoot(proofroots[i].height, proofroots[i].stateroot, proofroots[i].blockhash, proofroots[i].power)) {
                     validindexes.push(i);
                     if (bestindex == -1)
                         bestindex = 0;
@@ -1042,7 +1042,7 @@ async function getProofRoot(height = "latest") {
         latestproofroot.systemid = InteractorConfig.ethSystemId;
         latestproofroot.stateroot = util.removeHexLeader(block.stateRoot).reversebytes();
         latestproofroot.blockhash = util.removeHexLeader(block.hash).reversebytes();
-        latestproofroot.power = BigInt(block?.totalDifficulty || block.difficulty).toString(16);
+        latestproofroot.power = BigInt(block?.totalDifficulty || '0').toString(16);
 
         await setCachedBlock( latestproofroot, `${height}` )
 
@@ -1095,7 +1095,6 @@ async function checkProofRoot(height, stateroot, blockhash, power) {
         latestproofroot.systemid = InteractorConfig.ethSystemId;
         latestproofroot.stateroot = util.removeHexLeader(block.stateRoot).reversebytes();
         latestproofroot.blockhash = util.removeHexLeader(block.hash).reversebytes();
-        latestproofroot.power = BigInt(block?.totalDifficulty || block.difficulty).toString(16);
 
         await setCachedBlock( latestproofroot, `${height}` )
 
@@ -1109,7 +1108,10 @@ async function checkProofRoot(height, stateroot, blockhash, power) {
         console.log("checkProofRoot GASPRICE: " + latestproofroot.gasprice + ", height: " + height)
 
 
-    return (latestproofroot.stateroot == stateroot && latestproofroot.blockhash == blockhash && latestproofroot.power == BigInt(power).toString(16))
+    return (latestproofroot.stateroot == stateroot && latestproofroot.blockhash == blockhash && 
+        (power == '000000000000000000000000000000000000000000000000003c656d23029ab0' || //testnet sepolia
+            power == '000000000000000000000000000000000000000000000c70d815d562d3cfa955' || //mainnet
+            BigInt(power) == BigInt(0)))
 }
 
 //return the data required for a notarisation to be made
