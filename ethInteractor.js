@@ -1042,7 +1042,7 @@ async function getProofRoot(height = "latest") {
         latestproofroot.systemid = InteractorConfig.ethSystemId;
         latestproofroot.stateroot = util.removeHexLeader(block.stateRoot).reversebytes();
         latestproofroot.blockhash = util.removeHexLeader(block.hash).reversebytes();
-        latestproofroot.power = BigInt(block.totalDifficulty).toString(16);
+        latestproofroot.power = BigInt(block?.totalDifficulty || block.difficulty).toString(16);
 
         await setCachedBlock( latestproofroot, `${height}` )
 
@@ -1095,7 +1095,7 @@ async function checkProofRoot(height, stateroot, blockhash, power) {
         latestproofroot.systemid = InteractorConfig.ethSystemId;
         latestproofroot.stateroot = util.removeHexLeader(block.stateRoot).reversebytes();
         latestproofroot.blockhash = util.removeHexLeader(block.hash).reversebytes();
-        latestproofroot.power = BigInt(block.totalDifficulty).toString(16);
+        latestproofroot.power = BigInt(block?.totalDifficulty || block.difficulty).toString(16);
 
         await setCachedBlock( latestproofroot, `${height}` )
 
