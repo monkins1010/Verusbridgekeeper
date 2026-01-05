@@ -321,7 +321,7 @@ const createUpgradeTuple = (addresses, salt, upgradetype) => {
 
 const createContractUpdateAddress = async() => {
     try {
-        let randomBuf = Buffer.from('aae83c4ccbadca1ce6478b031bb4444ac0d375a56886a9d4a8dfe2116763dcbf', 'hex'); //randomBytes(32);
+        let randomBuf = randomBytes(32);
 
         let outBuffer = Buffer.alloc(1);
         outBuffer.writeUInt8(TYPE_CONTRACT);
