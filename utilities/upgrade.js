@@ -11,6 +11,7 @@ const revokemultisig = (process.argv.indexOf('-revokemultisig') > -1);
 const getContractHash = (process.argv.indexOf('-getcontracthash') > -1);
 const createrevokemultisigpacket = (process.argv.indexOf('-createmultisigrevoke') > -1);
 const createrecovermultisigpacket = (process.argv.indexOf('-createmultisigrecover') > -1);
+const countVotes = (process.argv.indexOf('-countvotes') > -1);
 const util = require('../utils.js');
 const axios = require('axios');
 const TYPE_CONTRACT = 1;
@@ -321,7 +322,7 @@ const createUpgradeTuple = (addresses, salt, upgradetype) => {
 
 const createContractUpdateAddress = async() => {
     try {
-        let randomBuf = randomBytes(32);
+        let randomBuf = Buffer.from("3cad78662d9223a011f414fcc2562d4b6ded2f84f4bf823d4de2d3ca44d525fa", 'hex');//randomBytes(32);
 
         let outBuffer = Buffer.alloc(1);
         outBuffer.writeUInt8(TYPE_CONTRACT);
@@ -568,7 +569,9 @@ const upgradeContractSend = async() => {
         const salt = getSalt();
 
         if (!newContract || !newContractType || !salt) {
-            return false;
+            console.log("Missing parameters");
+            process.exit(0);
+
         }
          //replace existing contract with new contract address
         contracts[newContractType] = newContract; 
@@ -577,6 +580,7 @@ const upgradeContractSend = async() => {
         console.log("\nNew Ethereum contract: " + newContract + " Type: " + key[newContractType] + "\nSalt used: 0x" + salt)
 
         const upgradeTupleSerialized = createUpgradeTuple(contracts, salt, TYPE_CONTRACT);
+        //console.log("Upgrade data: " + upgradeTupleSerialized);
 
         const revv1 = await delegatorContract.methods.upgradeContracts(upgradeTupleSerialized).call();
         const revv2 = await delegatorContract.methods.upgradeContracts(upgradeTupleSerialized).send({ from: account.address, gas: maxGas });
@@ -588,6 +592,42 @@ const upgradeContractSend = async() => {
     process.exit(0);
 
 
+}
+
+const countRollingUpgradeVotes = async() => {
+    try {
+        let votes = [];
+        
+        // Get the first 50 entries from rollingUpgradeVotes array (indices 0-49)
+        for (let i = 0; i < 50; i++) {
+            const vote = await delegatorContract.methods.rollingUpgradeVotes(i).call();
+            votes.push(vote.toLowerCase());
+        }
+        
+        // Count occurrences of each address
+        const voteCounts = {};
+        for (const vote of votes) {
+            if (voteCounts[vote]) {
+                voteCounts[vote]++;
+            } else {
+                voteCounts[vote] = 1;
+            }
+        }
+        
+        // Sort by count descending
+        const sortedVotes = Object.entries(voteCounts).sort((a, b) => b[1] - a[1]);
+        
+        console.log("\n*** Vote counts ***");
+        for (const [address, count] of sortedVotes) {
+            console.log(` ${address} = ${count}`);
+        }
+        
+       
+    } catch (e) {
+        console.log(e);
+       
+    }
+    process.exit(0);
 }
 
 const main = async ()=> {
@@ -619,8 +659,11 @@ const main = async ()=> {
         else if(upgradeContracts){
             success = upgradeContractSend();
         }
+        else if(countVotes){
+            success = await countRollingUpgradeVotes();
+        }
         if(!success) {
-            console.log("Please use the flags -contractupgrade, -revoke , -recover, or -getcontracthash");
+            console.log("Please use the flags -contractupgrade, -revoke , -recover, -countvotes, or -getcontracthash");
             console.log("To get the contract hash run:\n\nnode upgrade.js -getcontracthash -contracttype 1 -contractaddress 0x1234567890\n");
             exitUpgradeError();
         }
