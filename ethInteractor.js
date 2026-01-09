@@ -1121,7 +1121,7 @@ async function checkProofRoot(height, stateroot, blockhash, power) {
 
 //return the data required for a notarisation to be made
 exports.getNotarizationData = async() => {
-    
+
     let Notarization = {};
     Notarization.version = constants.VERSION_NOTARIZATIONDATA_CURRENT;
 
@@ -1151,11 +1151,7 @@ exports.getNotarizationData = async() => {
 
         try {
             while (j < MAX_FORKS_ITERATIONS) {
-                let notarization = await withTimeout(
-                    delegatorContract.methods.bestForks(j).call(),
-                    CONTRACT_CALL_TIMEOUT,
-                    'bestForks contract call timeout'
-                );
+                let notarization = await delegatorContract.methods.bestForks(j).call();
                 notarization = util.removeHexLeader(notarization);
                 //if mod is 0 then the length is the new type of notarization.
                 const lengthMod = notarization.length % constants.LIF.FORKLEN;
