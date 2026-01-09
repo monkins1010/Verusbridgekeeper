@@ -105,17 +105,6 @@ const reconnectOptions = {
   onTimeout: false,
 }
 
-// Timeout wrapper for contract calls to prevent hanging
-const CONTRACT_CALL_TIMEOUT = 5000; // 30 seconds
-const withTimeout = (promise, timeoutMs = CONTRACT_CALL_TIMEOUT, errorMessage = 'Contract call timeout') => {
-    return Promise.race([
-        promise,
-        new Promise((_, reject) => 
-            setTimeout(() => reject(new Error(errorMessage)), timeoutMs)
-        )
-    ]);
-};
-
 const web3Options = {
     clientConfig: {
         maxReceivedFrameSize: 100000000,
@@ -779,7 +768,6 @@ exports.getInfo = async() => {
         
     } catch (error) {
         console.log( "Error getInfo:" + error);
-        log("API_ERROR_GETINFO");
         return { "result": { "error": true, "message": error } };
     }
 }
@@ -795,11 +783,7 @@ exports.getCurrency = async(input) => {
         if (globaltimedelta + globallastcurrency < timenow || !getCurrency) {
 
             globallastcurrency = timenow;
-            let info = await withTimeout(
-                delegatorContract.methods.getcurrency(util.convertVerusAddressToEthAddress(currency)).call(),
-                CONTRACT_CALL_TIMEOUT,
-                'getCurrency contract call timeout'
-            );
+            let info = await delegatorContract.methods.getcurrency(util.convertVerusAddressToEthAddress(currency)).call();
             let notaries = [];
             let abiPattern = ['uint', 'string', 'address', 'address', 'address', 'uint8', 'uint8', [
                 ['uint8', 'bytes']
@@ -839,7 +823,6 @@ exports.getCurrency = async(input) => {
         return { "result": getCurrency };
     } catch (error) {
         console.log( "getCurrency:" + error);
-        log("API_ERROR_GETCURRENCY");
         return { "result": { "error": true, "message": error } };
     }
 }
@@ -872,16 +855,8 @@ exports.getExports = async(input) => {
         if (chainname != constants.VERUSSYSTEMID[InteractorConfig.ticker]) throw `i-Address not ${InteractorConfig.ticker}`;
 
         let exportSets = [];
-        const previousStartHeight = await withTimeout(
-            delegatorContract.methods.exportHeights(heightstart).call(),
-            CONTRACT_CALL_TIMEOUT,
-            'exportHeights contract call timeout'
-        );
-        exportSets = await withTimeout(
-            delegatorContract.methods.getReadyExportsByRange(previousStartHeight, heightend).call(),
-            CONTRACT_CALL_TIMEOUT,
-            'getReadyExportsByRange contract call timeout'
-        );
+        const previousStartHeight = await delegatorContract.methods.exportHeights(heightstart).call();
+        exportSets = await delegatorContract.methods.getReadyExportsByRange(previousStartHeight, heightend).call();
 
         log("Height end: ", heightend, "heightStart:", heightstart, {previousStartHeight});
 
@@ -934,7 +909,6 @@ exports.getExports = async(input) => {
           message = JSON.stringify(error);
         
         console.log("getExports error:", message);
-        log("API_ERROR_GETEXPORTS");
         return { "result": { "error": true, "message": message } };
     }
 }
@@ -1022,7 +996,6 @@ exports.getBestProofRoot = async(input) => {
           message = JSON.stringify(error);
         
         console.log("getBestProofRoot error:", message);
-        log("API_ERROR_GETBESTPROOFROOT");
         return { "result": { "error": true, "message": message } };
     }
 }
@@ -1148,6 +1121,7 @@ async function checkProofRoot(height, stateroot, blockhash, power) {
 
 //return the data required for a notarisation to be made
 exports.getNotarizationData = async() => {
+    
     let Notarization = {};
     Notarization.version = constants.VERSION_NOTARIZATIONDATA_CURRENT;
 
@@ -1380,6 +1354,7 @@ function reshapeTransfers(CTransferArray) {
 }
 
 exports.submitImports = async(CTransferArray) => {
+
     if (noaccount || InteractorConfig.noimports || InteractorConfig.spendDisabled) {
         log("************** Submitimports: Wallet will not spend ********************");
         return { result: { error: true } };
@@ -1400,11 +1375,7 @@ exports.submitImports = async(CTransferArray) => {
     try {
 
         if (CTempArray.length > 0) {
-            let processed = await withTimeout(
-                delegatorContract.methods.checkImport(CTempArray[0].txid).call(),
-                CONTRACT_CALL_TIMEOUT,
-                'checkImport contract call timeout'
-            );
+            let processed = await delegatorContract.methods.checkImport(CTempArray[0].txid).call();
             if (!processed) {
                 submitArray.push(CTempArray[0])
             } else {
@@ -1412,17 +1383,9 @@ exports.submitImports = async(CTransferArray) => {
             }
         }
         // catch any errors and return
-        const testcall = await withTimeout(
-            delegatorContract.methods.submitImports(submitArray[0]).call(),
-            CONTRACT_CALL_TIMEOUT,
-            'submitImports test call timeout'
-        ); //test call
+        const testcall = await delegatorContract.methods.submitImports(submitArray[0]).call(); //test call
         // prevent revert if gas limit is exceeded
-        const gascalc = await withTimeout(
-            delegatorContract.methods.submitImports(submitArray[0]).estimateGas({ from: account.address }),
-            CONTRACT_CALL_TIMEOUT,
-            'submitImports estimateGas timeout'
-        );
+        const gascalc = await delegatorContract.methods.submitImports(submitArray[0]).estimateGas({ from: account.address });
         if (CTempArray)
         log("Submitting transfers to ETH, total: " + CTempArray[0].transfers.length);
 
@@ -1456,7 +1419,6 @@ exports.submitImports = async(CTransferArray) => {
 
             console.log( "submitImports:" + error.message);
         }
-        log("API_ERROR_SUBMITIMPORTS");
         return { result: { result: error.message, error: true } };
     }
 
@@ -1464,6 +1426,7 @@ exports.submitImports = async(CTransferArray) => {
 }
 
 exports.submitAcceptedNotarization = async(params) => {
+
     if (noaccount || InteractorConfig.spendDisabled) {
         log("************** submitAcceptedNotarization: Wallet will not spend ********************");
         return { result: { error: true } };
@@ -1516,17 +1479,9 @@ exports.submitAcceptedNotarization = async(params) => {
 
         }
         // Call contract to test for reversion.
-        const testValue = await withTimeout(
-            delegatorContract.methods.setLatestData(serializednotarization, txid, txidObj.voutnum, abiencodedSigData).call(),
-            CONTRACT_CALL_TIMEOUT,
-            'setLatestData test call timeout'
-        );
+        const testValue = await delegatorContract.methods.setLatestData(serializednotarization, txid, txidObj.voutnum, abiencodedSigData).call();
 
-        const pendingTransactions = await withTimeout(
-            web3.eth.getBlock('pending', true),
-            CONTRACT_CALL_TIMEOUT,
-            'getBlock pending timeout'
-        );
+        const pendingTransactions = await web3.eth.getBlock('pending', true);
         let found = false;
 
         for (const tx of pendingTransactions.transactions) {
@@ -1562,13 +1517,13 @@ exports.submitAcceptedNotarization = async(params) => {
         else {
             console.log(error.message);
         }
-        log("API_ERROR_SUBMITACCEPTEDNOTARIZATION");
         return { "result": { "error" : true } };
     }
 }
 
 //return the data required for a notarisation to be made
 exports.getLastImportFrom = async() => {
+
     //create a CProofRoot from the block data
     let cachelastImportFrom = await getCachedImport('lastImportFrom');
     let lastImportFrom = cachelastImportFrom ? JSON.parse(cachelastImportFrom) : null;
@@ -1586,18 +1541,10 @@ exports.getLastImportFrom = async() => {
 
             // if Main testnet use call to get last import txid
             if (delegatorContract._address === "0x85a7dE2278E52327471e174AeeB280cdFdC6A68a") {
-                lastimporttxid = await withTimeout(
-                    delegatorContract.methods.lastTxIdImport().call(),
-                    CONTRACT_CALL_TIMEOUT,
-                    'lastTxIdImport contract call timeout'
-                );
+                lastimporttxid = await delegatorContract.methods.lastTxIdImport().call();
             }
 
-            lastImportInfo = await withTimeout(
-                delegatorContract.methods.lastImportInfo(lastimporttxid).call(),
-                CONTRACT_CALL_TIMEOUT,
-                'lastImportInfo contract call timeout'
-            );
+            lastImportInfo = await delegatorContract.methods.lastImportInfo(lastimporttxid).call();
             await setCachedImport(lastImportInfo, 'lastImportInfo');
 
             let lastimport = {};
@@ -1619,11 +1566,7 @@ exports.getLastImportFrom = async() => {
             let lastconfirmednotarization = {};
             let lastconfirmedutxo = {};
             try {
-                forksData = await withTimeout(
-                    delegatorContract.methods.bestForks(0).call(),
-                    CONTRACT_CALL_TIMEOUT,
-                    'bestForks(0) contract call timeout'
-                );
+                forksData = await delegatorContract.methods.bestForks(0).call();
                 forksData = util.removeHexLeader(forksData);
 
                 const lengthMod = forksData.length % constants.LIF.FORKLEN;
@@ -1645,7 +1588,6 @@ exports.getLastImportFrom = async() => {
         return lastImportFrom;
     } catch (error) {
         console.log( "getLastImportFrom:" + error.message);
-        log("API_ERROR_GETLASTIMPORTFROM");
         return { "result": { "error": true, "message": error.message } };
     }
 
