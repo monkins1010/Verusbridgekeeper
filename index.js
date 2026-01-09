@@ -49,7 +49,23 @@ const queue = async.queue(async (task, callback) => {
 
 const processData = async (request, response) => {
     if (request.post) {
-        response.writeHead(200, "OK", { 'Content-Type': 'application/json' });
+        let responseSent = false;
+        
+        // 5 second timeout to ensure response is always sent
+        const timeoutId = setTimeout(() => {
+            if (!responseSent) {
+                responseSent = true;
+                console.log("HTTP Request timeout - forcing response");
+                try {
+                    response.writeHead(504, "Gateway Timeout", { 'Content-Type': 'application/json' });
+                    response.write(JSON.stringify({ result: { error: true, message: "Request timeout" } }));
+                    response.end();
+                } catch (e) {
+                    // Response may already be partially sent
+                }
+                rollingBuffer.push(new Date(Date.now()).toLocaleString() + " Error: HTTP Request timeout");
+            }
+        }, 5000);
 
         try {
             let postData = JSON.parse(request.post);
@@ -73,19 +89,30 @@ const processData = async (request, response) => {
                 })
             ])
 
-            if (returnData?.result?.error) {
-                response.writeHead(402, "Error", { 'Content-Type': 'application/json' });
-                response.write(JSON.stringify(returnData));
-                response.end();
-            } else {
-                response.write(JSON.stringify(returnData));
-                response.end();
+            if (!responseSent) {
+                responseSent = true;
+                clearTimeout(timeoutId);
+                
+                if (returnData?.result?.error) {
+                    response.writeHead(402, "Error", { 'Content-Type': 'application/json' });
+                    response.write(JSON.stringify(returnData));
+                    response.end();
+                } else {
+                    response.writeHead(200, "OK", { 'Content-Type': 'application/json' });
+                    response.write(JSON.stringify(returnData));
+                    response.end();
+                }
             }
  
         } catch (e) {
-            response.writeHead(500, "Error", { 'Content-Type': 'application/json' });
-            response.end();
-            rollingBuffer.push(new Date(Date.now()).toLocaleString() + "Error: " + e.message ? e.message : e);
+            if (!responseSent) {
+                responseSent = true;
+                clearTimeout(timeoutId);
+                response.writeHead(500, "Error", { 'Content-Type': 'application/json' });
+                response.write(JSON.stringify({ result: { error: true, message: e.message || "Unknown error" } }));
+                response.end();
+                rollingBuffer.push(new Date(Date.now()).toLocaleString() + " Error: " + (e.message ? e.message : e));
+            }
         }
     }
 }

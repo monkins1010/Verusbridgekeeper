@@ -773,7 +773,6 @@ exports.getInfo = async() => {
 }
 
 exports.getCurrency = async(input) => {
-    
     try {
         let currency = input[0];
         var d = new Date();
@@ -797,7 +796,7 @@ exports.getCurrency = async(input) => {
                 notaries[i] = util.ethAddressToVAddress(decodedParams[14][i], IAddressBaseConst);
             }
 
-            getcurrency = {
+            getCurrency = {
                 "version": decodedParams[0],
                 "name": decodedParams[1],
                 "options": (decodedParams[1] === "VETH") ? 172 : 96,
@@ -1148,9 +1147,10 @@ exports.getNotarizationData = async() => {
         let largestIndex = 0;
 
         let calcIndex = 0;
+        const MAX_FORKS_ITERATIONS = 100; // Safety limit to prevent infinite loop
 
         try {
-            while (true) {
+            while (j < MAX_FORKS_ITERATIONS) {
                 let notarization = await delegatorContract.methods.bestForks(j).call();
                 notarization = util.removeHexLeader(notarization);
                 //if mod is 0 then the length is the new type of notarization.
@@ -1225,6 +1225,7 @@ exports.getNotarizationData = async() => {
 
     } catch (error) {
         console.log( "getNotarizationData: (No spend tx) S" + error.message);
+        log("API_ERROR_GETNOTARIZATIONDATA");
         return { "result": { "error": true, "message": error.message } };
     }
 }
