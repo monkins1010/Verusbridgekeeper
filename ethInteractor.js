@@ -952,7 +952,7 @@ exports.getBestProofRoot = async(input) => {
     try {
         if (input.length && proofroots) {
             for (let i = 0; i < proofroots.length; i++) {
-                if ((parseInt(proofroots[i].height) > 1) && await checkProofRoot(proofroots[i].height, proofroots[i].stateroot, proofroots[i].blockhash, proofroots[i].power)) {
+                if ((parseInt(proofroots[i].height) > 1) && await checkProofRoot(proofroots[i])) {
                     validindexes.push(i);
                     if (bestindex == -1)
                         bestindex = 0;
@@ -1032,6 +1032,11 @@ async function getProofRoot(height = "latest") {
         {
             latestproofroot.gasprice = gasPriceInSATS < BigInt(1000000000) ? "10.00000000" : util.uint64ToVerusFloat(gasPriceInSATS);
         }
+        else if (latestproofroot.height >= (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT3 : constants.ETH_GAS_REDUCTION_HEIGHT3))
+        {
+            const adjustedGas = gasPriceInSATS * BigInt(12) / BigInt(10);
+            latestproofroot.gasprice = adjustedGas < BigInt(100000000) ? "1.00000000" : util.uint64ToVerusFloat(adjustedGas);
+        }
         else if (latestproofroot.height >= (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT2 : constants.ETH_GAS_REDUCTION_HEIGHT2))
         {
             const adjustedGas = gasPriceInSATS * BigInt(12) / BigInt(10);
@@ -1064,10 +1069,11 @@ async function getProofRoot(height = "latest") {
 
 }
 
-async function checkProofRoot(height, stateroot, blockhash, power) {
+async function checkProofRoot({height, stateroot, blockhash, power, gasprice}) {
     let block;
     let transaction;
     let latestproofroot = {};
+    let gasAsSats = util.uint64ToVerusFloat(util.convertToInt64(gasprice));
 
     const cachedBlock = await getCachedBlock(`${height}`);
     if (!cachedBlock) {
@@ -1089,10 +1095,24 @@ async function checkProofRoot(height, stateroot, blockhash, power) {
         if (latestproofroot.height < (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT : constants.ETH_GAS_REDUCTION_HEIGHT))
         {
             latestproofroot.gasprice = gasPriceInSATS < BigInt(1000000000) ? "10.00000000" : util.uint64ToVerusFloat(gasPriceInSATS);
+            latestproofroot.checkGasPrice = true;
+        }
+        else if (latestproofroot.height >= (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT3 : constants.ETH_GAS_REDUCTION_HEIGHT3))
+        {
+            const adjustedGas = gasPriceInSATS * BigInt(12) / BigInt(10);
+            latestproofroot.gasprice = adjustedGas < BigInt(100000000) ? "1.00000000" : util.uint64ToVerusFloat(adjustedGas);
+            latestproofroot.checkGasPrice = (gasAsSats == latestproofroot.gasprice);
+        }
+        else if (latestproofroot.height >= (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT2 : constants.ETH_GAS_REDUCTION_HEIGHT2))
+        {
+            const adjustedGas = gasPriceInSATS * BigInt(12) / BigInt(10);
+            latestproofroot.gasprice = adjustedGas < BigInt(100000000) ? "1.00000000" : util.uint64ToVerusFloat(adjustedGas);
+            latestproofroot.checkGasPrice = (gasAsSats == "1.00000000" || gasAsSats == latestproofroot.gasprice) && (adjustedGas >= BigInt(100000000)) ;
         }
         else
         {
             latestproofroot.gasprice = gasPriceInSATS < BigInt(500000000) ? "5.00000000" : util.uint64ToVerusFloat(gasPriceInSATS);
+            latestproofroot.checkGasPrice = true;
         }
 
         latestproofroot.version = 1;
@@ -1113,7 +1133,7 @@ async function checkProofRoot(height, stateroot, blockhash, power) {
         console.log("checkProofRoot GASPRICE: " + latestproofroot.gasprice + ", height: " + height)
 
 
-    return (latestproofroot.stateroot == stateroot && latestproofroot.blockhash == blockhash && 
+    return (latestproofroot.checkGasPrice && latestproofroot.stateroot == stateroot && latestproofroot.blockhash == blockhash && 
         (power == '000000000000000000000000000000000000000000000000003c656d23029ab0' || //testnet sepolia
             power == '000000000000000000000000000000000000000000000c70d815d562d3cfa955' || //mainnet
             BigInt(power) == BigInt(0)))

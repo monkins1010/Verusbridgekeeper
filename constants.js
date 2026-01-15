@@ -95,6 +95,34 @@ module.exports = Object.freeze({
     CROSS_SYSTEM: 0x40,
     TESTNET_ETH_GAS_REDUCTION_HEIGHT: 7264000,
     ETH_GAS_REDUCTION_HEIGHT: 20798885,
+    // fork 2 heights
     TESTNET_ETH_GAS_REDUCTION_HEIGHT2: 10000052,
-    ETH_GAS_REDUCTION_HEIGHT2: 24189426
+    ETH_GAS_REDUCTION_HEIGHT2: 24189426,
+    // fork 3 heights
+    TESTNET_ETH_GAS_REDUCTION_HEIGHT3: 10180885,
+    ETH_GAS_REDUCTION_HEIGHT3: 24371856,
+
 });
+
+/*
+Ethereum Future Block Height Calculation (20 Days Ahead)
+
+Step 1: Calculate Total Time in Seconds
+  T_total = 20 days × 24 hours/day × 60 minutes/hour × 60 seconds/minute
+          = 1,728,000 seconds
+
+Step 2: Determine Number of New Blocks
+  Average block time (T_block) = 12.4 seconds
+  N_blocks = floor(T_total / T_block)
+           = floor(1,728,000 / 12.4)
+           = floor(139,354.8387...)
+           = 139,354
+
+Step 3: Calculate Future Block Height
+  Current height (H_current) = 24,232,502
+  H_future = H_current + N_blocks
+           = 24,232,502 + 139,354
+           = 24,371,856
+
+In 20 days, the Ethereum blockchain is expected to reach approximately block 24,371,856.
+*/
