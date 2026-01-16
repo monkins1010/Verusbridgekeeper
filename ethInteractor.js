@@ -1667,6 +1667,18 @@ exports.revokeidentity = async(params) => {
     }
 }
 
+exports.stop = async() => {
+    console.log("Stopping bridgekeeper via RPC...");
+    await disconnectProviderSocket();
+
+    setTimeout(() => {
+        console.log("Shutting down bridgekeeper server...");
+        process.exit(0);
+    }, 500);
+
+    return { "result": `Bridgekeeper server stopping` };
+}
+
 exports.invalid = async() => {
     console.log( "Invalid API call");
     return { "result": { "error": true, "message": "Unrecognized API call" } }
