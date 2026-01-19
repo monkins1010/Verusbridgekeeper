@@ -980,7 +980,8 @@ exports.getBestProofRoot = async(input) => {
         if (parseInt(latestProofHeight) >= (parseInt(latestBlock) - 2)) {
             latestproofroot = proofroots[bestindex];
         } else {
-            latestproofroot = await getProofRoot(parseInt(latestBlock) - 2);
+            // Potential save calls to getProofRoot by caching last proof root at latestBlock - 30;
+            latestproofroot = await getProofRoot(parseInt(latestBlock) - 30);
         }
 
         let laststableproofroot = null;
@@ -1098,32 +1099,26 @@ async function checkProofRoot({height, stateroot, blockhash, power, gasprice, ve
             throw new Error("checkProofRoot error:", (error.message?error.message:error), height);
         }
 
-        let gasPriceInSATS = (BigInt(transaction.gasPrice) / BigInt(10))
-
+        const gasPriceInSATS = (BigInt(transaction.gasPrice) / BigInt(10));
         latestproofroot.height = block.number;
 
         if (latestproofroot.height < (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT : constants.ETH_GAS_REDUCTION_HEIGHT))
         {
             latestproofroot.gasprice = gasPriceInSATS < BigInt(1000000000) ? "10.00000000" : util.uint64ToVerusFloat(gasPriceInSATS);
-            latestproofroot.checkGasPrice = true;
         }
         else if (latestproofroot.height >= (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT3 : constants.ETH_GAS_REDUCTION_HEIGHT3))
         {
             const adjustedGas = gasPriceInSATS * BigInt(12) / BigInt(10);
             latestproofroot.gasprice = adjustedGas < BigInt(100000000) ? "1.00000000" : util.uint64ToVerusFloat(adjustedGas);
-            latestproofroot.checkGasPrice = (util.uint64ToVerusFloat(gasToCheckInSats) == latestproofroot.gasprice);
         }
         else if (latestproofroot.height >= (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT2 : constants.ETH_GAS_REDUCTION_HEIGHT2))
         {
-            const adjustedGas = (gasPriceInSATS * BigInt(12) / BigInt(10)) < BigInt(100000000) ? BigInt(100000000) : (gasPriceInSATS * BigInt(12) / BigInt(10));
-            latestproofroot.gasprice = util.uint64ToVerusFloat(adjustedGas);
-            latestproofroot.checkGasPrice = (gasToCheckInSats < BigInt(500000000) && gasToCheckInSats >= BigInt(100000000) && adjustedGas == gasToCheckInSats) ||
-            (gasToCheckInSats) >= BigInt(500000000);            
+            const adjustedGas = gasPriceInSATS * BigInt(12) / BigInt(10);
+            latestproofroot.gasprice = adjustedGas < BigInt(100000000) ? "1.00000000" : util.uint64ToVerusFloat(adjustedGas);
         }
         else
         {
             latestproofroot.gasprice = gasPriceInSATS < BigInt(500000000) ? "5.00000000" : util.uint64ToVerusFloat(gasPriceInSATS);
-            latestproofroot.checkGasPrice = true;
         }
       
         latestproofroot.version = constants.ETH_NOTARIZATION_DEFAULT_VERSION;
@@ -1144,8 +1139,22 @@ async function checkProofRoot({height, stateroot, blockhash, power, gasprice, ve
         console.log("checkProofRoot GASPRICE: " + latestproofroot.gasprice + ", height: " + height);
     }
 
-    if (!latestproofroot.checkGasPrice)
+    if (BigInt(util.convertToInt64(latestproofroot.gasprice)) != gasToCheckInSats)
     {
+        const startBlockheightrange = (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT2 : constants.ETH_GAS_REDUCTION_HEIGHT2);
+        const secondblockheightrange = (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT3 : constants.ETH_GAS_REDUCTION_HEIGHT3);
+
+        // if we are in the range of the GAS reduction height 2 to 3.
+        if(latestproofroot.height >= startBlockheightrange && latestproofroot.height < secondblockheightrange){
+            if (gasToCheckInSats < BigInt(500000000) && gasToCheckInSats >= BigInt(100000000)) {
+                return false;
+            } 
+            else if (gasToCheckInSats >= BigInt(500000000)) 
+            {
+                return true;
+            }
+
+        }
         return false;
     }
         
