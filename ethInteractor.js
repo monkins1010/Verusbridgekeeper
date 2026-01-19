@@ -1134,12 +1134,12 @@ async function checkProofRoot({height, stateroot, blockhash, power, gasprice, ve
         else if (check3)
         {
             gasPriceInSATS = gasPriceInSATS * BigInt(12) / BigInt(10);
-            latestproofroot.gasprice = adjustedGas < BigInt(100000000) ? "1.00000000" : util.uint64ToVerusFloat(adjustedGas);
+            latestproofroot.gasprice = gasPriceInSATS < BigInt(100000000) ? "1.00000000" : util.uint64ToVerusFloat(gasPriceInSATS);
         }
         else if (check2)
         {
             gasPriceInSATS = (gasPriceInSATS * BigInt(12) / BigInt(10)) < BigInt(100000000) ? BigInt(100000000) : (gasPriceInSATS * BigInt(12) / BigInt(10));
-            latestproofroot.gasprice = util.uint64ToVerusFloat(adjustedGas);
+            latestproofroot.gasprice = util.uint64ToVerusFloat(gasPriceInSATS);
         }
         else
         {
@@ -1171,7 +1171,7 @@ async function checkProofRoot({height, stateroot, blockhash, power, gasprice, ve
     }
     else if (check2)
     {
-        checkPassed = (gasToCheckInSats < BigInt(500000000) && gasToCheckInSats >= BigInt(100000000) && adjustedGas == gasToCheckInSats) || 
+        checkPassed = (gasToCheckInSats < BigInt(500000000) && gasToCheckInSats >= BigInt(100000000) && gasPriceInSATS == gasToCheckInSats) || 
                         (gasToCheckInSats) >= BigInt(500000000);            
     }
     else
