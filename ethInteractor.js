@@ -939,7 +939,7 @@ exports.getBestProofRoot = async(input) => {
         }
      }
      else {
-        // wait for block to come in, this is only normally for the frist 15 seconds of startup
+        // wait for block to come in, this is only normally for the first 15 seconds of startup
         if (lastblocknumber){
             latestBlock = lastblocknumber; //await web3.eth.getBlockNumber();
             await setCachedApi(latestBlock, 'lastGetBestProofRoot');
@@ -977,10 +977,10 @@ exports.getBestProofRoot = async(input) => {
         if(bestindex != -1)
             latestProofHeight = proofroots[bestindex].height;
 
-        if (parseInt(latestProofHeight) >= (parseInt(latestBlock) - 2)) {
+        if (parseInt(latestProofHeight) >= (parseInt(latestBlock) - 30)) {
             latestproofroot = proofroots[bestindex];
         } else {
-            latestproofroot = await getProofRoot(parseInt(latestBlock) - 2);
+            latestproofroot = await getProofRoot(parseInt(latestBlock) - 30);
         }
 
         let laststableproofroot = null;
@@ -1076,6 +1076,10 @@ async function getProofRoot(height = "latest") {
 
 }
 
+// check code is a mess because it compensates for multiple past errors in checking to ensure all block ranges are
+// checked or not checked appropriately
+// at a future date, after the check3 condition is passed, it could be reasonable to not check anything besides check3,
+// which would enable significant cleanup
 async function checkProofRoot({height, stateroot, blockhash, power, gasprice, version, type, systemid}) {
     let block;
     let transaction;
@@ -1083,6 +1087,13 @@ async function checkProofRoot({height, stateroot, blockhash, power, gasprice, ve
     let gasToCheckInSats = BigInt(util.convertToInt64(gasprice));
 
     const cachedBlock = await getCachedBlock(`${height}`);
+    let gasPriceInSATS = BigInt(0);
+    let checkPassed = false;
+
+    let check1 = false;
+    let check3 = false;
+    let check2 = false;
+
     if (!cachedBlock)
     {
         let isOnline = await isProviderSocketOnline();
@@ -1098,53 +1109,87 @@ async function checkProofRoot({height, stateroot, blockhash, power, gasprice, ve
             throw new Error("checkProofRoot error:", (error.message?error.message:error), height);
         }
 
-        let gasPriceInSATS = (BigInt(transaction.gasPrice) / BigInt(10))
-
+        gasPriceInSATS = (BigInt(transaction.gasPrice) / BigInt(10))
         latestproofroot.height = block.number;
-
-        if (latestproofroot.height < (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT : constants.ETH_GAS_REDUCTION_HEIGHT))
-        {
-            latestproofroot.gasprice = gasPriceInSATS < BigInt(1000000000) ? "10.00000000" : util.uint64ToVerusFloat(gasPriceInSATS);
-            latestproofroot.checkGasPrice = true;
-        }
-        else if (latestproofroot.height >= (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT3 : constants.ETH_GAS_REDUCTION_HEIGHT3))
-        {
-            const adjustedGas = gasPriceInSATS * BigInt(12) / BigInt(10);
-            latestproofroot.gasprice = adjustedGas < BigInt(100000000) ? "1.00000000" : util.uint64ToVerusFloat(adjustedGas);
-            latestproofroot.checkGasPrice = (util.uint64ToVerusFloat(gasToCheckInSats) == latestproofroot.gasprice);
-        }
-        else if (latestproofroot.height >= (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT2 : constants.ETH_GAS_REDUCTION_HEIGHT2))
-        {
-            const adjustedGas = (gasPriceInSATS * BigInt(12) / BigInt(10)) < BigInt(100000000) ? BigInt(100000000) : (gasPriceInSATS * BigInt(12) / BigInt(10));
-            latestproofroot.gasprice = util.uint64ToVerusFloat(adjustedGas);
-            latestproofroot.checkGasPrice = (gasToCheckInSats < BigInt(500000000) && gasToCheckInSats >= BigInt(100000000) && adjustedGas == gasToCheckInSats) ||
-            (gasToCheckInSats) >= BigInt(500000000);            
-        }
-        else
-        {
-            latestproofroot.gasprice = gasPriceInSATS < BigInt(500000000) ? "5.00000000" : util.uint64ToVerusFloat(gasPriceInSATS);
-            latestproofroot.checkGasPrice = true;
-        }
-      
         latestproofroot.version = constants.ETH_NOTARIZATION_DEFAULT_VERSION;
         latestproofroot.type = constants.ETH_NOTARIZATION_DEFAULT_TYPE;
         latestproofroot.systemid = InteractorConfig.ethSystemId;
         latestproofroot.stateroot = util.removeHexLeader(block.stateRoot).reversebytes();
         latestproofroot.blockhash = util.removeHexLeader(block.hash).reversebytes();
-        
-        await setCachedBlock( latestproofroot, `${height}` )        
+
+        check1 = latestproofroot.height < (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT : constants.ETH_GAS_REDUCTION_HEIGHT);
+        if (!check1)
+        {
+            check3 = latestproofroot.height >= (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT3 : constants.ETH_GAS_REDUCTION_HEIGHT3);
+        }
+        else if (!check3)
+        {
+            check2 = latestproofroot.height >= (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT2 : constants.ETH_GAS_REDUCTION_HEIGHT2);
+        }
+
+        if (check1)
+        {
+            latestproofroot.gasprice = gasPriceInSATS < BigInt(1000000000) ? "10.00000000" : util.uint64ToVerusFloat(gasPriceInSATS);
+        }
+        else if (check3)
+        {
+            gasPriceInSATS = gasPriceInSATS * BigInt(12) / BigInt(10);
+            latestproofroot.gasprice = adjustedGas < BigInt(100000000) ? "1.00000000" : util.uint64ToVerusFloat(adjustedGas);
+        }
+        else if (check2)
+        {
+            gasPriceInSATS = (gasPriceInSATS * BigInt(12) / BigInt(10)) < BigInt(100000000) ? BigInt(100000000) : (gasPriceInSATS * BigInt(12) / BigInt(10));
+            latestproofroot.gasprice = util.uint64ToVerusFloat(adjustedGas);
+        }
+        else
+        {
+            latestproofroot.gasprice = gasPriceInSATS < BigInt(500000000) ? "5.00000000" : util.uint64ToVerusFloat(gasPriceInSATS);
+        }
     }
     else
     {
         latestproofroot = JSON.parse(cachedBlock);
+        gasPriceInSATS = BigInt(util.convertToInt64(latestproofroot.gasprice));
+        check1 = latestproofroot.height < (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT : constants.ETH_GAS_REDUCTION_HEIGHT);
+        if (!check1)
+        {
+            check3 = latestproofroot.height >= (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT3 : constants.ETH_GAS_REDUCTION_HEIGHT3);
+        }
+        else if (!check3)
+        {
+            check2 = latestproofroot.height >= (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT2 : constants.ETH_GAS_REDUCTION_HEIGHT2);
+        }
     }
-        
+
+    if (check1)
+    {
+        checkPassed = true;
+    }
+    else if (check3)
+    {
+        checkPassed = (util.uint64ToVerusFloat(gasToCheckInSats) == latestproofroot.gasprice);
+    }
+    else if (check2)
+    {
+        checkPassed = (gasToCheckInSats < BigInt(500000000) && gasToCheckInSats >= BigInt(100000000) && adjustedGas == gasToCheckInSats) || 
+                        (gasToCheckInSats) >= BigInt(500000000);            
+    }
+    else
+    {
+        checkPassed = true;
+    }
+    
+    if (!cachedBlock)
+    {
+        await setCachedBlock( latestproofroot, `${height}` )        
+    }
+
     if (InteractorConfig.debugnotarization) 
     {
         console.log("checkProofRoot GASPRICE: " + latestproofroot.gasprice + ", height: " + height);
     }
 
-    if (!latestproofroot.checkGasPrice)
+    if (!checkPassed)
     {
         return false;
     }
