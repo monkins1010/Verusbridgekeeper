@@ -12,6 +12,7 @@ exports.APIs = (api) => {
         'getlastimportfrom'             : "getLastImportFrom",
         'getclaimablefees'              : "getclaimablefees",
         'revokeidentity'                : "revokeidentity",
+        'stop'                          : "stop",
     }
 
     for ( var property in validCalls ) {
