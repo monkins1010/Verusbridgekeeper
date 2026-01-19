@@ -1090,9 +1090,17 @@ async function checkProofRoot({height, stateroot, blockhash, power, gasprice, ve
     let gasPriceInSATS = BigInt(0);
     let checkPassed = false;
 
-    let check1 = false;
     let check3 = false;
     let check2 = false;
+    let check1 = height < (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT : constants.ETH_GAS_REDUCTION_HEIGHT);
+    if (!check1)
+    {
+        check3 = height >= (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT3 : constants.ETH_GAS_REDUCTION_HEIGHT3);
+    }
+    else if (!check3)
+    {
+        check2 = height >= (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT2 : constants.ETH_GAS_REDUCTION_HEIGHT2);
+    }
 
     if (!cachedBlock)
     {
@@ -1117,16 +1125,6 @@ async function checkProofRoot({height, stateroot, blockhash, power, gasprice, ve
         latestproofroot.stateroot = util.removeHexLeader(block.stateRoot).reversebytes();
         latestproofroot.blockhash = util.removeHexLeader(block.hash).reversebytes();
 
-        check1 = latestproofroot.height < (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT : constants.ETH_GAS_REDUCTION_HEIGHT);
-        if (!check1)
-        {
-            check3 = latestproofroot.height >= (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT3 : constants.ETH_GAS_REDUCTION_HEIGHT3);
-        }
-        else if (!check3)
-        {
-            check2 = latestproofroot.height >= (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT2 : constants.ETH_GAS_REDUCTION_HEIGHT2);
-        }
-
         if (check1)
         {
             latestproofroot.gasprice = gasPriceInSATS < BigInt(1000000000) ? "10.00000000" : util.uint64ToVerusFloat(gasPriceInSATS);
@@ -1150,15 +1148,6 @@ async function checkProofRoot({height, stateroot, blockhash, power, gasprice, ve
     {
         latestproofroot = JSON.parse(cachedBlock);
         gasPriceInSATS = BigInt(util.convertToInt64(latestproofroot.gasprice));
-        check1 = latestproofroot.height < (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT : constants.ETH_GAS_REDUCTION_HEIGHT);
-        if (!check1)
-        {
-            check3 = latestproofroot.height >= (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT3 : constants.ETH_GAS_REDUCTION_HEIGHT3);
-        }
-        else if (!check3)
-        {
-            check2 = latestproofroot.height >= (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT2 : constants.ETH_GAS_REDUCTION_HEIGHT2);
-        }
     }
 
     if (check1)
