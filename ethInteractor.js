@@ -20,7 +20,7 @@ const {
 } = require('./cache/apicalls')
 const notarization = require('./utilities/notarizationSerializer.js');
 let log = function(){};
-let ETH_CONTRACT_START_HEIGHT = 0;
+
 
 const enableLog = function() {
     var old = console.log;
@@ -51,8 +51,6 @@ class EthInteractorConfig {
         this._nowitnesssubmit = nowitnesssubmissions;
         this._userpass = userpass;
         this._rpcallowip = rpcallowip;
-
-        ETH_CONTRACT_START_HEIGHT = this._ticker == "VRSCTEST" ? constants.TESTNET_ETH_CONTRACT_START_HEIGHT : constants.ETH_CONTRACT_START_HEIGHT;
 
         if(this._consolelog) enableLog();
     }
@@ -955,13 +953,21 @@ exports.getBestProofRoot = async(input) => {
     try {
         if (input.length && proofroots) {
             for (let i = 0; i < proofroots.length; i++) {
-                if ((parseInt(proofroots[i].height) > ETH_CONTRACT_START_HEIGHT) && await checkProofRoot(proofroots[i])) {
+
+                if (parseInt(proofroots[i].height) < (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_CONTRACT_START_HEIGHT : constants.ETH_CONTRACT_START_HEIGHT)){
+                    log("height: " + proofroots[i].height + ", is greater than contract start height");
+                    continue;
+                }  
+                if (await checkProofRoot(proofroots[i])) {
                     validindexes.push(i);
                     if (bestindex == -1)
                         bestindex = 0;
                     if (proofroots[bestindex].height < proofroots[i].height) {
                         bestindex = i;
                     }
+                }
+                else if (InteractorConfig.debugnotarization) {
+                    log("invalid proofroot at index: ", i);
                 }
             }
         }
