@@ -1144,7 +1144,7 @@ async function checkProofRoot({height, stateroot, blockhash, power, gasprice, ve
         const startBlockheightrange = (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT2 : constants.ETH_GAS_REDUCTION_HEIGHT2);
         const secondblockheightrange = (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT3 : constants.ETH_GAS_REDUCTION_HEIGHT3);
 
-        // if we are in the range of the GAS reduction height 2 to 3.
+        // if we are in the range of the GAS reduction height 2 to 3. only check values in the 1 to 5 gwei range
         if(latestproofroot.height >= startBlockheightrange && latestproofroot.height < secondblockheightrange){
             if (gasToCheckInSats < BigInt(500000000) && gasToCheckInSats >= BigInt(100000000)) {
                 return false;
@@ -1153,9 +1153,12 @@ async function checkProofRoot({height, stateroot, blockhash, power, gasprice, ve
             {
                 return true;
             }
-
+        } 
+        else if (latestproofroot.height >= secondblockheightrange)
+        {
+            return false;
         }
-        return false;
+        return true;
     }
         
     if (version != constants.ETH_NOTARIZATION_DEFAULT_VERSION || type != constants.ETH_NOTARIZATION_DEFAULT_TYPE || 
