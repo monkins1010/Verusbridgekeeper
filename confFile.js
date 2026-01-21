@@ -104,7 +104,7 @@ const loadConfFile = (chainName) => {
         console.log("(veth.conf) file found at: ", confPath);
         for (const [key, value] of Object.entries(Config)) {
 
-            if (_match = _data.match(new RegExp(`^${key}=\\n*(.*)`, 'm')) {
+            if (_match = _data.match(new RegExp(`^${key}=\\n*(.*)`, 'm'))) {
 
                 if (_match[1] != "empty") {
                     Config[key] = _match[1];
