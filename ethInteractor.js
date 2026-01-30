@@ -1483,7 +1483,20 @@ exports.submitImports = async(CTransferArray) => {
         if(found) {
             log("Submitimports: Pending transaction found, skipping...");
         } else if (submitArray.length > 0 && (parseInt(gascalc) < parseInt(submitImportMaxGas))) {
-            globalsubmitimports = await delegatorContract.methods.submitImports(submitArray[0]).send({ from: account.address, gas: submitImportMaxGas });
+            // Get current gas prices and set reasonable limits to avoid overpaying
+            const block = await web3.eth.getBlock('latest');
+            const baseFee = BigInt(block.baseFeePerGas || 0);
+            // Set max priority fee to 0.3 Gwei (300000000 wei) - sufficient for most transactions
+            const maxPriorityFeePerGas = BigInt(300000000); // 0.3 Gwei
+            // Set max fee to 2x base fee + priority fee to handle base fee fluctuations
+            const maxFeePerGas = (baseFee * BigInt(2)) + maxPriorityFeePerGas;
+            
+            globalsubmitimports = await delegatorContract.methods.submitImports(submitArray[0]).send({ 
+                from: account.address, 
+                gas: submitImportMaxGas,
+                maxFeePerGas: maxFeePerGas.toString(),
+                maxPriorityFeePerGas: maxPriorityFeePerGas.toString()
+            });
             // if the submit import spend  succeeds then we can cache the last submit import.
             await setCachedApi(CTransferArray, 'lastsubmitImports');
         } else {
@@ -1575,7 +1588,20 @@ exports.submitAcceptedNotarization = async(params) => {
         if(found) {
             log("Submitacceptednotarization: Pending transaction found, skipping...");
         } else {
-            txhash = await delegatorContract.methods.setLatestData(serializednotarization, txid, txidObj.voutnum, abiencodedSigData).send({ from: account.address, gas: notarizationMaxGas });
+            // Get current gas prices and set reasonable limits to avoid overpaying
+            const block = await web3.eth.getBlock('latest');
+            const baseFee = BigInt(block.baseFeePerGas || 0);
+            // Set max priority fee to 0.3 Gwei (300000000 wei) - sufficient for most transactions
+            const maxPriorityFeePerGas = BigInt(300000000); // 0.3 Gwei
+            // Set max fee to 2x base fee + priority fee to handle base fee fluctuations
+            const maxFeePerGas = (baseFee * BigInt(2)) + maxPriorityFeePerGas;
+            
+            txhash = await delegatorContract.methods.setLatestData(serializednotarization, txid, txidObj.voutnum, abiencodedSigData).send({ 
+                from: account.address, 
+                gas: notarizationMaxGas,
+                maxFeePerGas: maxFeePerGas.toString(),
+                maxPriorityFeePerGas: maxPriorityFeePerGas.toString()
+            });
             log("notarization tx: success");
         }
         await setCachedApi(txidObj.txid, 'lastNotarizationTxid');
