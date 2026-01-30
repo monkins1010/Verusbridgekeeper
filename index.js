@@ -51,7 +51,8 @@ const processData = async (request, response) => {
     if (request.post) {
         let responseSent = false;
         
-        // 5 second timeout to ensure response is always sent
+        // 20 second timeout to ensure response is always sent
+        // Must be longer than the 15s API timeout + potential reconnection time
         const timeoutId = setTimeout(() => {
             if (!responseSent) {
                 responseSent = true;
@@ -65,7 +66,7 @@ const processData = async (request, response) => {
                 }
                 rollingBuffer.push(new Date(Date.now()).toLocaleString() + " Error: HTTP Request timeout");
             }
-        }, 5000);
+        }, 20000);
 
         try {
             let postData = JSON.parse(request.post);
