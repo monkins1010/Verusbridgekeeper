@@ -99,6 +99,11 @@ let notarizationEvent = undefined;
 let blockEvent = undefined;
 let webSocketFault = false;
 
+// Connection restoration state
+let restorationPromise = null;
+let lastRestorationAttempt = 0;
+const RESTORATION_COOLDOWN_MS = 10000; // 10 second cooldown between restoration attempts
+
 const reconnectOptions = {
   auto: false,
   delay: 5000, // ms
@@ -166,7 +171,8 @@ async function setupConf() {
     }
 
     try {
-      let isListening = await web3.eth.net.isListening();
+      // Add timeout to prevent hanging on isListening check
+      let isListening = await timeoutCheck(web3.eth.net.isListening(), 5000);
       if (isListening === true) {
         webSocketFault = false;
         log('web3 provider is connected');
@@ -176,6 +182,7 @@ async function setupConf() {
       }
     } catch (e) {
       webSocketFault = true;
+      log('web3 provider connection check failed: ' + (e.message || 'timeout'));
     }
     if (webSocketFault === true) {
       log('web3 provider is offline');
@@ -696,22 +703,50 @@ function createCrossChainExport(transfers, startHeight, endHeight, jsonready = f
 //     return cce;
 // }
 
-var restoringProviderSocket = false;
-
 async function restoreProviderSocket() {
-  if(restoringProviderSocket === false) {
-    restoringProviderSocket = true;
-    let online = await setupConf();
-    if (online) {
-      clearCachedApis();
-      eventListener(settings.delegatorcontractaddress);
-      log("web3 provider restored");
+  const now = Date.now();
+  
+  // If there's an ongoing restoration, wait for it instead of returning false
+  if (restorationPromise !== null) {
+    log("web3 provider is already being restored, waiting...");
+    try {
+      return await restorationPromise;
+    } catch (e) {
+      return false;
     }
-    restoringProviderSocket = false;
-    return online;
   }
-  log("web3 provider is already being restored...");
-  return false;
+  
+  // Check cooldown to prevent rapid-fire restoration attempts
+  if (now - lastRestorationAttempt < RESTORATION_COOLDOWN_MS) {
+    const remainingCooldown = Math.ceil((RESTORATION_COOLDOWN_MS - (now - lastRestorationAttempt)) / 1000);
+    log(`web3 restoration on cooldown, ${remainingCooldown}s remaining`);
+    return false;
+  }
+  
+  lastRestorationAttempt = now;
+  
+  // Create a promise that concurrent callers can await
+  restorationPromise = (async () => {
+    try {
+      log("Attempting to restore web3 provider...");
+      let online = await setupConf();
+      if (online) {
+        clearCachedApis();
+        eventListener(settings.delegatorcontractaddress);
+        log("web3 provider restored successfully");
+      } else {
+        log("web3 provider restoration failed");
+      }
+      return online;
+    } catch (e) {
+      log("web3 provider restoration error: " + (e.message || e));
+      return false;
+    } finally {
+      restorationPromise = null;
+    }
+  })();
+  
+  return restorationPromise;
 }
 
 /** core functions */
@@ -719,16 +754,26 @@ const timeoutCheck = (prom, time) => Promise.race([prom, new Promise((_r, rej) =
 
 async function isProviderSocketOnline() {
   let online = false;
+  
+  // First check if web3 exists
+  if (!web3) {
+    log('web3 is not initialized');
+    return false;
+  }
+  
   try {
     online = await timeoutCheck(web3.eth.net.isListening(), 5000);
   } catch (e) {
     online = false;
+    log('web3 isListening check failed: ' + (e.message || 'timeout'));
   }
+  
   if (!online) {
     // attempt to restore/re-connect
     online = await restoreProviderSocket();
   }
-  return online?true:false;
+  
+  return online === true;
 }
 
 exports.getInfo = async() => {
@@ -980,6 +1025,7 @@ exports.getBestProofRoot = async(input) => {
         if (parseInt(latestProofHeight) >= (parseInt(latestBlock) - 30)) {
             latestproofroot = proofroots[bestindex];
         } else {
+            // Potential save calls to getProofRoot by caching last proof root at latestBlock - 30;
             latestproofroot = await getProofRoot(parseInt(latestBlock) - 30);
         }
 
@@ -1483,7 +1529,20 @@ exports.submitImports = async(CTransferArray) => {
         if(found) {
             log("Submitimports: Pending transaction found, skipping...");
         } else if (submitArray.length > 0 && (parseInt(gascalc) < parseInt(submitImportMaxGas))) {
-            globalsubmitimports = await delegatorContract.methods.submitImports(submitArray[0]).send({ from: account.address, gas: submitImportMaxGas });
+            // Get current gas prices and set reasonable limits to avoid overpaying
+            const block = await web3.eth.getBlock('latest');
+            const baseFee = BigInt(block.baseFeePerGas || 0);
+            // Set max priority fee to 0.3 Gwei (300000000 wei) - sufficient for most transactions
+            const maxPriorityFeePerGas = BigInt(300000000); // 0.3 Gwei
+            // Set max fee to 2x base fee + priority fee to handle base fee fluctuations
+            const maxFeePerGas = (baseFee * BigInt(2)) + maxPriorityFeePerGas;
+            
+            globalsubmitimports = await delegatorContract.methods.submitImports(submitArray[0]).send({ 
+                from: account.address, 
+                gas: submitImportMaxGas,
+                maxFeePerGas: maxFeePerGas.toString(),
+                maxPriorityFeePerGas: maxPriorityFeePerGas.toString()
+            });
             // if the submit import spend  succeeds then we can cache the last submit import.
             await setCachedApi(CTransferArray, 'lastsubmitImports');
         } else {
@@ -1575,7 +1634,20 @@ exports.submitAcceptedNotarization = async(params) => {
         if(found) {
             log("Submitacceptednotarization: Pending transaction found, skipping...");
         } else {
-            txhash = await delegatorContract.methods.setLatestData(serializednotarization, txid, txidObj.voutnum, abiencodedSigData).send({ from: account.address, gas: notarizationMaxGas });
+            // Get current gas prices and set reasonable limits to avoid overpaying
+            const block = await web3.eth.getBlock('latest');
+            const baseFee = BigInt(block.baseFeePerGas || 0);
+            // Set max priority fee to 0.3 Gwei (300000000 wei) - sufficient for most transactions
+            const maxPriorityFeePerGas = BigInt(300000000); // 0.3 Gwei
+            // Set max fee to 2x base fee + priority fee to handle base fee fluctuations
+            const maxFeePerGas = (baseFee * BigInt(2)) + maxPriorityFeePerGas;
+            
+            txhash = await delegatorContract.methods.setLatestData(serializednotarization, txid, txidObj.voutnum, abiencodedSigData).send({ 
+                from: account.address, 
+                gas: notarizationMaxGas,
+                maxFeePerGas: maxFeePerGas.toString(),
+                maxPriorityFeePerGas: maxPriorityFeePerGas.toString()
+            });
             log("notarization tx: success");
         }
         await setCachedApi(txidObj.txid, 'lastNotarizationTxid');
