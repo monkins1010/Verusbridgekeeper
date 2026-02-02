@@ -121,6 +121,29 @@ const web3Options = {
     reconnect: reconnectOptions
 };
 
+// Get median gas price from the last block's transactions
+async function getMedianGasPrice() {
+    const block = await web3.eth.getBlock('latest');
+    if (!block || block.transactions.length === 0) {
+        throw new Error('No transactions in latest block');
+    }
+    
+    const blockTransactionNum = block.transactions.length === 1 ? 1 : Math.ceil(block.transactions.length / 2);
+    const transaction = await web3.eth.getTransaction(block.transactions[blockTransactionNum - 1]);
+    
+    if (!transaction || !transaction.gasPrice) {
+        throw new Error('Could not get gas price from transaction');
+    }
+    
+    const baseFee = block.baseFeePerGas.toString() || '0';
+    const gasPriceGwei = web3.utils.fromWei(transaction.gasPrice, 'gwei');
+    const baseFeeGwei = web3.utils.fromWei(baseFee, 'gwei');
+    
+    console.log(`[GasPrice] Block: ${block.number}, BaseFee: ${baseFeeGwei} Gwei, GasPrice: ${gasPriceGwei} Gwei`);
+    
+    return transaction.gasPrice;
+}
+
 Object.assign(String.prototype, {
     reversebytes() {
         return this.match(/[a-fA-F0-9]{2}/g).reverse().join('');
@@ -1258,9 +1281,9 @@ exports.getNotarizationData = async() => {
 
     var d = new Date();
     var timenow = d.valueOf();
-
+    
     const lastTime = await getCachedApi('lastgetNotarizationDatatime');
-
+    
     if (lastTime && (JSON.parse(lastTime) + globaltimedeltaNota) > timenow) {
         let tempNotData = await getCachedApi('lastgetNotarizationData');
         if (tempNotData) {
@@ -1269,7 +1292,7 @@ exports.getNotarizationData = async() => {
     }
     newNotarization = false;
     await setCachedApi(timenow, 'lastgetNotarizationDatatime');
-
+    
     try {
         let forksData = [];
         let forks = [];
@@ -1529,19 +1552,13 @@ exports.submitImports = async(CTransferArray) => {
         if(found) {
             log("Submitimports: Pending transaction found, skipping...");
         } else if (submitArray.length > 0 && (parseInt(gascalc) < parseInt(submitImportMaxGas))) {
-            // Get current gas prices and set reasonable limits to avoid overpaying
-            const block = await web3.eth.getBlock('latest');
-            const baseFee = BigInt(block.baseFeePerGas || 0);
-            // Set max priority fee to 0.3 Gwei (300000000 wei) - sufficient for most transactions
-            const maxPriorityFeePerGas = BigInt(300000000); // 0.3 Gwei
-            // Set max fee to 2x base fee + priority fee to handle base fee fluctuations
-            const maxFeePerGas = (baseFee * BigInt(2)) + maxPriorityFeePerGas;
+            // Get median gas price from the last block's transactions
+            const gasPrice = await getMedianGasPrice();
             
             globalsubmitimports = await delegatorContract.methods.submitImports(submitArray[0]).send({ 
                 from: account.address, 
                 gas: submitImportMaxGas,
-                maxFeePerGas: maxFeePerGas.toString(),
-                maxPriorityFeePerGas: maxPriorityFeePerGas.toString()
+                gasPrice: gasPrice
             });
             // if the submit import spend  succeeds then we can cache the last submit import.
             await setCachedApi(CTransferArray, 'lastsubmitImports');
@@ -1634,19 +1651,13 @@ exports.submitAcceptedNotarization = async(params) => {
         if(found) {
             log("Submitacceptednotarization: Pending transaction found, skipping...");
         } else {
-            // Get current gas prices and set reasonable limits to avoid overpaying
-            const block = await web3.eth.getBlock('latest');
-            const baseFee = BigInt(block.baseFeePerGas || 0);
-            // Set max priority fee to 0.3 Gwei (300000000 wei) - sufficient for most transactions
-            const maxPriorityFeePerGas = BigInt(300000000); // 0.3 Gwei
-            // Set max fee to 2x base fee + priority fee to handle base fee fluctuations
-            const maxFeePerGas = (baseFee * BigInt(2)) + maxPriorityFeePerGas;
+            // Get median gas price from the last block's transactions
+            const gasPrice = await getMedianGasPrice();
             
             txhash = await delegatorContract.methods.setLatestData(serializednotarization, txid, txidObj.voutnum, abiencodedSigData).send({ 
                 from: account.address, 
                 gas: notarizationMaxGas,
-                maxFeePerGas: maxFeePerGas.toString(),
-                maxPriorityFeePerGas: maxPriorityFeePerGas.toString()
+                gasPrice: gasPrice
             });
             log("notarization tx: success");
         }
