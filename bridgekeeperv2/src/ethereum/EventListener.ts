@@ -63,28 +63,29 @@ export class EventListener {
             }
         });
 
-        // Notarization event listener (if contract supports it)
-        try {
-            const delegator = this.contracts.getDelegator();
-            delegator.on('NewNotarization', async (...args: unknown[]) => {
-                const event: INotarizationEvent = {
-                    verusHeight: Number(args[0]),
-                    ethHeight: Number(args[1]),
-                    txid: String(args[2]),
-                    blockHash: String(args[3]),
-                };
-
-                for (const handler of this.notarizationHandlers) {
-                    try {
-                        await handler(event);
-                    } catch (err) {
-                        console.error('Notarization handler error:', err);
-                    }
+        const delegator = this.contracts.getDelegator();
+        const filter = {
+            address: delegator.target, // or delegator.address
+            topics: [
+                '0x680ce19d19cb7479bae869cebd27efcca33f6f22a43fd4d52d6c62a64890b7fd'
+            ]
+        };
+        ethProvider.on(filter, async (log) => {
+            // Parse log data as needed
+            for (const handler of this.notarizationHandlers) {
+                try {
+                    await handler({
+                        // Fill in fields from log
+                        verusHeight: 0, // parse from log.data or log.topics
+                        ethHeight: log.blockNumber,
+                        txid: log.transactionHash,
+                        blockHash: log.blockHash,
+                    });
+                } catch (err) {
+                    console.error('Notarization handler error:', err);
                 }
-            });
-        } catch {
-            // Contract may not have notarization events
-        }
+            }
+        });
     }
 
     /** Stop listening for events */
