@@ -1,0 +1,3 @@
+- complete the whole bridgekeeperv2 project as outlines in task_1.md
+- make unit tests using the data in https://github.com/VerusCoin/Verus-Ethereum-Contracts/tree/main/test folder
+- make sure the code is documented

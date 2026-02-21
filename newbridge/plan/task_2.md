@@ -1,0 +1,4 @@
+- please init the project in a new folder called bridgekeeperv2
+- please add the typescript setup and basic folderrs setup
+- please setup the package.js
+- please implment the main start.js and index.js in task_1.md

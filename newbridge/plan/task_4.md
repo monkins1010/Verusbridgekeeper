@@ -1,0 +1,2 @@
+- please implment all the cli utils that are in the utilities
+- provide help in the cli utils so the user doesnt have to read a readme

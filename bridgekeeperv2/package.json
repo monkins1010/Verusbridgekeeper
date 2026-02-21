@@ -1,0 +1,44 @@
+{
+  "name": "verus-bridgekeeper",
+  "version": "2.0.0",
+  "description": "Verus-Ethereum Bridge Keeper — bridges Verus and Ethereum blockchains",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "start": "ts-node src/cli.ts -- start",
+    "start:prod": "node dist/cli.js start",
+    "build": "tsc",
+    "tools": "ts-node src/cli.ts -- tools",
+    "lint": "eslint src/ --ext .ts",
+    "lint:fix": "eslint src/ --ext .ts --fix",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "bn.js": "^5.2.1",
+    "commander": "^12.1.0",
+    "ethers": "^6.13.0",
+    "ini": "^4.1.1",
+    "inquirer": "^9.2.12",
+    "chalk": "^5.3.0",
+    "boxen": "^7.1.1",
+    "verus-typescript-primitives": "github:VerusCoin/verus-typescript-primitives"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.1.5",
+    "@types/ini": "^4.1.0",
+    "@types/inquirer": "^9.0.7",
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.56.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.0",
+    "vitest": "^1.6.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
