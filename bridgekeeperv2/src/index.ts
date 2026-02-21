@@ -108,6 +108,7 @@ export class BridgeKeeper {
                 userpass: configManager.rpcUserPass,
                 allowIp: configManager.rpcAllowIp,
                 requestTimeoutMs: 20_000,
+                debug: config.debug ?? false,
             });
 
             await rpcServer.listen();

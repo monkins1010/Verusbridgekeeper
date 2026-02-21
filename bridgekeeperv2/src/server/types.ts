@@ -38,4 +38,6 @@ export interface IServerConfig {
     allowIp: string;
     concurrency?: number;
     requestTimeoutMs?: number;
+    /** When true, log full request params and response data to console */
+    debug?: boolean;
 }

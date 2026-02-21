@@ -150,8 +150,16 @@ export class RpcServer {
             const rpcRequest: IRpcRequest = JSON.parse(body);
             const method = rpcRequest.method;
 
+            // Always log the command name to console (skip noisy getinfo/getcurrency)
             if (method !== 'getinfo' && method !== 'getcurrency') {
+                const ts = new Date().toLocaleString();
+                console.log(`[${ts}] RPC Command: ${method}`);
                 this.addLog(`Command: ${method}`);
+            }
+
+            // In debug mode, log the full request params
+            if (this.config.debug) {
+                console.log(`[DEBUG] >>> ${method} request params:`, JSON.stringify(rpcRequest.params, null, 2));
             }
 
             // Race the handler against a 15s timeout
@@ -166,6 +174,11 @@ export class RpcServer {
                 responseSent = true;
                 clearTimeout(timeoutId);
                 const rpcResponse = result as IRpcResponse;
+
+                // In debug mode, log the full response data
+                if (this.config.debug) {
+                    console.log(`[DEBUG] <<< ${method} response:`, JSON.stringify(rpcResponse, null, 2));
+                }
 
                 if (rpcResponse.error) {
                     response.writeHead(402, 'Error', { 'Content-Type': 'application/json' });
