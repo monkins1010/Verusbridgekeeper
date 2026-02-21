@@ -19,20 +19,20 @@ const program = new Command();
 program
     .name('bridgekeeper')
     .description('Verus-Ethereum Bridge Keeper v2')
-    .version('2.0.0')
+    .version('2.0.0');
+
+program
+    .command('start')
+    .description('Start the bridge keeper server')
     .option('-t, --testnet', 'Use VRSCTEST network', false)
     .option('-d, --debug', 'Enable debug logging', false)
     .option('--debug-submit', 'Debug import submissions', false)
     .option('--debug-notarization', 'Debug notarizations', false)
     .option('--no-imports', 'Disable import processing', false)
     .option('--check-hash', 'Enable hash checking', false)
-    .option('--console-log', 'Enable timestamped console logging', false);
-
-program
-    .command('start')
-    .description('Start the bridge keeper server')
-    .action(async () => {
-        const opts = program.opts();
+    .option('--console-log', 'Enable timestamped console logging', false)
+    .action(async (cmdOpts) => {
+        const opts = cmdOpts;
         const ticker: Ticker = opts.testnet ? 'VRSCTEST' : 'VRSC';
 
         const config: IBridgeConfig = {
@@ -72,9 +72,9 @@ program
 program
     .command('tools')
     .description('Open interactive tools menu')
-    .action(async () => {
-        const opts = program.opts();
-        const ticker: Ticker = opts.testnet ? 'VRSCTEST' : 'VRSC';
+    .option('-t, --testnet', 'Use VRSCTEST network', false)
+    .action(async (cmdOpts) => {
+        const ticker: Ticker = cmdOpts.testnet ? 'VRSCTEST' : 'VRSC';
 
         const { CliMenu } = await import('./cli-tools/index');
         const menu = new CliMenu(ticker);
@@ -84,9 +84,9 @@ program
 program
     .command('status')
     .description('Check the bridge keeper status')
-    .action(async () => {
-        const opts = program.opts();
-        const ticker: Ticker = opts.testnet ? 'VRSCTEST' : 'VRSC';
+    .option('-t, --testnet', 'Use VRSCTEST network', false)
+    .action(async (cmdOpts) => {
+        const ticker: Ticker = cmdOpts.testnet ? 'VRSCTEST' : 'VRSC';
 
         // For status, we need to make an RPC call to a running instance
         // This is a convenience command that connects to the RPC server
