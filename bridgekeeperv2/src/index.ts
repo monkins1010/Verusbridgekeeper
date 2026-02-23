@@ -44,7 +44,7 @@ export class BridgeKeeper {
         try {
             // --- Config ---
             const configManager = new ConfigManager(config.ticker ?? 'VRSC');
-            const confData = configManager.load();
+            const confData = await configManager.load();
             this.configManager = configManager;
 
             this.log = config.consoleLog ? console.log : () => {};

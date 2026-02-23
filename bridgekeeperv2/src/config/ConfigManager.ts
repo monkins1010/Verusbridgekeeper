@@ -5,12 +5,20 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import * as ini from 'ini';
 import { randomBytes } from 'crypto';
 import { Ticker } from '../types/common';
 import { IConfFile } from './types';
 import { getConfFilePath, getVerusConfPath } from './paths';
 import { CHAIN_CONFIG } from './constants';
+
+/** Lazy-loaded ini module (ESM-only since v5) */
+let _ini: typeof import('ini') | null = null;
+async function getIni(): Promise<typeof import('ini')> {
+    if (!_ini) {
+        _ini = await import('ini');
+    }
+    return _ini;
+}
 
 export class ConfigManager {
     private _ticker: Ticker;
@@ -64,7 +72,7 @@ export class ConfigManager {
     }
 
     /** Load configuration from the conf file. Creates defaults if missing. */
-    load(): IConfFile {
+    async load(): Promise<IConfFile> {
         const confPath = getConfFilePath(this._ticker);
         const confDir = path.dirname(confPath);
 
@@ -85,7 +93,7 @@ export class ConfigManager {
 
         if (data.length > 0) {
             console.log(`Config file found at: ${confPath}`);
-            const parsed = this.parseConfFile(data);
+            const parsed = await this.parseConfFile(data);
             this._config = parsed;
         } else {
             // Write defaults and instruct user to configure
@@ -100,7 +108,8 @@ export class ConfigManager {
     }
 
     /** Parse a veth.conf-style ini file into typed config */
-    private parseConfFile(data: string): IConfFile {
+    private async parseConfFile(data: string): Promise<IConfFile> {
+        const ini = await getIni();
         const config = ini.parse(data);
 
         return {
@@ -146,9 +155,9 @@ export class ConfigManager {
     }
 
     /** Update specific config values and persist */
-    update(updates: Partial<IConfFile>): void {
+    async update(updates: Partial<IConfFile>): Promise<void> {
         if (!this._config) {
-            this.load();
+            await this.load();
         }
 
         Object.assign(this._config!, updates);
@@ -158,7 +167,7 @@ export class ConfigManager {
     }
 
     /** Read the Verus daemon conf to get its RPC credentials */
-    readVerusConf(): { rpcuser: string; rpcpassword: string; rpcport: string } {
+    async readVerusConf(): Promise<{ rpcuser: string; rpcpassword: string; rpcport: string }> {
         const confPath = getVerusConfPath(this._ticker);
         const data = fs.readFileSync(confPath, 'utf8');
 
@@ -166,6 +175,7 @@ export class ConfigManager {
             throw new Error('No data in Verus conf file');
         }
 
+        const ini = await getIni();
         const config = ini.parse(data);
         return {
             rpcuser: config.rpcuser,

@@ -19,12 +19,12 @@ export class CliMenu {
     /** Run the interactive tools menu loop */
     async run(): Promise<void> {
         const configMgr = new ConfigManager(this.ticker);
-        const conf = configMgr.load();
+        const conf = await configMgr.load();
 
         // Build Verus daemon RPC info if available
         let verusDaemonRpc: IToolContext['verusDaemonRpc'] | undefined;
         try {
-            const vConf = configMgr.readVerusConf();
+            const vConf = await configMgr.readVerusConf();
             verusDaemonRpc = {
                 url: `http://127.0.0.1:${vConf.rpcport}`,
                 user: vConf.rpcuser,
