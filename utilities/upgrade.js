@@ -342,7 +342,7 @@ const createContractUpdateAddress = async() => {
             return false;
         }
          //replace existing contract with new contract address
-        contracts[newContractType] = newContract; 
+       // contracts[newContractType] = newContract; 
 
         for (let i = 0; i < 11; i++) 
         {

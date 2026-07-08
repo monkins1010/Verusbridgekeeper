@@ -662,9 +662,9 @@ function createCrossChainExport(transfers, startHeight, endHeight, jsonready = f
     cce.totalburned = [{ "currency": '0x0000000000000000000000000000000000000000', "amount": 0 }]; // serialiser doesnt like empty strings or non BIgints
     cce.rewardaddress = ""; //  blank
     cce.firstinput = 1;
-    if (InteractorConfig.debugsubmit) {
-        console.log("cce", JSON.stringify(cce),null,2);
-    }
+    // if (InteractorConfig.debugsubmit) {
+    //     console.log("cce", JSON.stringify(cce),null,2);
+    // }
     return cce;
 }
 
@@ -960,9 +960,9 @@ exports.getExports = async(input) => {
 
         }
 
-        if (InteractorConfig.debugsubmit) {
-            console.log(JSON.stringify(output, null, 2));
-        }
+        // if (InteractorConfig.debugsubmit) {
+        //     console.log(JSON.stringify(output, null, 2));
+        // }
 
         await setCachedApi(input, 'lastgetExports');
         await setCachedApi(output, 'lastgetExportResult');
@@ -1090,12 +1090,13 @@ async function getProofRoot(height = "latest") {
       
         try {
             block = await web3.eth.getBlock(height);
-            if (block.transactions.length == 0) {
-                throw  new Error(`No Transactions for Block: ${height}`);
+            if (!block) {
+                throw new Error(`Block ${height} not found`);
             }
-            const blockTransactionNum = block.transactions.length == 1 ? 1 : Math.ceil(block.transactions.length / 2);
-            transaction = await web3.eth.getTransaction(block.transactions[blockTransactionNum]);
-
+            if (block.transactions.length > 0) {
+                const blockTransactionNum = block.transactions.length == 1 ? 1 : Math.ceil(block.transactions.length / 2);
+                transaction = await web3.eth.getTransaction(block.transactions[blockTransactionNum - 1]);
+            }
         } catch (error) {
             throw new Error("[getProofRoot] " + (error.message ? error.message : error));
         }
@@ -1142,7 +1143,7 @@ async function getProofRoot(height = "latest") {
         console.log("getProofRoot GASPRICE: " + latestproofroot.gasprice + ", height: " + height)
 
     return latestproofroot;
-
+    
 }
 
 // check code is a mess because it compensates for multiple past errors in checking to ensure all block ranges are
@@ -1153,11 +1154,17 @@ async function checkProofRoot({height, stateroot, blockhash, power, gasprice, ve
     let block;
     let transaction;
     let latestproofroot = {};
-    let gasToCheckInSats = BigInt(util.convertToInt64(gasprice));
-
+    let gasToCheckInSats = BigInt(util.convertToInt64(gasprice || "0"));
+    
     const cachedBlock = await getCachedBlock(`${height}`);
     let gasPriceInSATS = BigInt(0);
     let checkPassed = false;
+    
+    if (version != constants.ETH_NOTARIZATION_DEFAULT_VERSION || type != constants.ETH_NOTARIZATION_DEFAULT_TYPE || 
+        (systemid != constants.VETHCURRENCYID.VRSC && systemid != constants.VETHCURRENCYID.VRSCTEST))
+    {
+        return false;
+    }
 
     let check3 = false;
     let check2 = false;
@@ -1181,7 +1188,7 @@ async function checkProofRoot({height, stateroot, blockhash, power, gasprice, ve
       
         try {
             block = await web3.eth.getBlock(height);
-            transaction = await web3.eth.getTransaction(block.transactions[Math.ceil(block.transactions.length / 2)]);
+            transaction = await web3.eth.getTransaction(block.transactions[Math.ceil(block.transactions.length == 1 ? 0 : block.transactions.length / 2)]);
         } catch (error) {
             throw new Error("checkProofRoot error:", (error.message?error.message:error), height);
         }
@@ -1252,25 +1259,16 @@ async function checkProofRoot({height, stateroot, blockhash, power, gasprice, ve
         return false;
     }
         
-    if (version != constants.ETH_NOTARIZATION_DEFAULT_VERSION || type != constants.ETH_NOTARIZATION_DEFAULT_TYPE || 
-        (systemid != constants.VETHCURRENCYID.VRSC && systemid != constants.VETHCURRENCYID.VRSCTEST))
-    {
-        return false;
-    }
 
     if (latestproofroot.stateroot != stateroot || latestproofroot.blockhash != blockhash) 
     {
         return false;
     }
 
-    if (power == '000000000000000000000000000000000000000000000000003c656d23029ab0' || //testnet sepolia
-            power == '000000000000000000000000000000000000000000000c70d815d562d3cfa955' || //mainnet
-            BigInt(power) == BigInt(0)) 
-    {
-        return true;
-    }
+    return true;
 
-    return false;
+
+
 }
 
 //return the data required for a notarisation to be made
@@ -1622,16 +1620,16 @@ exports.submitAcceptedNotarization = async(params) => {
     let txidObj = params[1].output;
     const lastTxid = await getCachedApi('lastNotarizationTxid');
 
-    try {
+    // try {
 
-        if (lastTxid && lastTxid == JSON.stringify(txidObj.txid)) {
-            return { "result": "0" };
-        }
+    //     if (lastTxid && lastTxid == JSON.stringify(txidObj.txid)) {
+    //         return { "result": "0" };
+    //     }
 
-    } catch (error) {
-        console.log("submitAcceptedNotarization Error:\n", error.message);
-        return null;
-    }
+    // } catch (error) {
+    //     console.log("submitAcceptedNotarization Error:\n", error.message);
+    //     return null;
+    // }
 
     const abiencodedSigData = util.encodeSignatures(signatures);
     const txid = addHexPrefix(txidObj.txid.reversebytes())
@@ -1647,12 +1645,12 @@ exports.submitAcceptedNotarization = async(params) => {
         const pendingTransactions = await web3.eth.getBlock('pending', true);
         let found = false;
 
-        for (const tx of pendingTransactions.transactions) {
-            if(tx.to == settings.delegatorcontractaddress) {
-                found = true;
-                break;
-            }
-        };
+        // for (const tx of pendingTransactions.transactions) {
+        //     if(tx.to == settings.delegatorcontractaddress) {
+        //         found = true;
+        //         break;
+        //     }
+        // };
 
         if(found) {
             log("Submitacceptednotarization: Pending transaction found, skipping...");
