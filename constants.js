@@ -63,7 +63,8 @@ module.exports = Object.freeze({
         SubmitImports: 8,
         NotarizationSerializer: 9,
         UpgradeManager: 10,
-		LastIndex: 11
+        PendingImports: 11,
+		LastIndex: 12
     },
     IADDRESS: 102,
     RADDRESS: 60,
