@@ -1188,7 +1188,7 @@ async function checkProofRoot({height, stateroot, blockhash, power, gasprice, ve
       
         try {
             block = await web3.eth.getBlock(height);
-            transaction = await web3.eth.getTransaction(block.transactions[Math.ceil(block.transactions.length == 1 ? 0 : block.transactions.length / 2)]);
+            transaction = await web3.eth.getTransaction(block.transactions[Math.ceil(block.transactions.length / 2) - 1]);
         } catch (error) {
             throw new Error("checkProofRoot error:", (error.message?error.message:error), height);
         }
@@ -1251,7 +1251,7 @@ async function checkProofRoot({height, stateroot, blockhash, power, gasprice, ve
 
     if (InteractorConfig.debugnotarization) 
     {
-        console.log("checkProofRoot GASPRICE: " + latestproofroot.gasprice + ", height: " + height);
+        console.log("checkProofRoot GASPRICE FROM ETH: " + latestproofroot.gasprice + ",  VRSC_GAS_PRICE: " + util.uint64ToVerusFloat(gasToCheckInSats) + ", height: " + height);
     }
 
     if (!checkPassed)
