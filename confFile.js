@@ -210,6 +210,40 @@ const set_conf = (key, infuraLink, ethContract, chainName)=> {
     }
 };
 
+const set_conf_values = (chainName, updates) => {
+    let chaintc = chainName.toUpperCase();
+    const ID = CONSTANTS.VETHIDHEXREVERSED[chaintc];
+    let confPath = rootPath(chainName, ID);
+    let fullPath = confPath + '/' + ID + '.conf';
+
+    if (!fs.existsSync(confPath)) {
+        fs.mkdirSync(confPath, { recursive: true });
+    }
+
+    let _data = "";
+    try {
+        _data = fs.readFileSync(fullPath, 'utf8');
+    } catch (error) {
+        if (error.code !== 'ENOENT') {
+            throw error;
+        }
+    }
+
+    let config = _data.length ? ini.parse(_data) : {};
+    for (const [key, value] of Object.entries(updates || {})) {
+        config[key] = value;
+    }
+
+    if (!fs.existsSync(fullPath)) {
+        fs.writeFileSync(fullPath, "", 'utf8');
+    }
+    fs.truncateSync(fullPath, 0);
+    for (const [key, value] of Object.entries(config)) {
+        fs.appendFileSync(fullPath, `${key}=${value}` + "\n");
+    }
+};
+
 exports.set_conf = set_conf;
 exports.loadConfFile = loadConfFile;
 exports.getVerusConf = getVerusConf;
+exports.set_conf_values = set_conf_values;

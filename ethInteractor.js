@@ -77,6 +77,49 @@ const RAddressBaseConst = constants.RAddressBaseConst;
 const notarizationMaxGas = constants.notarizationMaxGas;
 const submitImportMaxGas = constants.submitImportMaxGas;
 const verusDelegatorAbi = require('./abi/VerusDelegator.json');
+const abiCoder = ethersUtils.defaultAbiCoder;
+
+const IMPORT_RELEASE_COOLDOWN_SECONDS = 60 * 60;
+const IMPORT_TIMEOUT_SECONDS = 4 * 60 * 60;
+
+const PENDING_IMPORT_KEY_PREFIX = Web3.utils.keccak256("pending.import");
+const PENDING_IMPORT_QUEUE_KEY = Web3.utils.keccak256("pending.import.queue");
+const RELEASE_VOTE_BITMAP_PREFIX = Web3.utils.keccak256("pending.import.release.vote.bitmap");
+
+const PENDING_IMPORTS_MIN_ABI = [
+    {
+        "inputs": [{ "internalType": "bytes", "name": "data", "type": "bytes" }],
+        "name": "approveImport",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    }
+];
+
+const PACKED_SEND_TUPLE = "tuple(address currency,uint64 amount,address destination,uint176 refundAddress,uint32 launchTxIndexPlusOne)";
+const PACKED_LAUNCH_TUPLE = "tuple(uint256 tokenID,address ERCContract,address iaddress,address parent,uint8 flags,string name)";
+const PENDING_IMPORT_TUPLE = `tuple(bytes32 importTxid,uint32 nout,bytes32 confirmedNotarizationTxid,uint32 confirmedNotarizationN,${PACKED_SEND_TUPLE}[] transfers,${PACKED_LAUNCH_TUPLE}[] launchTxs,uint64 fees,uint128 cceHeightsAndIndex,uint176[3] exporters,uint64 nonce,uint64 submittedAt,uint8 state)`;
+
+class PendingImportRecord {
+    static IN_COOLDOWN = 1;
+    static READY_TO_BE_VOTED = 2;
+    static VOTE_CAST_NOT_EXECUTED = 4;
+    static VOTES_COMPLETED_NOT_EXECUTED = 8;
+    static TIMEOUT_PASSED = 16;
+
+    constructor({ statusflags, txid, n, notarizationtxid, notarizationn, submittedat, outputs, hasnotaryvote, votecount, quorum }) {
+        this.statusflags = statusflags;
+        this.txid = txid;
+        this.n = n;
+        this.notarizationtxid = notarizationtxid;
+        this.notarizationn = notarizationn;
+        this.submittedat = submittedat;
+        this.outputs = outputs;
+        this.hasnotaryvote = hasnotaryvote;
+        this.votecount = votecount;
+        this.quorum = quorum;
+    }
+}
 
 // Global settings
 let settings = undefined;
@@ -93,6 +136,11 @@ let globalgetlastimport = d.valueOf() - globaltimedelta;
 let transactioncount = 0;
 let account = undefined;
 let delegatorContract = undefined;
+let pendingImportsContract = undefined;
+let pendingImportsContractAddress = undefined;
+let cachedNotaryIndex = null;
+let cachedNotaryIAddress = null;
+let cachedNotaryCount = 0;
 let lastblocknumber = null;
 let lasttimestamp = null
 let notarizationEvent = undefined;
@@ -121,27 +169,41 @@ const web3Options = {
     reconnect: reconnectOptions
 };
 
-// Get median gas price from the last block's transactions
+// Get gas price based on latest block gas utilization
 async function getMedianGasPrice() {
-    const block = await web3.eth.getBlock('latest');
-    if (!block || block.transactions.length === 0) {
-        throw new Error('No transactions in latest block');
+    const latestBlock = await web3.eth.getBlock('latest');
+
+    if (!latestBlock || latestBlock.baseFeePerGas == null) {
+        throw new Error('Could not get baseFeePerGas from latest block');
     }
-    
-    const blockTransactionNum = block.transactions.length === 1 ? 1 : Math.ceil(block.transactions.length / 2);
-    const transaction = await web3.eth.getTransaction(block.transactions[blockTransactionNum - 1]);
-    
-    if (!transaction || !transaction.gasPrice) {
-        throw new Error('Could not get gas price from transaction');
+
+    if (latestBlock.gasUsed == null || latestBlock.gasLimit == null) {
+        throw new Error('Could not get gasUsed/gasLimit from latest block');
     }
-    
-    const baseFee = block.baseFeePerGas.toString() || '0';
-    const gasPriceGwei = web3.utils.fromWei(transaction.gasPrice, 'gwei');
-    const baseFeeGwei = web3.utils.fromWei(baseFee, 'gwei');
-    
-    console.log(`[GasPrice] Block: ${block.number}, BaseFee: ${baseFeeGwei} Gwei, GasPrice: ${gasPriceGwei} Gwei`);
-    
-    return transaction.gasPrice;
+
+    const latestBaseFee = BigInt(latestBlock.baseFeePerGas.toString());
+    const gasUsed = BigInt(latestBlock.gasUsed.toString());
+    const gasLimit = BigInt(latestBlock.gasLimit.toString());
+
+    if (gasLimit === BigInt(0)) {
+        throw new Error('Latest block gasLimit is zero');
+    }
+
+    const utilizationPercent = Number(gasUsed * BigInt(10000) / gasLimit) / 100;
+    const isHighUtilization = utilizationPercent > 50;
+
+    const selectedGasPrice = isHighUtilization
+        ? (latestBaseFee * BigInt(115)) / BigInt(100)
+        : latestBaseFee;
+
+    const latestBaseFeeGwei = web3.utils.fromWei(latestBaseFee.toString(), 'gwei');
+    const selectedGasPriceGwei = web3.utils.fromWei(selectedGasPrice.toString(), 'gwei');
+
+    console.log(
+        `[GasPrice] Block: ${latestBlock.number}, GasUsed: ${gasUsed.toString()}, GasLimit: ${gasLimit.toString()}, Utilization: ${utilizationPercent}%, BaseFee: ${latestBaseFeeGwei} Gwei, SelectedGasPrice: ${selectedGasPriceGwei} Gwei`
+    );
+
+    return selectedGasPrice.toString();
 }
 
 Object.assign(String.prototype, {
@@ -213,6 +275,216 @@ async function setupConf() {
     return false;
 }
 
+function normalizeBytes32(value) {
+    if (!value || typeof value !== 'string') {
+        return null;
+    }
+    const withPrefix = addHexPrefix(value.toLowerCase());
+    if (!/^0x[0-9a-f]{64}$/.test(withPrefix)) {
+        return null;
+    }
+    return withPrefix;
+}
+
+function reverseBytesHex(hexNoPrefix) {
+    return hexNoPrefix.match(/[a-fA-F0-9]{2}/g).reverse().join('');
+}
+
+function countSetBits32(value) {
+    let x = Number(value) >>> 0;
+    let count = 0;
+    while (x !== 0) {
+        x &= (x - 1);
+        count++;
+    }
+    return count;
+}
+
+function decodeUint32StorageValue(encodedValue) {
+    if (!encodedValue || encodedValue === '0x') {
+        return 0;
+    }
+    return Number(abi.decodeParameter('uint32', encodedValue));
+}
+
+function computePendingImportKey(importTxid) {
+    return web3.utils.soliditySha3(
+        { t: 'bytes32', v: PENDING_IMPORT_KEY_PREFIX },
+        { t: 'bytes32', v: importTxid }
+    );
+}
+
+function computeReleaseVoteKey(importTxid) {
+    return web3.utils.soliditySha3(
+        { t: 'bytes32', v: RELEASE_VOTE_BITMAP_PREFIX },
+        { t: 'bytes32', v: importTxid }
+    );
+}
+
+async function getPendingImportsContract() {
+    if (pendingImportsContract) {
+        return pendingImportsContract;
+    }
+
+    const address = await delegatorContract.methods.contracts(constants.CONTRACT_TYPE.PendingImports).call();
+    pendingImportsContractAddress = address;
+    pendingImportsContract = new web3.eth.Contract(PENDING_IMPORTS_MIN_ABI, address);
+    return pendingImportsContract;
+}
+
+async function resolveAndCacheNotaryContext() {
+    if (!account || !account.address) {
+        cachedNotaryIndex = null;
+        cachedNotaryIAddress = null;
+        cachedNotaryCount = 0;
+        return;
+    }
+
+    const myMain = account.address.toLowerCase();
+    const discoveredNotaries = [];
+
+    for (let i = 0; i < 64; i++) {
+        try {
+            const iAddress = await delegatorContract.methods.notaries(i).call();
+            discoveredNotaries.push(iAddress);
+        } catch (e) {
+            break;
+        }
+    }
+
+    cachedNotaryCount = discoveredNotaries.length;
+
+    let foundIndex = null;
+    let foundIAddress = null;
+
+    for (let i = 0; i < discoveredNotaries.length; i++) {
+        const iAddress = discoveredNotaries[i];
+        const mapping = await delegatorContract.methods.notaryAddressMapping(iAddress).call();
+        const main = (mapping.main || mapping[0] || '').toLowerCase();
+        const state = Number(mapping.state || mapping[2] || 0);
+        if (main === myMain && state === 1) {
+            foundIndex = i;
+            foundIAddress = iAddress;
+            break;
+        }
+    }
+
+    cachedNotaryIndex = foundIndex;
+    cachedNotaryIAddress = foundIAddress;
+
+    try {
+        settings.notaryindex = foundIndex == null ? '' : String(foundIndex);
+        settings.notaryiaddress = foundIAddress || '';
+        confFile.set_conf_values(InteractorConfig.ticker, {
+            notaryindex: settings.notaryindex,
+            notaryiaddress: settings.notaryiaddress
+        });
+    } catch (e) {
+        log("Failed to persist notary context: " + (e.message || e));
+    }
+}
+
+function buildPendingImportOutputs(pendingImport) {
+    const outputs = [];
+
+    for (let i = 0; i < pendingImport.transfers.length; i++) {
+        const transfer = pendingImport.transfers[i];
+        const launchIdxPlusOne = Number(transfer.launchTxIndexPlusOne.toString());
+        const launchIdx = launchIdxPlusOne - 1;
+
+        const out = {
+            address: transfer.destination,
+            currencyid: util.uint160ToVAddress(transfer.currency, constants.IADDRESS),
+            amount: util.uint64ToVerusFloat(transfer.amount.toString()),
+            type: "tokenspend"
+        };
+
+        if (launchIdxPlusOne > 0 && launchIdx >= 0 && launchIdx < pendingImport.launchTxs.length) {
+            const launch = pendingImport.launchTxs[launchIdx];
+            const tokenHex = ethersUtils.hexZeroPad(ethersUtils.hexlify(launch.tokenID), 32).slice(2);
+
+            out.type = "currencydefinition";
+            out.currencydefinition = {
+                tokenid: reverseBytesHex(tokenHex),
+                ERCContract: launch.ERCContract,
+                currencyid: util.uint160ToVAddress(launch.iaddress, constants.IADDRESS),
+                parentid: util.uint160ToVAddress(launch.parent, constants.IADDRESS),
+                name: launch.name
+            };
+        }
+
+        outputs.push(out);
+    }
+
+    return outputs;
+}
+
+async function getPendingImportsForDaemon() {
+    const queueBytes = await delegatorContract.methods.storageGlobal(PENDING_IMPORT_QUEUE_KEY).call();
+    if (!queueBytes || queueBytes === '0x') {
+        return [];
+    }
+
+    const txids = abi.decodeParameter('bytes32[]', queueBytes);
+    const latestBlock = await web3.eth.getBlock('latest');
+    const nowTs = Number(latestBlock.timestamp);
+    const quorum = (cachedNotaryCount >> 1) + 1;
+    const pendingimports = [];
+
+    for (const importTxid of txids) {
+        const pendingKey = computePendingImportKey(importTxid);
+        const pendingBytes = await delegatorContract.methods.storageGlobal(pendingKey).call();
+        if (!pendingBytes || pendingBytes === '0x') {
+            continue;
+        }
+
+        const [pendingImport] = abiCoder.decode([PENDING_IMPORT_TUPLE], pendingBytes);
+        const voteKey = computeReleaseVoteKey(importTxid);
+        const voteBytes = await delegatorContract.methods.storageGlobal(voteKey).call();
+        const bitmap = decodeUint32StorageValue(voteBytes);
+        const voteCount = countSetBits32(bitmap);
+        const hasNotaryVote = cachedNotaryIndex == null
+            ? false
+            : (((bitmap >>> cachedNotaryIndex) & 1) === 1);
+
+        const submittedAt = Number(pendingImport.submittedAt.toString());
+        const cooldownEndsAt = submittedAt + IMPORT_RELEASE_COOLDOWN_SECONDS;
+        const timeoutAt = cooldownEndsAt + IMPORT_TIMEOUT_SECONDS;
+
+        let statusflags = 0;
+        if (nowTs < cooldownEndsAt) {
+            statusflags |= PendingImportRecord.IN_COOLDOWN;
+        }
+        if (nowTs >= cooldownEndsAt && voteCount < quorum) {
+            statusflags |= PendingImportRecord.READY_TO_BE_VOTED;
+        }
+        if (nowTs >= cooldownEndsAt && hasNotaryVote && voteCount < quorum) {
+            statusflags |= PendingImportRecord.VOTE_CAST_NOT_EXECUTED;
+        }
+        if (nowTs >= cooldownEndsAt && voteCount >= quorum) {
+            statusflags |= PendingImportRecord.VOTES_COMPLETED_NOT_EXECUTED;
+        }
+        if (nowTs >= timeoutAt) {
+            statusflags |= PendingImportRecord.TIMEOUT_PASSED;
+        }
+
+        pendingimports.push(new PendingImportRecord({
+            statusflags,
+            txid: util.removeHexLeader(pendingImport.importTxid),
+            n: Number(pendingImport.nout.toString()),
+            notarizationtxid: util.removeHexLeader(pendingImport.confirmedNotarizationTxid),
+            notarizationn: Number(pendingImport.confirmedNotarizationN.toString()),
+            submittedat: submittedAt,
+            outputs: buildPendingImportOutputs(pendingImport),
+            hasnotaryvote: hasNotaryVote,
+            votecount: voteCount,
+            quorum
+        }));
+    }
+
+    return pendingimports;
+}
+
 /**
  * Initializes the ETH interactor
  * @param {{ ticker: string, debug?: boolean, debugsubmit?: boolean, debugnotarization?: boolean, noimports?: boolean, checkhash?: boolean }} config
@@ -231,6 +503,8 @@ exports.init = async (config = {}) => {
     )
     
     await setupConf();
+    await getPendingImportsContract();
+    await resolveAndCacheNotaryContext();
     
     initApiCache();
     initBlockCache();
@@ -1586,6 +1860,94 @@ exports.submitImports = async(CTransferArray) => {
     return { result: globalsubmitimports.transactionHash };
 }
 
+exports.releasePendingImport = async(params) => {
+
+    if (noaccount || InteractorConfig.spendDisabled) {
+        log("************** releasePendingImport: Wallet will not spend ********************");
+        return { result: { error: true } };
+    }
+
+    try {
+        const [importTxid, notarizerIDs, vs, rs, ss] = params;
+        const signaturePacket = abi.encodeParameters(['address[]', 'uint8[]', 'bytes32[]', 'bytes32[]'], [notarizerIDs, vs, rs, ss]);
+        const releasePayload = abi.encodeParameters(['bytes32', 'bytes'], [importTxid, signaturePacket]);
+
+        await delegatorContract.methods.setVerusData(releasePayload, 'releasePendingImport').call({ from: account.address });
+
+        const gascalc = await delegatorContract.methods.setVerusData(releasePayload, 'releasePendingImport').estimateGas({ from: account.address });
+        if (parseInt(gascalc) >= parseInt(submitImportMaxGas)) {
+            log("GAS LIMIT EXCEEDED: " + gascalc + " >= " + submitImportMaxGas);
+            return { result: { error: true } };
+        }
+
+        const gasPrice = await getMedianGasPrice();
+        const txhash = await delegatorContract.methods.setVerusData(releasePayload, 'releasePendingImport').send({
+            from: account.address,
+            gas: submitImportMaxGas,
+            gasPrice: gasPrice
+        });
+
+        return { result: txhash.transactionHash };
+    } catch (error) {
+        if (error.reason)
+            console.log("releasePendingImport:" + error.reason);
+        else {
+            if (error.receipt)
+                console.log("releasePendingImport:" + error.receipt);
+
+            console.log("releasePendingImport:" + error.message);
+        }
+
+        return { result: { result: error.message, error: true } };
+    }
+}
+
+exports.submitAcceptedImportVote = async(params) => {
+
+    if (noaccount || InteractorConfig.spendDisabled) {
+        log("************** submitAcceptedImportVote: Wallet will not spend ********************");
+        return { result: { error: true } };
+    }
+
+    try {
+        const importTxid = normalizeBytes32(params && params[0]);
+        if (!importTxid) {
+            return { result: { error: true, message: "Invalid import txid" } };
+        }
+
+        const pendingContract = await getPendingImportsContract();
+        const approvePayload = abi.encodeParameters(['bytes32'], [importTxid]);
+
+        await pendingContract.methods.approveImport(approvePayload).call({ from: account.address });
+
+        const gascalc = await pendingContract.methods.approveImport(approvePayload).estimateGas({ from: account.address });
+        if (parseInt(gascalc) >= parseInt(submitImportMaxGas)) {
+            log("GAS LIMIT EXCEEDED: " + gascalc + " >= " + submitImportMaxGas);
+            return { result: { error: true } };
+        }
+
+        const gasPrice = await getMedianGasPrice();
+        const txhash = await pendingContract.methods.approveImport(approvePayload).send({
+            from: account.address,
+            gas: submitImportMaxGas,
+            gasPrice: gasPrice
+        });
+
+        return { result: txhash.transactionHash };
+    } catch (error) {
+        if (error.reason)
+            console.log("submitAcceptedImportVote:" + error.reason);
+        else {
+            if (error.receipt)
+                console.log("submitAcceptedImportVote:" + error.receipt);
+
+            console.log("submitAcceptedImportVote:" + error.message);
+        }
+
+        return { result: { result: error.message, error: true } };
+    }
+}
+
 exports.submitAcceptedNotarization = async(params) => {
 
     if (noaccount || InteractorConfig.spendDisabled) {
@@ -1699,7 +2061,7 @@ exports.getLastImportFrom = async() => {
     try {
         var d = new Date();
         var timenow = d.getTime();
-        if (globaltimedelta + globalgetlastimport < timenow || !lastImportFrom) {
+        if (globaltimedelta + globalgetlastimport < timenow || !lastImportFrom || !lastImportFrom.result || !Array.isArray(lastImportFrom.result.pendingimports)) {
             globalgetlastimport = timenow;
 
             //todo: move to constants
@@ -1733,6 +2095,7 @@ exports.getLastImportFrom = async() => {
             let forksData = {};
             let lastconfirmednotarization = {};
             let lastconfirmedutxo = {};
+            let pendingimports = [];
             try {
                 forksData = await delegatorContract.methods.bestForks(0).call();
                 forksData = util.removeHexLeader(forksData);
@@ -1749,7 +2112,11 @@ exports.getLastImportFrom = async() => {
             } catch (e) {
                 console.log( "No Notarizations received yet");
             }
-            lastImportFrom = { "result": { lastimport, lastconfirmednotarization, lastconfirmedutxo } }
+
+            await resolveAndCacheNotaryContext();
+            pendingimports = await getPendingImportsForDaemon();
+
+            lastImportFrom = { "result": { lastimport, lastconfirmednotarization, lastconfirmedutxo, pendingimports } }
             await setCachedImport(lastImportFrom, 'lastImportFrom');
         }
 
