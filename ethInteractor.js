@@ -80,21 +80,13 @@ const verusDelegatorAbi = require('./abi/VerusDelegator.json');
 const abiCoder = ethersUtils.defaultAbiCoder;
 
 const IMPORT_RELEASE_COOLDOWN_SECONDS = 60 * 60;
-const IMPORT_TIMEOUT_SECONDS = 4 * 60 * 60;
 
 const PENDING_IMPORT_KEY_PREFIX = Web3.utils.keccak256("pending.import");
 const PENDING_IMPORT_QUEUE_KEY = Web3.utils.keccak256("pending.import.queue");
 const RELEASE_VOTE_BITMAP_PREFIX = Web3.utils.keccak256("pending.import.release.vote.bitmap");
+const REJECT_VOTE_BITMAP_PREFIX = Web3.utils.keccak256("pending.import.reject.vote.bitmap");
 
-const PENDING_IMPORTS_MIN_ABI = [
-    {
-        "inputs": [{ "internalType": "bytes", "name": "data", "type": "bytes" }],
-        "name": "approveImport",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    }
-];
+const IMPORT_STATE_REJECTED = 3;
 
 const PACKED_SEND_TUPLE = "tuple(address currency,uint64 amount,address destination,uint176 refundAddress,uint32 launchTxIndexPlusOne)";
 const PACKED_LAUNCH_TUPLE = "tuple(uint256 tokenID,address ERCContract,address iaddress,address parent,uint8 flags,string name)";
@@ -102,12 +94,11 @@ const PENDING_IMPORT_TUPLE = `tuple(bytes32 importTxid,uint32 nout,bytes32 confi
 
 class PendingImportRecord {
     static IN_COOLDOWN = 1;
-    static READY_TO_BE_VOTED = 2;
-    static VOTE_CAST_NOT_EXECUTED = 4;
-    static VOTES_COMPLETED_NOT_EXECUTED = 8;
-    static TIMEOUT_PASSED = 16;
+    static NEEDS_MY_VOTE = 2;
+    static COMPLETE_CONFIRMED = 3;
+    static COMPLETE_REJECTED = 4;
 
-    constructor({ statusflags, txid, n, notarizationtxid, notarizationn, submittedat, outputs, hasnotaryvote, votecount, quorum }) {
+    constructor({ statusflags, txid, n, notarizationtxid, notarizationn, submittedat, outputs }) {
         this.statusflags = statusflags;
         this.txid = txid;
         this.n = n;
@@ -115,9 +106,6 @@ class PendingImportRecord {
         this.notarizationn = notarizationn;
         this.submittedat = submittedat;
         this.outputs = outputs;
-        this.hasnotaryvote = hasnotaryvote;
-        this.votecount = votecount;
-        this.quorum = quorum;
     }
 }
 
@@ -136,11 +124,8 @@ let globalgetlastimport = d.valueOf() - globaltimedelta;
 let transactioncount = 0;
 let account = undefined;
 let delegatorContract = undefined;
-let pendingImportsContract = undefined;
-let pendingImportsContractAddress = undefined;
 let cachedNotaryIndex = null;
 let cachedNotaryIAddress = null;
-let cachedNotaryCount = 0;
 let lastblocknumber = null;
 let lasttimestamp = null
 let notarizationEvent = undefined;
@@ -290,21 +275,12 @@ function reverseBytesHex(hexNoPrefix) {
     return hexNoPrefix.match(/[a-fA-F0-9]{2}/g).reverse().join('');
 }
 
-function countSetBits32(value) {
-    let x = Number(value) >>> 0;
-    let count = 0;
-    while (x !== 0) {
-        x &= (x - 1);
-        count++;
+function hasVoteInBitmap(encodedValue, notaryIndex) {
+    if (notaryIndex == null || !encodedValue || encodedValue === '0x') {
+        return false;
     }
-    return count;
-}
-
-function decodeUint32StorageValue(encodedValue) {
-    if (!encodedValue || encodedValue === '0x') {
-        return 0;
-    }
-    return Number(abi.decodeParameter('uint32', encodedValue));
+    const bitmap = Number(abi.decodeParameter('uint32', encodedValue)) >>> 0;
+    return ((bitmap >>> notaryIndex) & 1) === 1;
 }
 
 function computePendingImportKey(importTxid) {
@@ -321,22 +297,17 @@ function computeReleaseVoteKey(importTxid) {
     );
 }
 
-async function getPendingImportsContract() {
-    if (pendingImportsContract) {
-        return pendingImportsContract;
-    }
-
-    const address = await delegatorContract.methods.contracts(constants.CONTRACT_TYPE.PendingImports).call();
-    pendingImportsContractAddress = address;
-    pendingImportsContract = new web3.eth.Contract(PENDING_IMPORTS_MIN_ABI, address);
-    return pendingImportsContract;
+function computeRejectVoteKey(importTxid) {
+    return web3.utils.soliditySha3(
+        { t: 'bytes32', v: REJECT_VOTE_BITMAP_PREFIX },
+        { t: 'bytes32', v: importTxid }
+    );
 }
 
 async function resolveAndCacheNotaryContext() {
     if (!account || !account.address) {
         cachedNotaryIndex = null;
         cachedNotaryIAddress = null;
-        cachedNotaryCount = 0;
         return;
     }
 
@@ -351,8 +322,6 @@ async function resolveAndCacheNotaryContext() {
             break;
         }
     }
-
-    cachedNotaryCount = discoveredNotaries.length;
 
     let foundIndex = null;
     let foundIAddress = null;
@@ -428,7 +397,6 @@ async function getPendingImportsForDaemon() {
     const txids = abi.decodeParameter('bytes32[]', queueBytes);
     const latestBlock = await web3.eth.getBlock('latest');
     const nowTs = Number(latestBlock.timestamp);
-    const quorum = (cachedNotaryCount >> 1) + 1;
     const pendingimports = [];
 
     for (const importTxid of txids) {
@@ -439,33 +407,29 @@ async function getPendingImportsForDaemon() {
         }
 
         const [pendingImport] = abiCoder.decode([PENDING_IMPORT_TUPLE], pendingBytes);
-        const voteKey = computeReleaseVoteKey(importTxid);
-        const voteBytes = await delegatorContract.methods.storageGlobal(voteKey).call();
-        const bitmap = decodeUint32StorageValue(voteBytes);
-        const voteCount = countSetBits32(bitmap);
-        const hasNotaryVote = cachedNotaryIndex == null
-            ? false
-            : (((bitmap >>> cachedNotaryIndex) & 1) === 1);
-
         const submittedAt = Number(pendingImport.submittedAt.toString());
         const cooldownEndsAt = submittedAt + IMPORT_RELEASE_COOLDOWN_SECONDS;
-        const timeoutAt = cooldownEndsAt + IMPORT_TIMEOUT_SECONDS;
 
-        let statusflags = 0;
-        if (nowTs < cooldownEndsAt) {
-            statusflags |= PendingImportRecord.IN_COOLDOWN;
-        }
-        if (nowTs >= cooldownEndsAt && voteCount < quorum) {
-            statusflags |= PendingImportRecord.READY_TO_BE_VOTED;
-        }
-        if (nowTs >= cooldownEndsAt && hasNotaryVote && voteCount < quorum) {
-            statusflags |= PendingImportRecord.VOTE_CAST_NOT_EXECUTED;
-        }
-        if (nowTs >= cooldownEndsAt && voteCount >= quorum) {
-            statusflags |= PendingImportRecord.VOTES_COMPLETED_NOT_EXECUTED;
-        }
-        if (nowTs >= timeoutAt) {
-            statusflags |= PendingImportRecord.TIMEOUT_PASSED;
+        let statusflags;
+
+        if (Number(pendingImport.state.toString()) === IMPORT_STATE_REJECTED) {
+            statusflags = PendingImportRecord.COMPLETE_REJECTED;
+        } else if (nowTs < cooldownEndsAt) {
+            statusflags = PendingImportRecord.IN_COOLDOWN;
+        } else {
+            const [approveBytes, rejectBytes] = await Promise.all([
+                delegatorContract.methods.storageGlobal(computeReleaseVoteKey(importTxid)).call(),
+                delegatorContract.methods.storageGlobal(computeRejectVoteKey(importTxid)).call()
+            ]);
+
+            // A vote from this notary is final for this bridgekeeper; the contract executes the
+            // import itself as soon as the quorum vote lands, so nothing further is required here.
+            const alreadyVoted = hasVoteInBitmap(approveBytes, cachedNotaryIndex) ||
+                hasVoteInBitmap(rejectBytes, cachedNotaryIndex);
+
+            statusflags = alreadyVoted
+                ? PendingImportRecord.COMPLETE_CONFIRMED
+                : PendingImportRecord.NEEDS_MY_VOTE;
         }
 
         pendingimports.push(new PendingImportRecord({
@@ -475,10 +439,7 @@ async function getPendingImportsForDaemon() {
             notarizationtxid: util.removeHexLeader(pendingImport.confirmedNotarizationTxid),
             notarizationn: Number(pendingImport.confirmedNotarizationN.toString()),
             submittedat: submittedAt,
-            outputs: buildPendingImportOutputs(pendingImport),
-            hasnotaryvote: hasNotaryVote,
-            votecount: voteCount,
-            quorum
+            outputs: buildPendingImportOutputs(pendingImport)
         }));
     }
 
@@ -503,7 +464,6 @@ exports.init = async (config = {}) => {
     )
     
     await setupConf();
-    await getPendingImportsContract();
     await resolveAndCacheNotaryContext();
     
     initApiCache();
@@ -1856,52 +1816,10 @@ exports.submitImports = async(CTransferArray) => {
     return { result: globalsubmitimports.transactionHash };
 }
 
-exports.releasePendingImport = async(params) => {
+exports.approveOrRejectAcceptedImport = async(params) => {
 
     if (noaccount || InteractorConfig.spendDisabled) {
-        log("************** releasePendingImport: Wallet will not spend ********************");
-        return { result: { error: true } };
-    }
-
-    try {
-        const [importTxid, notarizerIDs, vs, rs, ss] = params;
-        const signaturePacket = abi.encodeParameters(['address[]', 'uint8[]', 'bytes32[]', 'bytes32[]'], [notarizerIDs, vs, rs, ss]);
-        const releasePayload = abi.encodeParameters(['bytes32', 'bytes'], [importTxid, signaturePacket]);
-
-        await delegatorContract.methods.setVerusData(releasePayload, 'releasePendingImport').call({ from: account.address });
-
-        const gascalc = await delegatorContract.methods.setVerusData(releasePayload, 'releasePendingImport').estimateGas({ from: account.address });
-        if (parseInt(gascalc) >= parseInt(submitImportMaxGas)) {
-            log("GAS LIMIT EXCEEDED: " + gascalc + " >= " + submitImportMaxGas);
-            return { result: { error: true } };
-        }
-
-        const gasPrice = await getMedianGasPrice();
-        const txhash = await delegatorContract.methods.setVerusData(releasePayload, 'releasePendingImport').send({
-            from: account.address,
-            gas: submitImportMaxGas,
-            gasPrice: gasPrice
-        });
-
-        return { result: txhash.transactionHash };
-    } catch (error) {
-        if (error.reason)
-            console.log("releasePendingImport:" + error.reason);
-        else {
-            if (error.receipt)
-                console.log("releasePendingImport:" + error.receipt);
-
-            console.log("releasePendingImport:" + error.message);
-        }
-
-        return { result: { result: error.message, error: true } };
-    }
-}
-
-exports.submitAcceptedImportVote = async(params) => {
-
-    if (noaccount || InteractorConfig.spendDisabled) {
-        log("************** submitAcceptedImportVote: Wallet will not spend ********************");
+        log("************** approveOrRejectAcceptedImport: Wallet will not spend ********************");
         return { result: { error: true } };
     }
 
@@ -1911,19 +1829,20 @@ exports.submitAcceptedImportVote = async(params) => {
             return { result: { error: true, message: "Invalid import txid" } };
         }
 
-        const pendingContract = await getPendingImportsContract();
-        const approvePayload = abi.encodeParameters(['bytes32'], [importTxid]);
+        const approve = params[1] === true || params[1] === 1 || params[1] === "true";
+        const votePayload = abi.encodeParameters(['bytes32', 'bool'], [importTxid, approve]);
+        const vote = delegatorContract.methods.setVerusData(votePayload, 'approveOrRejectAcceptedImport');
 
-        await pendingContract.methods.approveImport(approvePayload).call({ from: account.address });
+        await vote.call({ from: account.address });
 
-        const gascalc = await pendingContract.methods.approveImport(approvePayload).estimateGas({ from: account.address });
+        const gascalc = await vote.estimateGas({ from: account.address });
         if (parseInt(gascalc) >= parseInt(submitImportMaxGas)) {
             log("GAS LIMIT EXCEEDED: " + gascalc + " >= " + submitImportMaxGas);
             return { result: { error: true } };
         }
 
         const gasPrice = await getMedianGasPrice();
-        const txhash = await pendingContract.methods.approveImport(approvePayload).send({
+        const txhash = await vote.send({
             from: account.address,
             gas: submitImportMaxGas,
             gasPrice: gasPrice
@@ -1932,12 +1851,12 @@ exports.submitAcceptedImportVote = async(params) => {
         return { result: txhash.transactionHash };
     } catch (error) {
         if (error.reason)
-            console.log("submitAcceptedImportVote:" + error.reason);
+            console.log("approveOrRejectAcceptedImport:" + error.reason);
         else {
             if (error.receipt)
-                console.log("submitAcceptedImportVote:" + error.receipt);
+                console.log("approveOrRejectAcceptedImport:" + error.receipt);
 
-            console.log("submitAcceptedImportVote:" + error.message);
+            console.log("approveOrRejectAcceptedImport:" + error.message);
         }
 
         return { result: { result: error.message, error: true } };
