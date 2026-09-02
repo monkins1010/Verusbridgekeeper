@@ -3,6 +3,7 @@ exports.APIs = (api) => {
     
     let validCalls = {
         'submitimports'                 : "submitImports",
+        'approveorrejectacceptedimport' : "approveOrRejectAcceptedImport",
         "getinfo"                       : "getInfo",
         'getexports'                    : "getExports",
         'getcurrency'                   : "getCurrency",

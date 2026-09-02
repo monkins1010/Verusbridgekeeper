@@ -79,7 +79,8 @@ const ContractType = {
     ExportManager: 7,
     SubmitImports: 8,
     NotarizationSerializer: 9,
-    UpgradeManager: 10
+    UpgradeManager: 10,
+    PendingImports: 11
 }
 
 const verusDelegatorAbi = require('../abi/VerusDelegator.json');
