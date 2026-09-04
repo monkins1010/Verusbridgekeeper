@@ -364,11 +364,14 @@ function buildPendingImportOutputs(pendingImport) {
         const transfer = pendingImport.transfers[i];
         const launchIdxPlusOne = Number(transfer.launchTxIndexPlusOne.toString());
         const launchIdx = launchIdxPlusOne - 1;
+        const currencyid = util.uint160ToVAddress(transfer.currency, constants.IADDRESS);
+        const amount = util.uint64ToVerusFloat(transfer.amount.toString());
 
         const out = {
             address: transfer.destination,
-            currencyid: util.uint160ToVAddress(transfer.currency, constants.IADDRESS),
-            amount: util.uint64ToVerusFloat(transfer.amount.toString()),
+            currencyoutput: {
+                [currencyid]: amount
+            },
             type: "tokenspend"
         };
 
