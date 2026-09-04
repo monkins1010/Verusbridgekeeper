@@ -98,8 +98,8 @@ class PendingImportRecord {
     static COMPLETE_CONFIRMED = 3;
     static COMPLETE_REJECTED = 4;
 
-    constructor({ statusflags, exportTxid, exportN, notarizationTxid, notarizationN, submittedat, outputs }) {
-        this.statusflags = statusflags;
+    constructor({ status, exportTxid, exportN, notarizationTxid, notarizationN, submittedat, outputs }) {
+        this.status = status;
         this.export = {
             txid: exportTxid,
             n: exportN
@@ -414,12 +414,12 @@ async function getPendingImportsForDaemon() {
         const submittedAt = Number(pendingImport.submittedAt.toString());
         const cooldownEndsAt = submittedAt + IMPORT_RELEASE_COOLDOWN_SECONDS;
 
-        let statusflags;
+        let status;
 
         if (Number(pendingImport.state.toString()) === IMPORT_STATE_REJECTED) {
-            statusflags = PendingImportRecord.COMPLETE_REJECTED;
+            status = PendingImportRecord.COMPLETE_REJECTED;
         } else if (nowTs < cooldownEndsAt) {
-            statusflags = PendingImportRecord.IN_COOLDOWN;
+            status = PendingImportRecord.IN_COOLDOWN;
         } else {
             const [approveBytes, rejectBytes] = await Promise.all([
                 delegatorContract.methods.storageGlobal(computeReleaseVoteKey(importTxid)).call(),
@@ -431,17 +431,17 @@ async function getPendingImportsForDaemon() {
             const alreadyVoted = hasVoteInBitmap(approveBytes, cachedNotaryIndex) ||
                 hasVoteInBitmap(rejectBytes, cachedNotaryIndex);
 
-            statusflags = alreadyVoted
+            status = alreadyVoted
                 ? PendingImportRecord.COMPLETE_CONFIRMED
                 : PendingImportRecord.NEEDS_MY_VOTE;
         }
 
-        if (statusflags !== PendingImportRecord.IN_COOLDOWN && statusflags !== PendingImportRecord.NEEDS_MY_VOTE) {
+        if (status !== PendingImportRecord.IN_COOLDOWN && status !== PendingImportRecord.NEEDS_MY_VOTE) {
             continue;
         }
 
         pendingimports.push(new PendingImportRecord({
-            statusflags,
+            status,
             exportTxid: util.removeHexLeader(pendingImport.importTxid),
             exportN: Number(pendingImport.nout.toString()),
             notarizationTxid: util.removeHexLeader(pendingImport.confirmedNotarizationTxid),
