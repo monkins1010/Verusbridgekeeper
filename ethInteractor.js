@@ -432,6 +432,10 @@ async function getPendingImportsForDaemon() {
                 : PendingImportRecord.NEEDS_MY_VOTE;
         }
 
+        if (statusflags !== PendingImportRecord.IN_COOLDOWN && statusflags !== PendingImportRecord.NEEDS_MY_VOTE) {
+            continue;
+        }
+
         pendingimports.push(new PendingImportRecord({
             statusflags,
             txid: util.removeHexLeader(pendingImport.importTxid),
