@@ -98,12 +98,16 @@ class PendingImportRecord {
     static COMPLETE_CONFIRMED = 3;
     static COMPLETE_REJECTED = 4;
 
-    constructor({ statusflags, txid, n, notarizationtxid, notarizationn, submittedat, outputs }) {
+    constructor({ statusflags, exportTxid, exportN, notarizationTxid, notarizationN, submittedat, outputs }) {
         this.statusflags = statusflags;
-        this.txid = txid;
-        this.n = n;
-        this.notarizationtxid = notarizationtxid;
-        this.notarizationn = notarizationn;
+        this.export = {
+            txid: exportTxid,
+            n: exportN
+        };
+        this.notarization = {
+            txid: notarizationTxid,
+            n: notarizationN
+        };
         this.submittedat = submittedat;
         this.outputs = outputs;
     }
@@ -438,10 +442,10 @@ async function getPendingImportsForDaemon() {
 
         pendingimports.push(new PendingImportRecord({
             statusflags,
-            txid: util.removeHexLeader(pendingImport.importTxid),
-            n: Number(pendingImport.nout.toString()),
-            notarizationtxid: util.removeHexLeader(pendingImport.confirmedNotarizationTxid),
-            notarizationn: Number(pendingImport.confirmedNotarizationN.toString()),
+            exportTxid: util.removeHexLeader(pendingImport.importTxid),
+            exportN: Number(pendingImport.nout.toString()),
+            notarizationTxid: util.removeHexLeader(pendingImport.confirmedNotarizationTxid),
+            notarizationN: Number(pendingImport.confirmedNotarizationN.toString()),
             submittedat: submittedAt,
             outputs: buildPendingImportOutputs(pendingImport)
         }));
