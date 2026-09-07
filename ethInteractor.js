@@ -102,11 +102,11 @@ class PendingImportRecord {
         this.status = status;
         this.export = {
             txid: exportTxid,
-            n: exportN
+            voutnum: exportN
         };
         this.notarization = {
             txid: notarizationTxid,
-            n: notarizationN
+            voutnum: notarizationN
         };
         this.submittedat = submittedat;
         this.outputs = outputs;
@@ -445,9 +445,9 @@ async function getPendingImportsForDaemon() {
 
         pendingimports.push(new PendingImportRecord({
             status,
-            exportTxid: util.removeHexLeader(pendingImport.importTxid),
+            exportTxid: util.removeHexLeader(pendingImport.importTxid).reversebytes(),
             exportN: Number(pendingImport.nout.toString()),
-            notarizationTxid: util.removeHexLeader(pendingImport.confirmedNotarizationTxid),
+            notarizationTxid: util.removeHexLeader(pendingImport.confirmedNotarizationTxid).reversebytes(),
             notarizationN: Number(pendingImport.confirmedNotarizationN.toString()),
             submittedat: submittedAt,
             outputs: buildPendingImportOutputs(pendingImport)
@@ -1839,7 +1839,11 @@ exports.approveOrRejectAcceptedImport = async(params) => {
     }
 
     try {
-        const importTxid = normalizeBytes32(params && params[0]);
+        const normalized = normalizeBytes32(params && params[0]);
+        if (!normalized) {
+            return { result: { error: true, message: "Invalid import txid" } };
+        }
+        const importTxid = addHexPrefix(util.removeHexLeader(normalized).reversebytes());
         if (!importTxid) {
             return { result: { error: true, message: "Invalid import txid" } };
         }
