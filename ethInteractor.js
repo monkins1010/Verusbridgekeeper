@@ -98,12 +98,16 @@ class PendingImportRecord {
     static COMPLETE_CONFIRMED = 3;
     static COMPLETE_REJECTED = 4;
 
-    constructor({ statusflags, txid, n, notarizationtxid, notarizationn, submittedat, outputs }) {
-        this.statusflags = statusflags;
-        this.txid = txid;
-        this.n = n;
-        this.notarizationtxid = notarizationtxid;
-        this.notarizationn = notarizationn;
+    constructor({ status, exportTxid, exportN, notarizationTxid, notarizationN, submittedat, outputs }) {
+        this.status = status;
+        this.export = {
+            txid: exportTxid,
+            n: exportN
+        };
+        this.notarization = {
+            txid: notarizationTxid,
+            n: notarizationN
+        };
         this.submittedat = submittedat;
         this.outputs = outputs;
     }
@@ -360,11 +364,14 @@ function buildPendingImportOutputs(pendingImport) {
         const transfer = pendingImport.transfers[i];
         const launchIdxPlusOne = Number(transfer.launchTxIndexPlusOne.toString());
         const launchIdx = launchIdxPlusOne - 1;
+        const currencyid = util.uint160ToVAddress(transfer.currency, constants.IADDRESS);
+        const amount = util.uint64ToVerusFloat(transfer.amount.toString());
 
         const out = {
             address: transfer.destination,
-            currencyid: util.uint160ToVAddress(transfer.currency, constants.IADDRESS),
-            amount: util.uint64ToVerusFloat(transfer.amount.toString()),
+            currencyoutput: {
+                [currencyid]: amount
+            },
             type: "tokenspend"
         };
 
@@ -410,12 +417,12 @@ async function getPendingImportsForDaemon() {
         const submittedAt = Number(pendingImport.submittedAt.toString());
         const cooldownEndsAt = submittedAt + IMPORT_RELEASE_COOLDOWN_SECONDS;
 
-        let statusflags;
+        let status;
 
         if (Number(pendingImport.state.toString()) === IMPORT_STATE_REJECTED) {
-            statusflags = PendingImportRecord.COMPLETE_REJECTED;
+            status = PendingImportRecord.COMPLETE_REJECTED;
         } else if (nowTs < cooldownEndsAt) {
-            statusflags = PendingImportRecord.IN_COOLDOWN;
+            status = PendingImportRecord.IN_COOLDOWN;
         } else {
             const [approveBytes, rejectBytes] = await Promise.all([
                 delegatorContract.methods.storageGlobal(computeReleaseVoteKey(importTxid)).call(),
@@ -427,17 +434,21 @@ async function getPendingImportsForDaemon() {
             const alreadyVoted = hasVoteInBitmap(approveBytes, cachedNotaryIndex) ||
                 hasVoteInBitmap(rejectBytes, cachedNotaryIndex);
 
-            statusflags = alreadyVoted
+            status = alreadyVoted
                 ? PendingImportRecord.COMPLETE_CONFIRMED
                 : PendingImportRecord.NEEDS_MY_VOTE;
         }
 
+        if (status !== PendingImportRecord.IN_COOLDOWN && status !== PendingImportRecord.NEEDS_MY_VOTE) {
+            continue;
+        }
+
         pendingimports.push(new PendingImportRecord({
-            statusflags,
-            txid: util.removeHexLeader(pendingImport.importTxid),
-            n: Number(pendingImport.nout.toString()),
-            notarizationtxid: util.removeHexLeader(pendingImport.confirmedNotarizationTxid),
-            notarizationn: Number(pendingImport.confirmedNotarizationN.toString()),
+            status,
+            exportTxid: util.removeHexLeader(pendingImport.importTxid),
+            exportN: Number(pendingImport.nout.toString()),
+            notarizationTxid: util.removeHexLeader(pendingImport.confirmedNotarizationTxid),
+            notarizationN: Number(pendingImport.confirmedNotarizationN.toString()),
             submittedat: submittedAt,
             outputs: buildPendingImportOutputs(pendingImport)
         }));
