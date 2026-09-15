@@ -11,6 +11,8 @@ exports.APIs = (api) => {
         'getnotarizationdata'           : "getNotarizationData",
         'getbestproofroot'              : "getBestProofRoot",
         'getlastimportfrom'             : "getLastImportFrom",
+        'getpendingqueuestate'          : "getPendingQueueState",
+        'getbridgestatus'               : "getBridgeStatus",
         'getclaimablefees'              : "getclaimablefees",
         'revokeidentity'                : "revokeidentity",
         'stop'                          : "stop",
