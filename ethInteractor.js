@@ -384,17 +384,15 @@ function buildPendingImportOutputs(pendingImport) {
             const tokenHex = ethersUtils.hexZeroPad(ethersUtils.hexlify(launch.tokenID), 32).slice(2);
 
             out.type = "currencydefinition";
-            out.currencydefinition = {
-                currencyid: util.uint160ToVAddress(launch.iaddress, constants.IADDRESS),
-                parentid: util.uint160ToVAddress(launch.parent, constants.IADDRESS),
-                name: launch.name
-            };
+            out.currencyid = util.uint160ToVAddress(launch.iaddress, constants.IADDRESS);
+            out.parentid = util.uint160ToVAddress(launch.parent, constants.IADDRESS);
+            out.name = launch.name;
 
             if (!/^0+$/.test(tokenHex)) {
-                out.currencydefinition.tokenid = reverseBytesHex(tokenHex);
+                out.tokenid = reverseBytesHex(tokenHex);
             }
             if (launch.ERCContract && launch.ERCContract.toLowerCase() !== "0x0000000000000000000000000000000000000000") {
-                out.currencydefinition.ERCContract = launch.ERCContract;
+                out.ERCContract = launch.ERCContract;
             }
         }
 
