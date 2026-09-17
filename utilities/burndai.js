@@ -16,7 +16,6 @@ const account = web3.eth.accounts.privateKeyToAccount(settings.privatekey);
 const delegatorContract = new web3.eth.Contract(verusDelegatorAbi, settings.delegatorcontractaddress);
 const daiPotContractInstance = new web3.eth.Contract(daiPotAbi, DSR_POT_CONTRACT);
 const CoinGeckoETH = 'https://api.coingecko.com/api/v3/coins/ethereum'
-const urls = [CoinGeckoETH]
 
 const main = async () => {
 
@@ -49,21 +48,29 @@ const main = async () => {
     
     const gasCost = web3.utils.toBN(gasfee).mul(web3.utils.toBN(gasPrice));
     log("The burn will cost: ", web3.utils.fromWei(gasCost), "ETH in GAS FEES, GAS is: ", web3.utils.fromWei(gasPrice, "gwei"), " gwei");
-    let conversions;
+    let ethUsdPrice;
+    const quoteController = new AbortController();
+    const quoteTimeout = setTimeout(() => quoteController.abort(), 5000);
     try {
-        conversions = await Promise.all(
-          urls.map(async (url) => fetch(url)
-            .then((res) => res.json())
-            .then((c) => ({
-              symbol: c.symbol,
-              price: c.market_data.current_price.usd
-            })))
-        )
-      } catch (error) {
+        const response = await fetch(CoinGeckoETH, { signal: quoteController.signal });
+        if (!response.ok) {
+            throw new Error(`CoinGecko returned HTTP ${response.status}`);
+        }
+        const quote = await response.json();
+        const price = Number(quote?.market_data?.current_price?.usd);
+        if (!Number.isFinite(price)) {
+            throw new Error('CoinGecko returned an invalid ETH price');
+        }
+        ethUsdPrice = price;
+    } catch (error) {
         // eslint-disable-next-line no-console
         console.error('%s: fetching prices %s', Date().toString(), error)
-      }
-      log("The burn will refund you approx: ", (conversions[0].price * web3.utils.fromWei(gasCost)), " DAI");
+    } finally {
+        clearTimeout(quoteTimeout);
+    }
+    if (ethUsdPrice !== undefined) {
+        log("The burn will refund you approx: ", (ethUsdPrice * web3.utils.fromWei(gasCost)), " DAI");
+    }
 
     if(parseFloat(fees) < 1000 ) {
         log("You need to have at least 1000 DAI in fees to burn");

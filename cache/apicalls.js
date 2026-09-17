@@ -161,6 +161,14 @@ exports.clearCachedApis = () => {
     })
 }
 
+exports.clearCachedBlocks = () => {
+    console.log("Clearing block proof cache")
+    return blockCache.clearAll().catch(e => {
+        console.log("Error while clearing block cache")
+        throw e
+    })
+}
+
 exports.getapiCache = () => {
     return apiCache.getAll().catch(e => {
         console.log("Error while getting all Api cache")

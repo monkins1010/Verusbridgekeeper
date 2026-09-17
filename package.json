@@ -19,6 +19,7 @@
         "blake2b-wasm": "git+https://github.com/michaeltout/blake2b-wasm.git",
         "ethers": "5.1.0",
         "ini": "2.0.0",
+        "json-bigint": "1.0.0",
         "long": "5.2.0",
         "react-native-cache": "git+https://github.com/michaeltout/react-native-cache.git",
         "web3": "1.10.0"

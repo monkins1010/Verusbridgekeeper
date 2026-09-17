@@ -54,14 +54,22 @@ function notarizationFlags(pBaasNotarization) {
     return flags;
 }
 
+  function requiredFinancialField(object, fieldName) {
+    if (!object || object[fieldName] === undefined || object[fieldName] === null || object[fieldName] === '') {
+      throw new Error(`Missing required financial field: ${fieldName}`);
+    }
+
+    return object[fieldName];
+  }
+
 function serializeCoinbaseCurrencyState(currencyState) {
 
     let encodedOutput = serializeCurrencyState(currencyState); 
     
-    encodedOutput = Buffer.concat([encodedOutput, util.writeUInt(util.convertToInt64(currencyState.primarycurrencyout), 64)]);
-    encodedOutput = Buffer.concat([encodedOutput, util.writeUInt(util.convertToInt64(currencyState.preconvertedout), 64)]);
-    encodedOutput = Buffer.concat([encodedOutput, util.writeUInt(util.convertToInt64(currencyState.primarycurrencyfees), 64)]);
-    encodedOutput = Buffer.concat([encodedOutput, util.writeUInt(util.convertToInt64(currencyState.primarycurrencyconversionfees), 64)]);
+    encodedOutput = Buffer.concat([encodedOutput, util.writeUInt(util.convertToInt64(requiredFinancialField(currencyState, 'primarycurrencyout')), 64)]);
+    encodedOutput = Buffer.concat([encodedOutput, util.writeUInt(util.convertToInt64(requiredFinancialField(currencyState, 'preconvertedout')), 64)]);
+    encodedOutput = Buffer.concat([encodedOutput, util.writeUInt(util.convertToInt64(requiredFinancialField(currencyState, 'primarycurrencyfees')), 64)]);
+    encodedOutput = Buffer.concat([encodedOutput, util.writeUInt(util.convertToInt64(requiredFinancialField(currencyState, 'primarycurrencyconversionfees')), 64)]);
    
     encodedOutput = Buffer.concat([encodedOutput, util.serializeIntArray(currencyState.currencies, "reservein", 64 )]);
     encodedOutput = Buffer.concat([encodedOutput, util.serializeIntArray(currencyState.currencies, "primarycurrencyin", 64 )]);
@@ -100,13 +108,13 @@ function serializeCurrencyState(currencyState) {
         encodedOutput = Buffer.concat([encodedOutput, util.serializeReservesArray(currencyState.launchcurrencies)]);
     }
     
-    let initialsupply = Buffer.from(new Uint8Array(util.writeVarInt(util.convertToInt64(currencyState.initialsupply))));
+    let initialsupply = Buffer.from(new Uint8Array(util.writeVarInt(util.convertToInt64(requiredFinancialField(currencyState, 'initialsupply')))));
     encodedOutput = Buffer.concat([encodedOutput, initialsupply]);
 
-    let emitted = Buffer.from(new Uint8Array(util.writeVarInt(util.convertToInt64(currencyState.emitted))));
+    let emitted = Buffer.from(new Uint8Array(util.writeVarInt(util.convertToInt64(requiredFinancialField(currencyState, 'emitted')))));
     encodedOutput = Buffer.concat([encodedOutput, emitted]);
 
-    let supply = Buffer.from(new Uint8Array(util.writeVarInt(util.convertToInt64(currencyState.supply))));
+    let supply = Buffer.from(new Uint8Array(util.writeVarInt(util.convertToInt64(requiredFinancialField(currencyState, 'supply')))));
     encodedOutput = Buffer.concat([encodedOutput, supply]);
 
     return encodedOutput;

@@ -1,5 +1,6 @@
 const http = require('http');
 const async = require('async');
+const JSONbig = require('json-bigint')({ storeAsString: true });
 const os = require('os');
 global.HOME = os.platform() === "win32" ? process.env.APPDATA : process.env.HOME;
 let ethInteractor = require('./ethInteractor.js');
@@ -40,11 +41,10 @@ function processPost(request, response, callback) {
 
 let rollingBuffer = [];
 
-const queue = async.queue(async (task, callback) => {
+const queue = async.queue(async (task) => {
 
     const { request, response } = task;
     await processData(request, response);
-    callback();
 }, 1); // set concurrency to 1 to process tasks one at a time
 
 const processData = async (request, response) => {
@@ -69,7 +69,7 @@ const processData = async (request, response) => {
         }, 20000);
 
         try {
-            let postData = JSON.parse(request.post);
+            let postData = JSONbig.parse(request.post);
             let command = postData.method;
             const event = new Date(Date.now());
 
@@ -81,14 +81,7 @@ const processData = async (request, response) => {
             if (rollingBuffer.length > 20)
                 rollingBuffer = rollingBuffer.slice(rollingBuffer.length - 20, 20);
 
-            const returnData = await Promise.race([
-                ethInteractor[checkAPI.APIs(command)](postData.params),
-                new Promise((resolve, reject) => {
-                    setTimeout(() => {
-                        reject(new Error('Websocket connection Timeout'));
-                    }, 15000);
-                })
-            ])
+            const returnData = await ethInteractor[checkAPI.APIs(command)](postData.params);
 
             if (!responseSent) {
                 responseSent = true;
@@ -118,17 +111,24 @@ const processData = async (request, response) => {
     }
 }
 
+function normalizeRemoteAddress(address) {
+    if (address === '::1') {
+        return '127.0.0.1';
+    }
+    if (address && address.startsWith('::ffff:')) {
+        return address.substring(7);
+    }
+
+    return address;
+}
+
 const bridgeKeeperServer = http.createServer((request, response) => {
     const userpass = Buffer.from(
         (request.headers.authorization || '').split(' ')[1] || '',
         'base64'
     ).toString();
 
-    var ip = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
-
-    if (ip.startsWith('::ffff:')) {
-        ip = ip.substring(7);
-    }
+    const ip = normalizeRemoteAddress(request.socket.remoteAddress);
 
     if (userpass !== RPCDetails.userpass || ip != RPCDetails.ip) {
         response.writeHead(401, { 'WWW-Authenticate': 'Basic realm="nope"' });
@@ -172,22 +172,40 @@ exports.status = async function () {
 
 /**
  * Starts bridgekeeper
- * @param {{ ticker: string, debug?: boolean, debugsubmit?: boolean, debugnotarization?: boolean, noimports?: boolean, checkhash?: boolean }} config
+ * @param {{ ticker: string, debug?: boolean, debugsubmit?: boolean, debugnotarization?: boolean, noimports?: boolean, checkhash?: boolean, runtimeSettings?: object }} config
  */
 exports.start = async function (config) {
-    try {
-        const port = await ethInteractor.init(config);
+    const port = await ethInteractor.init(config);
 
-        RPCDetails = { userpass: ethInteractor.InteractorConfig._userpass, ip: ethInteractor.InteractorConfig._rpcallowip };
-        log = ethInteractor.InteractorConfig._consolelog ? console.log : function () { };;
-        bridgeKeeperServer.listen(port);
-        console.log(`Bridgekeeper Started listening on port: ${port}`);
-        rollingBuffer.push(`Bridgekeeper Started listening on port: ${port}`);
-        return true;
-    } catch (error) {
-        console.error(error)
-        return error;
-    }
+    RPCDetails = {
+        userpass: ethInteractor.InteractorConfig._userpass,
+        host: ethInteractor.InteractorConfig._rpchost,
+        ip: ethInteractor.InteractorConfig._rpcallowip
+    };
+    log = ethInteractor.InteractorConfig._consolelog ? console.log : function () { };;
+
+    await new Promise((resolve, reject) => {
+        const onError = (error) => {
+            bridgeKeeperServer.removeListener('listening', onListening);
+            reject(error);
+        };
+        const onListening = () => {
+            bridgeKeeperServer.removeListener('error', onError);
+            resolve();
+        };
+
+        bridgeKeeperServer.once('error', onError);
+        bridgeKeeperServer.once('listening', onListening);
+        if (RPCDetails.host) {
+            bridgeKeeperServer.listen(port, RPCDetails.host);
+        } else {
+            bridgeKeeperServer.listen(port);
+        }
+    });
+
+    console.log(`Bridgekeeper Started listening on port: ${port}`);
+    rollingBuffer.push(`Bridgekeeper Started listening on port: ${port}`);
+    return true;
 }
 
 exports.stop = function () {

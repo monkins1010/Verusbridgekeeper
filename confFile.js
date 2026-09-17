@@ -5,6 +5,45 @@ const path = require('path');
 var ini = require('ini');
 const CONSTANTS = require('./constants');
 
+const CONFIG_DIRECTORY_MODE = 0o700;
+const CONFIG_FILE_MODE = 0o600;
+
+const ensureConfigDirectory = (confPath) => {
+    fs.mkdirSync(confPath, { recursive: true, mode: CONFIG_DIRECTORY_MODE });
+    if (os.platform() !== 'win32') {
+        fs.chmodSync(confPath, CONFIG_DIRECTORY_MODE);
+    }
+};
+
+const restrictConfigFile = (fullPath) => {
+    if (os.platform() !== 'win32' && fs.existsSync(fullPath)) {
+        fs.chmodSync(fullPath, CONFIG_FILE_MODE);
+    }
+};
+
+const writeConfigFile = (fullPath, config) => {
+    ensureConfigDirectory(path.dirname(fullPath));
+    const content = Object.entries(config)
+        .map(([key, value]) => `${key}=${value}`)
+        .join('\n') + '\n';
+
+    if (os.platform() === 'win32') {
+        fs.writeFileSync(fullPath, content, { encoding: 'utf8', mode: CONFIG_FILE_MODE });
+        return;
+    }
+
+    const temporaryPath = `${fullPath}.${process.pid}.${Date.now()}.tmp`;
+    try {
+        fs.writeFileSync(temporaryPath, content, { encoding: 'utf8', mode: CONFIG_FILE_MODE, flag: 'wx' });
+        fs.renameSync(temporaryPath, fullPath);
+        fs.chmodSync(fullPath, CONFIG_FILE_MODE);
+    } finally {
+        if (fs.existsSync(temporaryPath)) {
+            fs.unlinkSync(temporaryPath);
+        }
+    }
+};
+
 const rootPath = function (chainName, currency) {
     let chaintc = chainName.toUpperCase();
     const pbaasFolder = settings.pbaas[currency]; //TODO: Make modular
@@ -81,24 +120,24 @@ const loadConfFile = (chainName) => {
 
     let chaintc = chainName.toUpperCase();
     const ID =  CONSTANTS.VETHIDHEXREVERSED[chaintc]
-    let Config = settings.INIKeys;
+    let Config = { ...settings.INIKeys };
     let rpcconf = {};
     let confPath = rootPath(chainName, ID);
+    const fullPath = path.join(confPath, `${ID}.conf`);
 
-    if (!fs.existsSync(confPath)) {
-        fs.mkdirSync(confPath, { recursive: true });
-    }
+    ensureConfigDirectory(confPath);
+    restrictConfigFile(fullPath);
 
     let _data = {};
     try {
-        _data = fs.readFileSync(confPath + '/' + ID + '.conf', 'utf8');
+        _data = fs.readFileSync(fullPath, 'utf8');
     } catch (error) {
         if (error.code != 'ENOENT') {
             console.log("Error reading file at: ", confPath + "\nError: " + error.message);
         }
     }
 
-    if (_data.length && fs.existsSync(confPath + '/' + ID + '.conf')) {
+    if (_data.length && fs.existsSync(fullPath)) {
         let _match;
 
         console.log("(veth.conf) file found at: ", confPath);
@@ -106,29 +145,19 @@ const loadConfFile = (chainName) => {
 
             if (_match = _data.match(new RegExp(`^${key}=\\n*(.*)`, 'm'))) {
 
-                if (_match[1] != "empty") {
-                    Config[key] = _match[1];
-                } else {
+                if (_match[1] == "empty") {
                     console.log("Empty veth.conf file value: ", `${key}:"empty" `);
+                } else {
+                    Config[key] = _match[1];
                 }
             }
         }
         rpcconf = Config;
     } else {
+        writeConfigFile(fullPath, settings.RPCDefault[chaintc]);
 
-        let err = fs.writeFileSync(confPath + '/' + ID + '.conf', "", 'utf8');
-
-        if (err) {
-            console.log(err, 'Errror writing veth.conf', err.message);
-
-        }
-
-        for (const [key, value] of Object.entries(settings.RPCDefault[chaintc])) {
-            fs.appendFileSync(confPath + '/' + ID + '.conf', `${key}=${value}` + "\n");
-        }
-
-        let tempvalues = fs.readFileSync(confPath + '/' + ID + '.conf', 'utf8');
-        console.log("Quitting....\n\nPlease check veth.conf file located at: ", path.normalize(confPath + '/' + ID + '.conf'));
+        let tempvalues = fs.readFileSync(fullPath, 'utf8');
+        console.log("Quitting....\n\nPlease check veth.conf file located at: ", path.normalize(fullPath));
         console.log("Default Values:\n", ini.parse(tempvalues, 'utf-8'))
 
     }
@@ -149,9 +178,12 @@ const set_conf = (key, infuraLink, ethContract, chainName)=> {
 
     let chaintc = chainName.toUpperCase();
     const ID =  CONSTANTS.VETHIDHEXREVERSED[chaintc]
-    confPath = rootPath(chainName, ID);
+    const confPath = rootPath(chainName, ID);
+    const fullPath = path.join(confPath, `${ID}.conf`);
+    ensureConfigDirectory(confPath);
+    restrictConfigFile(fullPath);
 
-    let confKeys = settings.RPCDefault[chaintc];
+    let confKeys = { ...settings.RPCDefault[chaintc] };
     let _data = {};
 
     if (key) {
@@ -167,16 +199,14 @@ const set_conf = (key, infuraLink, ethContract, chainName)=> {
     }
 
     try {
-        _data = fs.readFileSync(confPath + '/' + ID + '.conf', 'utf8');
+        _data = fs.readFileSync(fullPath, 'utf8');
     } catch (error) {
-        if (error.code === 'ENOENT') {
-            let err = fs.writeFileSync(confPath + '/' + ID + '.conf', "", 'utf8');
-        } else {
+        if (error.code !== 'ENOENT') {
             throw (error);
         }
     }
 
-    if (_data.length && fs.existsSync(confPath + '/' + ID + '.conf')) {
+    if (_data.length && fs.existsSync(fullPath)) {
 
         var config = ini.parse(_data)
 
@@ -191,10 +221,7 @@ const set_conf = (key, infuraLink, ethContract, chainName)=> {
         if (ethContract) {
             config.delegatorcontractaddress = ethContract;
         }
-        fs.truncateSync(confPath + '/' + ID + '.conf', 0);
-        for (const [key, value] of Object.entries(config)) {
-            fs.appendFileSync(confPath + '/' + ID + '.conf', `${key}=${value}` + "\n");
-        }
+        writeConfigFile(fullPath, config);
         return "Conf file updated";
     }
     else {
@@ -203,9 +230,7 @@ const set_conf = (key, infuraLink, ethContract, chainName)=> {
         } else if (infuraLink.slice(0,4) === "http") {
             throw new Error("Please use the wws:// protocol for the Eth node");
         }
-        for (const [key, value] of Object.entries(confKeys)) {
-            fs.appendFileSync(confPath + '/' + ID + '.conf', `${key}=${value}` + "\n");
-        }
+        writeConfigFile(fullPath, confKeys);
         return "Conf file created";
     }
 };
@@ -216,9 +241,8 @@ const set_conf_values = (chainName, updates) => {
     let confPath = rootPath(chainName, ID);
     let fullPath = confPath + '/' + ID + '.conf';
 
-    if (!fs.existsSync(confPath)) {
-        fs.mkdirSync(confPath, { recursive: true });
-    }
+    ensureConfigDirectory(confPath);
+    restrictConfigFile(fullPath);
 
     let _data = "";
     try {
@@ -234,13 +258,7 @@ const set_conf_values = (chainName, updates) => {
         config[key] = value;
     }
 
-    if (!fs.existsSync(fullPath)) {
-        fs.writeFileSync(fullPath, "", 'utf8');
-    }
-    fs.truncateSync(fullPath, 0);
-    for (const [key, value] of Object.entries(config)) {
-        fs.appendFileSync(fullPath, `${key}=${value}` + "\n");
-    }
+    writeConfigFile(fullPath, config);
 };
 
 exports.set_conf = set_conf;

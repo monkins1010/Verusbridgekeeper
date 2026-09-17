@@ -183,8 +183,10 @@ node upgrade.js -recovermultisig [-testnet]
 ## To Create a contract upgrade hash
 
 ```shell
-node upgrade.js -getcontracthash -contracttype 0 -contractaddress 0xe20Aa3a102e4326B1D86683d493E854A792baB41 [-testnet]
+node upgrade.js -getcontracthash -contracttype 0 -contractaddress 0xe20Aa3a102e4326B1D86683d493E854A792baB41 [-testnet] [-salt 0xaae83c4ccbadca1ce6478b031bb4444ac0d375a56886a9d4a8dfe2116763dcbf]
 ```
+The command generates a fresh salt when `-salt` is omitted. Keep the printed salt with the proposal and use the same salt when executing the approved upgrade.
+
 NOTE: the upgraded contract MUST have a `initialize()` function in it as below to be able to upgrade.
 
 ```js

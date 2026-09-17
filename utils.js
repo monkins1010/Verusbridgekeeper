@@ -245,8 +245,24 @@ const convertToUint256 = (inputNumber) => {
 }
 
 const convertToInt64 = (inputNumber) => {
-    let bigNum = BigNumber(inputNumber).multipliedBy(100000000);
-    return bigNum.toFixed(0);
+    if (inputNumber === undefined || inputNumber === null || inputNumber === '') {
+        throw new Error('Financial value is required');
+    }
+
+    const decimalValue = new BigNumber(inputNumber);
+    if (!decimalValue.isFinite()) {
+        throw new Error('Financial value must be finite');
+    }
+
+    const atomicValue = decimalValue.multipliedBy(100000000);
+    if (!atomicValue.isInteger()) {
+        throw new Error('Financial value must have no more than 8 decimal places');
+    }
+    if (atomicValue.isLessThan('-9223372036854775808') || atomicValue.isGreaterThan('9223372036854775807')) {
+        throw new Error('Financial value exceeds int64 range');
+    }
+
+    return atomicValue.toFixed(0);
 }
 
 const addBytesIndicator = (input) => {
@@ -271,19 +287,27 @@ const increaseHexByAmount = (hex, amount) => {
 }
 
 const writeVarInt = (newNumber) => {
-    //   console.log(newNumber);
     if (!newNumber) return Buffer.from('00', 'hex');
+
+    let number = new BigNumber(newNumber);
+    if (!number.isFinite() || !number.isInteger() || number.isNegative()) {
+        throw new Error('VarInt value must be a non-negative integer');
+    }
+    if (number.isGreaterThan('18446744073709551615')) {
+        throw new Error('VarInt value exceeds uint64 range');
+    }
 
     let tmp = [];
     let len = 0;
     // eslint-disable-next-line no-constant-condition
     while (true) {
-        tmp[len] = (newNumber & 0x7f) | (len ? 0x80 : 0x00);
-        if (newNumber <= 0x7f) break;
-        for (let i = 0; i < 7; i++)
-            newNumber = Math.floor(newNumber / 2); //java cant to bit shifts
-        newNumber = newNumber - 1;
+        tmp[len] = number.modulo(128).plus(len ? 128 : 0).toNumber();
+        if (number.isLessThanOrEqualTo(127)) break;
+        number = number.dividedToIntegerBy(128).minus(1);
         len++;
+        if (len >= 10) {
+            throw new Error('VarInt encoding exceeds 10 bytes');
+        }
     }
     //reverse the array return it as a buffer
     tmp = tmp.reverse();

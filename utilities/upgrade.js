@@ -121,6 +121,27 @@ function exitUpgradeError() {
     exit(0);
 }
 
+function isSuccessfulReceiptStatus(status) {
+    if (status === true || status === 1 || status === 1n || status === "1" || status === "0x1") {
+        return true;
+    }
+
+    return false;
+}
+
+function verifyTransactionReceipt(receipt, description) {
+    if (!receipt || !isSuccessfulReceiptStatus(receipt.status)) {
+        throw new Error(`${description} transaction did not complete successfully`);
+    }
+
+    return receipt;
+}
+
+function exitAdministrativeTransactionError(error) {
+    console.error(error);
+    process.exit(1);
+}
+
 function getContractAddress() {
     const flag = '-contractaddress';
     const index = process.argv.indexOf(flag);
@@ -155,6 +176,27 @@ function getSalt() {
         return null;
     }
 
+}
+
+function normalizeSalt(salt) {
+    const saltHex = salt || addHexPrefix(randomBytes(32).toString('hex'));
+
+    if (!/^0x[0-9a-fA-F]{64}$/.test(saltHex)) {
+        throw new Error("Salt must be a 32-byte hex string, for example 0xaae83c4ccbadca1ce6478b031bb4444ac0d375a56886a9d4a8dfe2116763dcbf");
+    }
+
+    return saltHex;
+}
+
+async function verifySaltUnused(salt) {
+    if (!delegatorContract.methods.saltsUsed) {
+        return;
+    }
+
+    const used = await delegatorContract.methods.saltsUsed(salt).call();
+    if (used) {
+        throw new Error(`Salt ${salt} has already been used`);
+    }
 }
 
 async function getRecoverAddresses() {
@@ -323,7 +365,9 @@ const createUpgradeTuple = (addresses, salt, upgradetype) => {
 
 const createContractUpdateAddress = async() => {
     try {
-        let randomBuf = Buffer.from("3cad78662d9223a011f414fcc2562d4b6ded2f84f4bf823d4de2d3ca44d525fa", 'hex');//randomBytes(32);
+        const salt = normalizeSalt(getSalt());
+        await verifySaltUnused(salt);
+        let randomBuf = Buffer.from(util.removeHexLeader(salt), 'hex');
 
         let outBuffer = Buffer.alloc(1);
         outBuffer.writeUInt8(TYPE_CONTRACT);
@@ -340,10 +384,11 @@ const createContractUpdateAddress = async() => {
         const newContractType = getContractType();
 
         if (!newContract || !newContractType) {
-            return false;
+            console.log("Missing parameters");
+            process.exit(1);
         }
          //replace existing contract with new contract address
-       // contracts[newContractType] = newContract; 
+        contracts[newContractType] = newContract; 
 
         for (let i = 0; i < 11; i++) 
         {
@@ -354,10 +399,12 @@ const createContractUpdateAddress = async() => {
 
         let hashedContractPackage =  web3.utils.keccak256(serialized);
         const key = Object.keys(ContractType);
-        console.log("\nNew Ethereum contract: " + newContract + " Type: " + key[newContractType] + "\nSalt used: 0x" + randomBuf.toString('hex') + "\nHash for upgrade: 0x" + hashedContractPackage.toString().slice(26,66))
+        console.log("\nNew Ethereum contract: " + newContract + " Type: " + key[newContractType] + "\nSalt used: " + salt + "\nHash for upgrade: 0x" + hashedContractPackage.toString().slice(26,66))
+        console.log("\nPersist this salt with the proposal and execute with:\nnode upgrade.js -upgradecontracts -contracttype " + newContractType + " -contractaddress " + newContract + " -salt " + salt + (ticker === "VRSCTEST" ? " -testnet" : ""));
 
     } catch (e) {
         console.log(e);
+        process.exit(1);
 
     }
     process.exit(0);
@@ -367,12 +414,15 @@ const revokeID = async() => {
     try {
 
         //const revv1 = await delegatorContract.methods.revokeWithMainAddress("0xff").call();
-        const revv2 = await delegatorContract.methods.revokeWithMainAddress("0xff").send({ from: account.address, gas: maxGas });
+        const revv2 = verifyTransactionReceipt(
+            await delegatorContract.methods.revokeWithMainAddress("0xff").send({ from: account.address, gas: maxGas }),
+            "Revocation"
+        );
 
-        console.log("\n Notary transaction succeeded please check on etherscan for confirmation");
+        console.log("\n Notary transaction succeeded please check on etherscan for confirmation", revv2.transactionHash);
 
     } catch (e) {
-        console.log(e);
+        exitAdministrativeTransactionError(e);
 
     }
     process.exit(0);
@@ -413,13 +463,16 @@ const recoverID = async() => {
 
         const revokeTupleSerialized = createRevokeTuple(addresses, util.addHexPrefix(randomBuf.toString('Hex')), { _vs: vVal, _rs: rVal, _ss: sVal});
 
-        const revv1 = await delegatorContract.methods.recoverWithRecoveryAddress(revokeTupleSerialized).call();
-        const revv2 = await delegatorContract.methods.recoverWithRecoveryAddress(revokeTupleSerialized).send({ from: account.address, gas: maxGas });
+        await delegatorContract.methods.recoverWithRecoveryAddress(revokeTupleSerialized).call();
+        const revv2 = verifyTransactionReceipt(
+            await delegatorContract.methods.recoverWithRecoveryAddress(revokeTupleSerialized).send({ from: account.address, gas: maxGas }),
+            "Recovery"
+        );
 
         console.log("\nTransaction Details below, please check with etherscan : ", /* signature,*/ revv2);
 
     } catch (e) {
-        console.log(e);
+        exitAdministrativeTransactionError(e);
 
     }
     process.exit(0);
@@ -521,13 +574,16 @@ const revokeIDWithMultisig = async() => {
 
         const revokeTupleSerialized = createRevokeMultisigTuple(packet);
 
-        const revv1 = await delegatorContract.methods.revokeWithMultiSig(revokeTupleSerialized).call();
-        const revv2 = await delegatorContract.methods.revokeWithMultiSig(revokeTupleSerialized).send({ from: account.address, gas: maxGas });
+        await delegatorContract.methods.revokeWithMultiSig(revokeTupleSerialized).call();
+        const revv2 = verifyTransactionReceipt(
+            await delegatorContract.methods.revokeWithMultiSig(revokeTupleSerialized).send({ from: account.address, gas: maxGas }),
+            "Multisig revocation"
+        );
 
         console.log("\nTransaction Details below, please check with etherscan : ", /* signature,*/ revv2);
 
     } catch (e) {
-        console.log(e);
+        exitAdministrativeTransactionError(e);
 
     }
     process.exit(0);
@@ -544,13 +600,16 @@ const recoverIDWithMultisig = async() => {
 
         const recoverTupleSerialized = createRecoverMultisigTuple(packet);
 
-        const revv1 = await delegatorContract.methods.recoverWithMultiSig(recoverTupleSerialized).call();
-        const revv2 = await delegatorContract.methods.recoverWithMultiSig(recoverTupleSerialized).send({ from: account.address, gas: maxGas });
+        await delegatorContract.methods.recoverWithMultiSig(recoverTupleSerialized).call();
+        const revv2 = verifyTransactionReceipt(
+            await delegatorContract.methods.recoverWithMultiSig(recoverTupleSerialized).send({ from: account.address, gas: maxGas }),
+            "Multisig recovery"
+        );
 
         console.log("\nTransaction Details below, please check with etherscan : ", /* signature,*/ revv2);
 
     } catch (e) {
-        console.log(e);
+        exitAdministrativeTransactionError(e);
 
     }
     process.exit(0);
@@ -561,19 +620,24 @@ const upgradeContractSend = async() => {
        
         let contracts = [];
         // Get the list of current active contracts
+        // note: contracts on mainnet are indexed from 0 to 10
+        // proposed future upgrade adds 2 contracts to increase the count to 13.
+        // TODO: once contracts are upggraded on mainnet then change 11 to 13;
         for (let i = 0; i < 11; i++) 
         {
             contracts.push(await delegatorContract.methods.contracts(i).call());
         }
         const newContract = getContractAddress();
         const newContractType = getContractType();
-        const salt = getSalt();
+        const saltArg = getSalt();
+        const salt = saltArg ? normalizeSalt(saltArg) : null;
 
         if (!newContract || !newContractType || !salt) {
             console.log("Missing parameters");
-            process.exit(0);
+            process.exit(1);
 
         }
+        await verifySaltUnused(salt);
          //replace existing contract with new contract address
         contracts[newContractType] = newContract; 
 
@@ -583,11 +647,14 @@ const upgradeContractSend = async() => {
         const upgradeTupleSerialized = createUpgradeTuple(contracts, salt, TYPE_CONTRACT);
         //console.log("Upgrade data: " + upgradeTupleSerialized);
 
-        const revv1 = await delegatorContract.methods.upgradeContracts(upgradeTupleSerialized).call();
-        const revv2 = await delegatorContract.methods.upgradeContracts(upgradeTupleSerialized).send({ from: account.address, gas: maxGas });
+        await delegatorContract.methods.upgradeContracts(upgradeTupleSerialized).call();
+        const revv2 = verifyTransactionReceipt(
+            await delegatorContract.methods.upgradeContracts(upgradeTupleSerialized).send({ from: account.address, gas: maxGas }),
+            "Upgrade"
+        );
         console.log("Upgrade completed, please check with etherscan : ", revv2);
     } catch (e) {
-        console.log(e);
+        exitAdministrativeTransactionError(e);
 
     }
     process.exit(0);
