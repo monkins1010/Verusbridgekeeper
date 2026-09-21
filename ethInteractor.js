@@ -183,6 +183,7 @@ function isArrayBoundsError(error) {
 
     const details = `${errorMessage(error, '')} ${error?.reason || ''} ${data}`.toLowerCase();
     return details.includes('panic code 0x32') ||
+    details.includes('returned error: execution reverted') ||
         details.includes('array accessed at an out-of-bounds') ||
         (details.includes('4e487b71') && /32\b/.test(details));
 }
@@ -1776,7 +1777,9 @@ exports.getNotarizationData = async() => {
         const MAX_FORKS_ITERATIONS = 100; // Safety limit to prevent infinite loop
 
         while (j < MAX_FORKS_ITERATIONS) {
+            
             let notarization;
+            
             try {
                 notarization = await delegatorContract.methods.bestForks(j).call();
             } catch (error) {
