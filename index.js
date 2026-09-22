@@ -40,34 +40,54 @@ function processPost(request, response, callback) {
 }
 
 let rollingBuffer = [];
+const RPC_TIMEOUT_MS = 20000;
+const MUTATING_RPC_METHODS = new Set([
+    'submitimports',
+    'approveorrejectacceptedimport',
+    'submitacceptednotarization',
+    'revokeidentity',
+    'stop'
+]);
+
+function sendResponse(task, statusCode, statusMessage, body) {
+    if (task.responseSent) {
+        return false;
+    }
+
+    task.responseSent = true;
+    clearTimeout(task.timeoutId);
+    try {
+        task.response.writeHead(statusCode, statusMessage, { 'Content-Type': 'application/json' });
+        task.response.write(JSON.stringify(body));
+        task.response.end();
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
+function createQueuedTask(request, response) {
+    const task = { request, response, responseSent: false, timeoutId: null, timeout: null };
+    task.timeout = new Promise(resolve => {
+        task.timeoutId = setTimeout(() => {
+            if (sendResponse(task, 504, 'Gateway Timeout', { result: { error: true, message: 'Request timeout' } })) {
+                console.log('HTTP Request timeout - forcing response');
+                rollingBuffer.push(new Date(Date.now()).toLocaleString() + ' Error: HTTP Request timeout');
+            }
+            resolve();
+        }, RPC_TIMEOUT_MS);
+    });
+    return task;
+}
 
 const queue = async.queue(async (task) => {
 
-    const { request, response } = task;
-    await processData(request, response);
+    await processData(task);
 }, 1); // set concurrency to 1 to process tasks one at a time
 
-const processData = async (request, response) => {
-    if (request.post) {
-        let responseSent = false;
-        
-        // 20 second timeout to ensure response is always sent
-        // Must be longer than the 15s API timeout + potential reconnection time
-        const timeoutId = setTimeout(() => {
-            if (!responseSent) {
-                responseSent = true;
-                console.log("HTTP Request timeout - forcing response");
-                try {
-                    response.writeHead(504, "Gateway Timeout", { 'Content-Type': 'application/json' });
-                    response.write(JSON.stringify({ result: { error: true, message: "Request timeout" } }));
-                    response.end();
-                } catch (e) {
-                    // Response may already be partially sent
-                }
-                rollingBuffer.push(new Date(Date.now()).toLocaleString() + " Error: HTTP Request timeout");
-            }
-        }, 20000);
-
+const processData = async (task) => {
+    const { request } = task;
+    if (request.post && !task.responseSent) {
         try {
             let postData = JSONbig.parse(request.post);
             let command = postData.method;
@@ -81,30 +101,22 @@ const processData = async (request, response) => {
             if (rollingBuffer.length > 20)
                 rollingBuffer = rollingBuffer.slice(rollingBuffer.length - 20, 20);
 
-            const returnData = await ethInteractor[checkAPI.APIs(command)](postData.params);
+            const interactorCall = ethInteractor[checkAPI.APIs(command)](postData.params);
+            const returnData = MUTATING_RPC_METHODS.has(command)
+                ? await interactorCall
+                : await Promise.race([interactorCall, task.timeout]);
 
-            if (!responseSent) {
-                responseSent = true;
-                clearTimeout(timeoutId);
-                
+            if (!task.responseSent) {
                 if (returnData?.result?.error) {
-                    response.writeHead(402, "Error", { 'Content-Type': 'application/json' });
-                    response.write(JSON.stringify(returnData));
-                    response.end();
+                    sendResponse(task, 402, 'Error', returnData);
                 } else {
-                    response.writeHead(200, "OK", { 'Content-Type': 'application/json' });
-                    response.write(JSON.stringify(returnData));
-                    response.end();
+                    sendResponse(task, 200, 'OK', returnData);
                 }
             }
  
         } catch (e) {
-            if (!responseSent) {
-                responseSent = true;
-                clearTimeout(timeoutId);
-                response.writeHead(500, "Error", { 'Content-Type': 'application/json' });
-                response.write(JSON.stringify({ result: { error: true, message: e.message || "Unknown error" } }));
-                response.end();
+            if (!task.responseSent) {
+                sendResponse(task, 500, 'Error', { result: { error: true, message: e.message || 'Unknown error' } });
                 rollingBuffer.push(new Date(Date.now()).toLocaleString() + " Error: " + (e.message ? e.message : e));
             }
         }
@@ -137,8 +149,13 @@ const bridgeKeeperServer = http.createServer((request, response) => {
     }
     if (request.method == 'POST') {
         processPost(request, response, function () {
+            const task = createQueuedTask(request, response);
+            if (!request.post.trim()) {
+                sendResponse(task, 400, 'Bad Request', { result: { error: true, message: 'Request body is required' } });
+                return;
+            }
 
-            queue.push({ request, response }, function (err) { });
+            queue.push(task, function (err) { });
         });
     } else {
         response.writeHead(200, "OK", { 'Content-Type': 'application/json' });

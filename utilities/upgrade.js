@@ -82,6 +82,7 @@ const ContractType = {
     UpgradeManager: 10,
     PendingImports: 11
 }
+const SUPPORTED_CONTRACT_COUNT = 11;
 
 const verusDelegatorAbi = require('../abi/VerusDelegator.json');
 
@@ -112,7 +113,7 @@ const getSig = async(sigParams) => {
 
 function exitUpgradeError() {
 
-    const key = Object.keys(ContractType);
+    const key = Object.keys(ContractType).filter(item => ContractType[item] < SUPPORTED_CONTRACT_COUNT);
     let list = "";
     for (const item of key) {
         list += item + " : " + ContractType[item] + "\n";
@@ -164,6 +165,20 @@ function getContractType() {
         return null;
     }
 
+}
+
+function getSupportedContractType() {
+    const contractType = getContractType();
+    if (contractType == null || !/^\d+$/.test(contractType)) {
+        throw new Error("Contract type must be an integer");
+    }
+
+    const contractTypeIndex = Number(contractType);
+    if (!Number.isSafeInteger(contractTypeIndex) || contractTypeIndex >= SUPPORTED_CONTRACT_COUNT) {
+        throw new Error(`Contract type must be between 0 and ${SUPPORTED_CONTRACT_COUNT - 1} for the current deployment`);
+    }
+
+    return contractTypeIndex;
 }
 
 function getSalt() {
@@ -375,22 +390,22 @@ const createContractUpdateAddress = async() => {
         let contractsHex = Buffer.from('');
 
         let contracts = [];
-        // Get the list of current active contracts
-        for (let i = 0; i < 11; i++) 
-        {
-            contracts.push(await delegatorContract.methods.contracts(i).call());
-        }
         const newContract = getContractAddress();
-        const newContractType = getContractType();
+        const newContractType = getSupportedContractType();
 
-        if (!newContract || !newContractType) {
+        if (!newContract) {
             console.log("Missing parameters");
             process.exit(1);
+        }
+        // Get the list of current active contracts
+        for (let i = 0; i < SUPPORTED_CONTRACT_COUNT; i++)
+        {
+            contracts.push(await delegatorContract.methods.contracts(i).call());
         }
          //replace existing contract with new contract address
         contracts[newContractType] = newContract; 
 
-        for (let i = 0; i < 11; i++) 
+        for (let i = 0; i < SUPPORTED_CONTRACT_COUNT; i++)
         {
             contractsHex = Buffer.concat([contractsHex, Buffer.from(contracts[i].slice(2), 'hex')]);
         }
@@ -441,9 +456,9 @@ const recoverID = async() => {
 
         let serialized = Buffer.from('');
         serialized = Buffer.concat([
+            outBuffer,
             Buffer.from(util.removeHexLeader(addresses[1]), "Hex"), 
             Buffer.from(util.removeHexLeader(addresses[2]), "Hex"), 
-            outBuffer,
             randomBuf ])
 
         const signature = await getSig([signatureAddress, serialized.toString('Hex').toLowerCase()])
@@ -619,23 +634,20 @@ const upgradeContractSend = async() => {
     try {
        
         let contracts = [];
-        // Get the list of current active contracts
-        // note: contracts on mainnet are indexed from 0 to 10
-        // proposed future upgrade adds 2 contracts to increase the count to 13.
-        // TODO: once contracts are upggraded on mainnet then change 11 to 13;
-        for (let i = 0; i < 11; i++) 
-        {
-            contracts.push(await delegatorContract.methods.contracts(i).call());
-        }
         const newContract = getContractAddress();
-        const newContractType = getContractType();
+        const newContractType = getSupportedContractType();
         const saltArg = getSalt();
         const salt = saltArg ? normalizeSalt(saltArg) : null;
 
-        if (!newContract || !newContractType || !salt) {
+        if (!newContract || !salt) {
             console.log("Missing parameters");
             process.exit(1);
 
+        }
+        // Get the list of current active contracts
+        for (let i = 0; i < SUPPORTED_CONTRACT_COUNT; i++)
+        {
+            contracts.push(await delegatorContract.methods.contracts(i).call());
         }
         await verifySaltUnused(salt);
          //replace existing contract with new contract address

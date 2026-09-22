@@ -287,7 +287,10 @@ const increaseHexByAmount = (hex, amount) => {
 }
 
 const writeVarInt = (newNumber) => {
-    if (!newNumber) return Buffer.from('00', 'hex');
+    if ((typeof newNumber !== 'number' && typeof newNumber !== 'string' &&
+        typeof newNumber !== 'bigint' && !BigNumber.isBigNumber(newNumber)) || newNumber === '') {
+        throw new Error('VarInt value must be a non-negative integer');
+    }
 
     let number = new BigNumber(newNumber);
     if (!number.isFinite() || !number.isInteger() || number.isNegative()) {
@@ -296,6 +299,7 @@ const writeVarInt = (newNumber) => {
     if (number.isGreaterThan('18446744073709551615')) {
         throw new Error('VarInt value exceeds uint64 range');
     }
+    if (number.isZero()) return Buffer.from('00', 'hex');
 
     let tmp = [];
     let len = 0;

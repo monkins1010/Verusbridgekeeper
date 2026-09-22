@@ -61,16 +61,16 @@ class EthInteractorConfig {
         if(this._consolelog) enableLog();
     }
 
-    get ticker() { return this._ticker };
-    get debug() { return this._debug };
-    get debugsubmit() { return this._debugsubmit };
-    get debugnotarization() { return this._debugnotarization };
-    get noimports() { return this._noimports };
-    get checkhash() { return this._checkhash };
-    get ethSystemId() { return constants.VETHCURRENCYID[this.ticker] };
-    get verusSystemId() { return constants.VERUSSYSTEMID[this.ticker] };
-    get bridgeId() { return constants.BRIDGEID[this.ticker] };
-    get spendDisabled()  { return this._nowitnesssubmit };
+    get ticker() { return this._ticker }
+    get debug() { return this._debug }
+    get debugsubmit() { return this._debugsubmit }
+    get debugnotarization() { return this._debugnotarization }
+    get noimports() { return this._noimports }
+    get checkhash() { return this._checkhash }
+    get ethSystemId() { return constants.VETHCURRENCYID[this.ticker] }
+    get verusSystemId() { return constants.VERUSSYSTEMID[this.ticker] }
+    get bridgeId() { return constants.BRIDGEID[this.ticker] }
+    get spendDisabled()  { return this._nowitnesssubmit }
 }
 
 const InteractorConfig = new EthInteractorConfig();
@@ -79,7 +79,6 @@ exports.InteractorConfig = InteractorConfig;
 
 //Main coin ID's
 const IAddressBaseConst = constants.IAddressBaseConst;
-const RAddressBaseConst = constants.RAddressBaseConst;
 const notarizationMaxGas = constants.notarizationMaxGas;
 const submitImportMaxGas = constants.submitImportMaxGas;
 const verusDelegatorAbi = require('./abi/VerusDelegator.json');
@@ -130,12 +129,12 @@ let web3 = undefined;
 let provider = undefined;
 let d = new Date();
 let globalsubmitimports = { "transactionHash": "" };
+const inFlightImports = new Set();
 const inFlightNotarizations = new Set();
 let globaltimedelta = constants.globaltimedelta; //60s for getnewblocks
 let globaltimedeltaNota = 300000;
 let globallastinfo = d.valueOf() - globaltimedelta;
 let globalgetlastimport = d.valueOf() - globaltimedelta;
-let transactioncount = 0;
 let account = undefined;
 let delegatorContract = undefined;
 let cachedNotaryIndex = null;
@@ -183,9 +182,13 @@ function isArrayBoundsError(error) {
 
     const details = `${errorMessage(error, '')} ${error?.reason || ''} ${data}`.toLowerCase();
     return details.includes('panic code 0x32') ||
-    details.includes('returned error: execution reverted') ||
         details.includes('array accessed at an out-of-bounds') ||
         (details.includes('4e487b71') && /32\b/.test(details));
+}
+
+function isBestForksEndError(error, forkIndex) {
+    return isArrayBoundsError(error) ||
+        (forkIndex > 0 && errorMessage(error, '').toLowerCase().includes('execution reverted'));
 }
 
 // Get gas price based on latest block gas utilization
@@ -252,8 +255,8 @@ async function setupConf() {
 
     // create new provider connection    
     provider = new Web3.providers.WebsocketProvider(settings.ethnode, web3Options);
-    provider.on('error', e => { log('web3 provider socket error'); });
-    provider.on('end',   e => { log('web3 provider socket end'); });
+    provider.on('error', () => { log('web3 provider socket error'); });
+    provider.on('end', () => { log('web3 provider socket end'); });
 
         if (web3 === undefined) {
       web3 = new Web3(provider);
@@ -601,39 +604,67 @@ exports.init = async (config = {}) => {
     lastblocknumber = null;
     lasttimestamp = null;
     lastblockhash = null;
+    inFlightImports.clear();
     inFlightNotarizations.clear();
 
-    InteractorConfig.init(
-        config.ticker, 
-        config.debug, 
-        config.debugsubmit, 
-        config.debugnotarization, 
-        config.noimports,
-        config.checkhash,
-        config.userpass,
-        config.rpchost,
-        config.rpcallowip,
-        config.nowitnesssubmissions,
-    )
-    
-    await setupConf();
-    await resolveAndCacheNotaryContext();
-    
-    initApiCache();
-    initBlockCache();
+    try {
+        InteractorConfig.init(
+            config.ticker,
+            config.debug,
+            config.debugsubmit,
+            config.debugnotarization,
+            config.noimports,
+            config.checkhash,
+            config.userpass,
+            config.rpchost,
+            config.rpcallowip,
+            config.nowitnesssubmissions,
+        )
 
-    eventListener(settings.delegatorcontractaddress);
+        const providerReady = await setupConf();
+        if (!providerReady) {
+            throw new Error('Ethereum provider is not ready');
+        }
+        await resolveAndCacheNotaryContext();
 
-    return settings.rpcport;
+        initApiCache();
+        initBlockCache();
+
+        eventListener(settings.delegatorcontractaddress);
+
+        return settings.rpcport;
+    } catch (error) {
+        await clearInitializationState();
+        throw error;
+    }
 };
+
+async function clearInitializationState() {
+    account = undefined;
+    noaccount = true;
+    delegatorContract = undefined;
+    cachedNotaryIndex = null;
+    cachedNotaryIAddress = null;
+    inFlightImports.clear();
+    inFlightNotarizations.clear();
+
+    try {
+        await disconnectProviderSocket();
+    } catch (error) {
+        log('web3 provider cleanup failed: ' + errorMessage(error));
+    }
+
+    provider = undefined;
+    web3 = undefined;
+}
 
 async function disconnectProviderSocket() {
   if (notarizationEvent) {
-    notarizationEvent.unsubscribe(function(error, success){});
+        notarizationEvent.unsubscribe(function(){});
     notarizationEvent = undefined;
   }
   if (blockEvent) {
-    blockEvent.unsubscribe(function(error, success){});
+        blockEvent.unsubscribe(function(){});
     blockEvent = undefined;
   }
   if(web3) {
@@ -691,6 +722,7 @@ async function eventListener(notarizerAddress) {
                     if (lastblockhash && blockHeader.parentHash && blockHeader.number === lastblocknumber + 1 &&
                             blockHeader.parentHash.toLowerCase() !== lastblockhash.toLowerCase()) {
                         clearCachedBlocks();
+                        clearCachedApis();
                     }
           lastblocknumber = blockHeader.number;
           lasttimestamp = blockHeader.timestamp;
@@ -1215,7 +1247,7 @@ exports.getInfo = async() => {
             if(!timestamp) {
                 return { "result": null };
             }
-            getinfo = {
+            getInfo = {
                 "version": 2000753,
                 "name": "vETH",
                 "VRSCversion": constants.VERSION,
@@ -1224,10 +1256,10 @@ exports.getInfo = async() => {
                 "chainid": constants.VETHCURRENCYID[InteractorConfig.ticker]
             }
             log("Command: getinfo");
-            await setCachedApi(getinfo, 'getInfo');
+            await setCachedApi(getInfo, 'getInfo');
         }
 
-        return { "result": getinfo };
+        return { "result": getInfo };
         
         
     } catch (error) {
@@ -1294,16 +1326,11 @@ exports.getCurrency = async(input) => {
 
 exports.getExports = async(input) => {
     let output = [];
-    const lastCTransferArray = await getCachedApi('lastgetExports');
-    const lastGetExport = await getCachedApi('lastgetExportResult');
     let chainname = input[0];
     let heightstart = input[1];
     let heightend = input[2];
 
     let srtInput = JSON.stringify(input);
-    if (lastCTransferArray == srtInput && lastGetExport) {
-        return { "result": JSON.parse(lastGetExport) };
-    }
 
     // web3 connection management
     let isOnline = await isProviderSocketOnline();
@@ -1314,6 +1341,18 @@ exports.getExports = async(input) => {
     heightstart = heightstart == 1 ? 0 : heightstart;
 
     try {
+        const [lastCTransferArray, lastGetExport, cachedBlockHash, canonicalBlock] = await Promise.all([
+            getCachedApi('lastgetExports'),
+            getCachedApi('lastgetExportResult'),
+            getCachedApi('lastgetExportsBlockHash'),
+            web3.eth.getBlock(heightend)
+        ]);
+
+        if (lastCTransferArray == srtInput && lastGetExport && cachedBlockHash && canonicalBlock?.hash &&
+            cachedBlockHash.toLowerCase() === canonicalBlock.hash.toLowerCase()) {
+            return { "result": JSON.parse(lastGetExport) };
+        }
+
         //input chainname should always be VETH
         let bridgeConverterActive;
 
@@ -1346,8 +1385,6 @@ exports.getExports = async(input) => {
             outputSet.partialtransactionproof = serializeEthFullProof(outputSet.partialtransactionproof).toString('hex') + components;
 
             //build transfer list
-            //get the transactions at the index
-            let test = await delegatorContract.methods._readyExports(outputSet.height).call();
             outputSet.transfers = createOutboundTransfers(exportSet.transfers);
             if (InteractorConfig.debugnotarization)
                 console.log("First Ethereum Send to Verus: ", outputSet.transfers[0].currencyvalues, " to ", outputSet.transfers[0].destination);
@@ -1360,8 +1397,11 @@ exports.getExports = async(input) => {
         //     console.log(JSON.stringify(output, null, 2));
         // }
 
-        await setCachedApi(input, 'lastgetExports');
-        await setCachedApi(output, 'lastgetExportResult');
+        await Promise.all([
+            setCachedApi(input, 'lastgetExports'),
+            setCachedApi(output, 'lastgetExportResult'),
+            setCachedApi(canonicalBlock.hash, 'lastgetExportsBlockHash')
+        ]);
         return { "result": output };
 
     } catch (error) {
@@ -1468,10 +1508,7 @@ function getProofRootTransactionIndex(transactionCount) {
 
 async function getProofRootGasPriceInSats(block) {
     if (block.transactions.length === 0) {
-        if (block.baseFeePerGas == null) {
-            throw new Error(`Block ${block.number} has no transactions or base fee`);
-        }
-        return BigInt(block.baseFeePerGas) / BigInt(10);
+        return block.baseFeePerGas == null ? BigInt(0) : BigInt(block.baseFeePerGas) / BigInt(10);
     }
 
     const transactionIndex = getProofRootTransactionIndex(block.transactions.length);
@@ -1523,7 +1560,8 @@ function cachedProofRootMatchesBlock(cachedProofRoot, block) {
     }
 
     return cachedProofRoot.blockhash?.toLowerCase() === util.removeHexLeader(block.hash).reversebytes().toLowerCase() &&
-        cachedProofRoot.stateroot?.toLowerCase() === util.removeHexLeader(block.stateRoot).reversebytes().toLowerCase();
+        cachedProofRoot.stateroot?.toLowerCase() === util.removeHexLeader(block.stateRoot).reversebytes().toLowerCase() &&
+        normalizeProofRootPower(cachedProofRoot.power) !== undefined;
 }
 
 async function getProofRoot(height = "latest") {
@@ -1675,9 +1713,7 @@ async function checkProofRoot({height, stateroot, blockhash, power, gasprice, ve
         latestproofroot.systemid = InteractorConfig.ethSystemId;
         latestproofroot.stateroot = util.removeHexLeader(block.stateRoot).reversebytes();
         latestproofroot.blockhash = util.removeHexLeader(block.hash).reversebytes();
-        if (block.totalDifficulty != null) {
-            latestproofroot.power = BigInt(block.totalDifficulty).toString(16);
-        }
+        latestproofroot.power = BigInt(block.totalDifficulty || '0').toString(16);
 
         if (check1)
         {
@@ -1764,8 +1800,6 @@ exports.getNotarizationData = async() => {
             return JSON.parse(tempNotData);
         }
     }
-    newNotarization = false;
-    
     try {
         let forksData = [];
         let forks = [];
@@ -1783,7 +1817,7 @@ exports.getNotarizationData = async() => {
             try {
                 notarization = await delegatorContract.methods.bestForks(j).call();
             } catch (error) {
-                if (isArrayBoundsError(error)) {
+                if (isBestForksEndError(error, j)) {
                     break;
                 }
                 throw error;
@@ -1988,6 +2022,17 @@ function reshapeTransfers(CTransferArray) {
     return CTempArray;
 }
 
+function getImportIdentity(importTxid) {
+    return importTxid.toLowerCase();
+}
+
+function isMatchingPendingImport(transaction, expectedInput) {
+    return transaction && typeof transaction.input === 'string' &&
+        transaction.to?.toLowerCase() === settings.delegatorcontractaddress.toLowerCase() &&
+        transaction.from?.toLowerCase() === account.address.toLowerCase() &&
+        transaction.input.toLowerCase() === expectedInput.toLowerCase();
+}
+
 exports.submitImports = async(CTransferArray) => {
 
     if (noaccount || InteractorConfig.noimports || InteractorConfig.spendDisabled) {
@@ -2021,41 +2066,55 @@ exports.submitImports = async(CTransferArray) => {
             log("SubmitImports: No imports to submit.");
             return { result: globalsubmitimports.transactionHash };
         }
-        // catch any errors and return
-        const testcall = await delegatorContract.methods.submitImports(submitArray[0]).call(); //test call
-        // prevent revert if gas limit is exceeded
-        const gascalc = await delegatorContract.methods.submitImports(submitArray[0]).estimateGas({ from: account.address });
+        const importIdentity = getImportIdentity(submitArray[0].txid);
+        if (inFlightImports.has(importIdentity)) {
+            return { result: { error: true, retryable: true, message: "Import submission already in progress" } };
+        }
 
-        log("Submitting transfers to ETH, total: " + CTempArray[0].transfers.length);
+        inFlightImports.add(importIdentity);
+        try {
+            const submission = delegatorContract.methods.submitImports(submitArray[0]);
+            const expectedInput = submission.encodeABI();
+            // catch any errors and return
+            await submission.call(); //test call
+            // prevent revert if gas limit is exceeded
+            const gascalc = await submission.estimateGas({ from: account.address });
 
-        const pendingTransactions = await web3.eth.getBlock('pending', true);
-        let found = false;
-    
-        for (const tx of pendingTransactions.transactions) {
-            if(tx.to == settings.delegatorcontractaddress) {
-                found = true;
-                break;
+            log("Submitting transfers to ETH, total: " + CTempArray[0].transfers.length);
+
+            const pendingTransactions = await web3.eth.getBlock('pending', true);
+            const pendingTransaction = pendingTransactions?.transactions?.find(transaction =>
+                isMatchingPendingImport(transaction, expectedInput));
+
+            if(pendingTransaction) {
+                log("Submitimports: Matching pending transaction found, skipping...");
+                return {
+                    result: {
+                        error: true,
+                        retryable: true,
+                        message: "Import transaction is already pending",
+                        transactionHash: pendingTransaction.hash
+                    }
+                };
+            } else if (submitArray.length > 0 && (parseInt(gascalc) < parseInt(submitImportMaxGas))) {
+                // Get median gas price from the last block's transactions
+                log("Calculating Median Gas Price for submitImports...");
+                const gasPrice = await getMedianGasPrice();
+                log("Using gas price: " + gasPrice);
+                globalsubmitimports = await submission.send({
+                    from: account.address,
+                    gas: submitImportMaxGas,
+                    gasPrice: gasPrice
+                });
+                log("submitImports: success");
+                // if the submit import spend  succeeds then we can cache the last submit import.
+                await setCachedApi(CTransferArray, 'lastsubmitImports');
+            } else {
+                log("GAS LIMIT EXCEEDED: " + gascalc + " > " + submitImportMaxGas);
+                return { result: {error: true} };
             }
-        };
-        
-        if(found) {
-            log("Submitimports: Pending transaction found, skipping...");
-        } else if (submitArray.length > 0 && (parseInt(gascalc) < parseInt(submitImportMaxGas))) {
-            // Get median gas price from the last block's transactions
-            log("Calculating Median Gas Price for submitImports...");
-            const gasPrice = await getMedianGasPrice();
-            log("Using gas price: " + gasPrice);
-            globalsubmitimports = await delegatorContract.methods.submitImports(submitArray[0]).send({ 
-                from: account.address, 
-                gas: submitImportMaxGas,
-                gasPrice: gasPrice
-            });
-            log("submitImports: success");
-            // if the submit import spend  succeeds then we can cache the last submit import.
-            await setCachedApi(CTransferArray, 'lastsubmitImports');
-        } else {
-            log("GAS LIMIT EXCEEDED: " + gascalc + " > " + submitImportMaxGas);
-            return { result: {error: true} };
+        } finally {
+            inFlightImports.delete(importIdentity);
         }
     } catch (error) {
 
@@ -2377,8 +2436,6 @@ exports.getLastImportFrom = async() => {
         var d = new Date();
         var timenow = d.getTime();
         if (globaltimedelta + globalgetlastimport < timenow || !lastImportFrom || !lastImportFrom.result || !Array.isArray(lastImportFrom.result.pendingimports)) {
-            globalgetlastimport = timenow;
-
             //todo: move to constants
             const SUBMIT_IMPORTS_LAST_TXID = "0x00000000000000000000000037256eef64a0bf17344bcb0cbfcde4bea6746347";
             let lastimporttxid = SUBMIT_IMPORTS_LAST_TXID;
@@ -2411,28 +2468,25 @@ exports.getLastImportFrom = async() => {
             let lastconfirmednotarization = {};
             let lastconfirmedutxo = {};
             let pendingimports = [];
-            try {
-                forksData = await delegatorContract.methods.bestForks(0).call();
-                forksData = util.removeHexLeader(forksData);
 
-                const lengthMod = forksData.length % constants.LIF.FORKLEN;
+            forksData = await delegatorContract.methods.bestForks(0).call();
+            forksData = util.removeHexLeader(forksData);
 
-                let txidPos = constants.LIF.TXIDPOS;
-                let nPos = lengthMod === 0 ? constants.LIF.NPOS : constants.LIF.NPOS_VRSCTEST;
-                let txid = "0x" + forksData.substring(txidPos, txidPos + constants.LIF.BYTES32SIZE).reversebytes();
-                let n = parseInt(forksData.substring(nPos, nPos + 8), constants.LIF.HEX);
+            const lengthMod = forksData.length % constants.LIF.FORKLEN;
 
-                lastconfirmedutxo = { txid: util.removeHexLeader(txid), voutnum: n }
+            let txidPos = constants.LIF.TXIDPOS;
+            let nPos = lengthMod === 0 ? constants.LIF.NPOS : constants.LIF.NPOS_VRSCTEST;
+            let txid = "0x" + forksData.substring(txidPos, txidPos + constants.LIF.BYTES32SIZE).reversebytes();
+            let n = parseInt(forksData.substring(nPos, nPos + 8), constants.LIF.HEX);
 
-            } catch (e) {
-                console.log( "No Notarizations received yet");
-            }
+            lastconfirmedutxo = { txid: util.removeHexLeader(txid), voutnum: n }
 
             await resolveAndCacheNotaryContext();
             pendingimports = await getPendingImportsForDaemon();
 
             lastImportFrom = { "result": { lastimport, lastconfirmednotarization, lastconfirmedutxo, pendingimports } }
             await setCachedImport(lastImportFrom, 'lastImportFrom');
+            globalgetlastimport = timenow;
         }
 
         return lastImportFrom;
@@ -2460,12 +2514,12 @@ exports.getclaimablefees = async(params) => {
 
 }
 
-exports.revokeidentity = async(params) => {
+exports.revokeidentity = async() => {
 
     const TYPE_AUTO_REVOKE = "0x04";
     let txhash
     try {
-        const testValue = await delegatorContract.methods.revokeWithMainAddress(TYPE_AUTO_REVOKE).call();
+        await delegatorContract.methods.revokeWithMainAddress(TYPE_AUTO_REVOKE).call();
         txhash = await delegatorContract.methods.revokeWithMainAddress(TYPE_AUTO_REVOKE).send({ from: account.address, gas: notarizationMaxGas });
 
         return { "result": txhash };
