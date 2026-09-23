@@ -73,7 +73,7 @@ const readTranferdestination = function (memory) {
 
     retVal.address = util.hexAddressToBase58(retVal.type, temp.retval)
 
-    if (retVal.type & FLAG_DEST_GATEWAY == FLAG_DEST_GATEWAY)
+    if ((retVal.type & FLAG_DEST_GATEWAY) == FLAG_DEST_GATEWAY)
     {
         temp = readtype(memory,"uint", 160)
 
@@ -81,18 +81,18 @@ const readTranferdestination = function (memory) {
         temp = readtype(memory,"uint", 160) // TODO: gateway code not uniobjected
 
         temp = readtype(memory,"uint", 64)
-        retVal.fees = temp.retVal;
+        retVal.fees = temp.retval;
     }
 
-    if (retVal.type & FLAG_DEST_AUX == FLAG_DEST_AUX)
+    if ((retVal.type & FLAG_DEST_AUX) == FLAG_DEST_AUX)
     {
         let auxdests = []
 
         temp = readCompactInt(memory);
-        let auxsize = temp.retVal;
+        let auxsize = temp.retval;
 
         
-        for (i= 0; i< auxsize; i++)
+        for (let i= 0; i< auxsize; i++)
         {
             temp = readCompactInt(memory);
             let auxType = temp.retval;

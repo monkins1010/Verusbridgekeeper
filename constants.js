@@ -33,6 +33,10 @@ module.exports = Object.freeze({
                             VRSC: "52c7a71ed15802d33778235e7988d61339b84c45"
                         },
     VERSION: "1.2.14",
+    NOTARY_COUNT: {
+        VRSCTEST: 3,
+        VRSC: 15
+    },
     EMPTY_ADDRESS: "0x0000000000000000000000000000000000000000",
     CROSS_SYSTEM: 64,
     VERSION_NOTARIZATIONDATA_CURRENT : 1,
@@ -93,7 +97,6 @@ module.exports = Object.freeze({
         FORKLEN_VRSCTEST: 256 
     },
     RESERVE_TO_RESERVE: 0x400,
-    CROSS_SYSTEM: 0x40,
     TESTNET_ETH_GAS_REDUCTION_HEIGHT: 7264000,
     ETH_GAS_REDUCTION_HEIGHT: 20798885,
     // fork 2 heights

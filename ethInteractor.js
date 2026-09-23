@@ -348,16 +348,7 @@ async function resolveAndCacheNotaryContext() {
     }
 
     const myMain = account.address.toLowerCase();
-    const discoveredNotaries = [];
-
-    for (let i = 0; i < 64; i++) {
-        try {
-            const iAddress = await delegatorContract.methods.notaries(i).call();
-            discoveredNotaries.push(iAddress);
-        } catch (e) {
-            break;
-        }
-    }
+    const discoveredNotaries = await getNotaryIAddresses();
 
     let foundIndex = null;
     let foundIAddress = null;
@@ -502,15 +493,10 @@ async function getPendingImportsForDaemon() {
 
 async function getNotaryList() {
     const notaries = [];
+    const iAddresses = await getNotaryIAddresses();
 
-    for (let i = 0; i < 64; i++) {
-        let iAddress;
-        try {
-            iAddress = await delegatorContract.methods.notaries(i).call();
-        } catch (e) {
-            break;
-        }
-
+    for (let i = 0; i < iAddresses.length; i++) {
+        const iAddress = iAddresses[i];
         const mapping = await delegatorContract.methods.notaryAddressMapping(iAddress).call();
 
         notaries.push({
@@ -521,6 +507,17 @@ async function getNotaryList() {
     }
 
     return notaries;
+}
+
+async function getNotaryIAddresses() {
+    const notaryCount = constants.NOTARY_COUNT[InteractorConfig.ticker];
+    const iAddresses = [];
+
+    for (let i = 0; i < notaryCount; i++) {
+        iAddresses.push(await delegatorContract.methods.notaries(i).call());
+    }
+
+    return iAddresses;
 }
 
 function decodeVoteBitmap(encodedValue, notaries) {
