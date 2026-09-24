@@ -1520,6 +1520,14 @@ async function getProofRootGasPriceInSats(block) {
         throw new Error(`Gas price transaction not found for block ${block.number}`);
     }
 
+    if (InteractorConfig.debugnotarization) {
+        console.log(
+            `[ProofRootGas] Block: ${block.number}, TxIndex: ${transactionIndex}, TxHash: ${transaction.hash}, ` +
+            `GasPrice: ${transaction.gasPrice}, MaxFeePerGas: ${transaction.maxFeePerGas || 'n/a'}, ` +
+            `MaxPriorityFeePerGas: ${transaction.maxPriorityFeePerGas || 'n/a'}, BaseFee: ${block.baseFeePerGas || 'n/a'}`
+        );
+    }
+
     return BigInt(transaction.gasPrice) / BigInt(10);
 }
 
@@ -1749,7 +1757,7 @@ async function checkProofRoot({height, stateroot, blockhash, power, gasprice, ve
     }
     else if (check3)
     {
-        checkPassed = (util.uint64ToVerusFloat(gasToCheckInSats) >= latestproofroot.gasprice);
+        checkPassed = (util.uint64ToVerusFloat(gasToCheckInSats) == latestproofroot.gasprice);
     }
     else if (check2)
     {
