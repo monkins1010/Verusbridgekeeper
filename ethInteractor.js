@@ -1749,7 +1749,7 @@ async function checkProofRoot({height, stateroot, blockhash, power, gasprice, ve
     }
     else if (check3)
     {
-        checkPassed = (util.uint64ToVerusFloat(gasToCheckInSats) == latestproofroot.gasprice);
+        checkPassed = (util.uint64ToVerusFloat(gasToCheckInSats) >= latestproofroot.gasprice);
     }
     else if (check2)
     {
