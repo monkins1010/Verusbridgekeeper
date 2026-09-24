@@ -187,8 +187,14 @@ function isArrayBoundsError(error) {
 }
 
 function isBestForksEndError(error, forkIndex) {
-    return isArrayBoundsError(error) ||
-        (forkIndex > 0 && errorMessage(error, '').toLowerCase().includes('execution reverted'));
+    if (isArrayBoundsError(error)) {
+        return true;
+    }
+    // Some providers (e.g. Ganache) don't surface a panic code for out-of-bounds reads and
+    // just return a bare "execution reverted" with no reason/data - treat that as end-of-array
+    // too, but only when there's no revert reason, to avoid masking real require() failures.
+    const hasRevertReason = Boolean(error?.reason) || (typeof error?.data === 'string' && error.data !== '0x');
+    return forkIndex >= 0 && !hasRevertReason && errorMessage(error, '').toLowerCase().includes('execution reverted');
 }
 
 // Get gas price based on latest block gas utilization
