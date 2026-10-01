@@ -241,8 +241,9 @@ const set_conf_values = (chainName, updates) => {
     let confPath = rootPath(chainName, ID);
     let fullPath = confPath + '/' + ID + '.conf';
 
-    ensureConfigDirectory(confPath);
-    restrictConfigFile(fullPath);
+    if (!fs.existsSync(confPath)) {
+        fs.mkdirSync(confPath, { recursive: true });
+    }
 
     let _data = "";
     try {
@@ -258,7 +259,13 @@ const set_conf_values = (chainName, updates) => {
         config[key] = value;
     }
 
-    writeConfigFile(fullPath, config);
+    if (!fs.existsSync(fullPath)) {
+        fs.writeFileSync(fullPath, "", 'utf8');
+    }
+    fs.truncateSync(fullPath, 0);
+    for (const [key, value] of Object.entries(config)) {
+        fs.appendFileSync(fullPath, `${key}=${value}` + "\n");
+    }
 };
 
 exports.set_conf = set_conf;
