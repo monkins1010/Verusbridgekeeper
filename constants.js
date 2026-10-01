@@ -69,8 +69,6 @@ module.exports = Object.freeze({
         UpgradeManager: 10,
         PendingImports: 11,
         Imports: 12
-        PendingImports: 11,
-		LastIndex: 12
     },
     IADDRESS: 102,
     RADDRESS: 60,
