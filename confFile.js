@@ -158,7 +158,10 @@ const loadConfFile = (chainName) => {
 
         let tempvalues = fs.readFileSync(fullPath, 'utf8');
         console.log("Quitting....\n\nPlease check veth.conf file located at: ", path.normalize(fullPath));
-        console.log("Default Values:\n", ini.parse(tempvalues, 'utf-8'))
+        const defaultValues = ini.parse(tempvalues, 'utf-8');
+        // don't echo the generated credentials to the console/logs
+        if (defaultValues.rpcpassword) defaultValues.rpcpassword = "<generated, see veth.conf>";
+        console.log("Default Values:\n", defaultValues)
 
     }
     return rpcconf;

@@ -1,4 +1,5 @@
 const http = require('http');
+const crypto = require('crypto');
 const async = require('async');
 const JSONbig = require('json-bigint')({ storeAsString: true });
 const os = require('os');
@@ -41,6 +42,9 @@ function processPost(request, response, callback) {
 
 let rollingBuffer = [];
 const RPC_TIMEOUT_MS = 20000;
+// Mutators return as soon as the tx hash is known; this hard cap only stops a dead provider
+// from wedging the queue. The daemon's own RPC timeout is far longer (900 s).
+const MUTATING_RPC_TIMEOUT_MS = 90000;
 const MUTATING_RPC_METHODS = new Set([
     'submitimports',
     'approveorrejectacceptedimport',
@@ -48,6 +52,12 @@ const MUTATING_RPC_METHODS = new Set([
     'revokeidentity',
     'stop'
 ]);
+
+function pushLog(line) {
+    rollingBuffer.push(line);
+    if (rollingBuffer.length > 20)
+        rollingBuffer = rollingBuffer.slice(-20);
+}
 
 function sendResponse(task, statusCode, statusMessage, body) {
     if (task.responseSent) {
@@ -66,17 +76,33 @@ function sendResponse(task, statusCode, statusMessage, body) {
     }
 }
 
-function createQueuedTask(request, response) {
-    const task = { request, response, responseSent: false, timeoutId: null, timeout: null };
+function armTimeout(task, timeoutMs) {
     task.timeout = new Promise(resolve => {
         task.timeoutId = setTimeout(() => {
             if (sendResponse(task, 504, 'Gateway Timeout', { result: { error: true, message: 'Request timeout' } })) {
                 console.log('HTTP Request timeout - forcing response');
-                rollingBuffer.push(new Date(Date.now()).toLocaleString() + ' Error: HTTP Request timeout');
+                pushLog(new Date(Date.now()).toLocaleString() + ' Error: HTTP Request timeout');
             }
             resolve();
-        }, RPC_TIMEOUT_MS);
+        }, timeoutMs);
     });
+}
+
+function createQueuedTask(request, response) {
+    const task = { request, response, responseSent: false, timeoutId: null, timeout: null, postData: null, parseError: null };
+
+    try {
+        task.postData = JSONbig.parse(request.post);
+    } catch (error) {
+        task.parseError = error;
+    }
+
+    task.mutating = MUTATING_RPC_METHODS.has(task.postData?.method);
+    // Read-only calls time out from enqueue. Mutators are timed from when processing starts,
+    // so waiting behind other calls never turns a submission into a 504.
+    if (!task.mutating) {
+        armTimeout(task, RPC_TIMEOUT_MS);
+    }
     return task;
 }
 
@@ -89,22 +115,24 @@ const processData = async (task) => {
     const { request } = task;
     if (request.post && !task.responseSent) {
         try {
-            let postData = JSONbig.parse(request.post);
+            if (task.parseError) {
+                throw task.parseError;
+            }
+            if (task.mutating) {
+                armTimeout(task, MUTATING_RPC_TIMEOUT_MS);
+            }
+
+            let postData = task.postData;
             let command = postData.method;
             const event = new Date(Date.now());
 
             if (command != "getinfo" && command != "getcurrency") {
                 log("Command: " + command);
-                rollingBuffer.push(event.toLocaleString() + " Command: " + command);
+                pushLog(event.toLocaleString() + " Command: " + command);
             }
 
-            if (rollingBuffer.length > 20)
-                rollingBuffer = rollingBuffer.slice(rollingBuffer.length - 20, 20);
-
             const interactorCall = ethInteractor[checkAPI.APIs(command)](postData.params);
-            const returnData = MUTATING_RPC_METHODS.has(command)
-                ? await interactorCall
-                : await Promise.race([interactorCall, task.timeout]);
+            const returnData = await Promise.race([interactorCall, task.timeout]);
 
             if (!task.responseSent) {
                 if (returnData?.result?.error) {
@@ -117,10 +145,17 @@ const processData = async (task) => {
         } catch (e) {
             if (!task.responseSent) {
                 sendResponse(task, 500, 'Error', { result: { error: true, message: e.message || 'Unknown error' } });
-                rollingBuffer.push(new Date(Date.now()).toLocaleString() + " Error: " + (e.message ? e.message : e));
+                pushLog(new Date(Date.now()).toLocaleString() + " Error: " + (e.message ? e.message : e));
             }
         }
     }
+}
+
+function safeEqual(a, b) {
+    // hash first so lengths match and the compare is constant-time
+    const ha = crypto.createHash('sha256').update(String(a)).digest();
+    const hb = crypto.createHash('sha256').update(String(b)).digest();
+    return crypto.timingSafeEqual(ha, hb);
 }
 
 function normalizeRemoteAddress(address) {
@@ -142,7 +177,7 @@ const bridgeKeeperServer = http.createServer((request, response) => {
 
     const ip = normalizeRemoteAddress(request.socket.remoteAddress);
 
-    if (userpass !== RPCDetails.userpass || ip != RPCDetails.ip) {
+    if (!safeEqual(userpass, RPCDetails.userpass) || ip != RPCDetails.ip) {
         response.writeHead(401, { 'WWW-Authenticate': 'Basic realm="nope"' });
         response.end('HTTP Error 401 Unauthorized: Access is denied');
         return;
@@ -171,7 +206,7 @@ exports.status = async function () {
         websocketOk = await ethInteractor.web3status();
     } catch (error) {
         websocketOk = false;
-        rollingBuffer.push(new Date(Date.now()).toLocaleString() + "Connection error: " + error.message);
+        pushLog(new Date(Date.now()).toLocaleString() + "Connection error: " + error.message);
     }
 
     let status;
@@ -221,7 +256,7 @@ exports.start = async function (config) {
     });
 
     console.log(`Bridgekeeper Started listening on port: ${port}`);
-    rollingBuffer.push(`Bridgekeeper Started listening on port: ${port}`);
+    pushLog(`Bridgekeeper Started listening on port: ${port}`);
     return true;
 }
 
@@ -229,7 +264,7 @@ exports.stop = function () {
     try {
         ethInteractor.end();
         bridgeKeeperServer.close();
-        rollingBuffer.push(new Date(Date.now()).toLocaleString() + ` - Bridgekeeper Stopped`);
+        pushLog(new Date(Date.now()).toLocaleString() + ` - Bridgekeeper Stopped`);
         return true;
     } catch (error) {
         return error;

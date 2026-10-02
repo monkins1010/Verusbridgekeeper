@@ -88,13 +88,11 @@ module.exports = Object.freeze({
         HASHPOS: 0,
         TXIDPOS: 64,
         NPOS: 136,
-        NPOS_VRSCTEST: 200,
         BYTES32SIZE: 64,
         HEX: 16,
         FLAGS: 68,
         VERSION: 1,
-        FORKLEN: 192,
-        FORKLEN_VRSCTEST: 256 
+        FORKLEN: 192
     },
     RESERVE_TO_RESERVE: 0x400,
     TESTNET_ETH_GAS_REDUCTION_HEIGHT: 7264000,

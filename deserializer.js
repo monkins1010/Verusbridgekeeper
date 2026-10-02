@@ -46,11 +46,19 @@ const readCompactInt = function (memory) {
         retval = chSize;
         memory.stream = temp.slice(1);
     } else if (chSize == 253) {
-        retval = temp.readUInt16LE(1, is);
+        retval = temp.readUInt16LE(1);
         memory.stream = temp.slice(3);
     } else if (chSize == 254) {
-        retval = temp.ser_readdata32(1, is);
-        memory.stream = temp.slice(4);
+        retval = temp.readUInt32LE(1);
+        memory.stream = temp.slice(5);
+    } else {
+        // 255: 64-bit size; anything this large cannot be a valid component length
+        const size = temp.readBigUInt64LE(1);
+        if (size > BigInt(Number.MAX_SAFE_INTEGER)) {
+            throw new Error("readCompactInt: size too large");
+        }
+        retval = Number(size);
+        memory.stream = temp.slice(9);
     }
 
 
@@ -94,11 +102,14 @@ const readTranferdestination = function (memory) {
         
         for (let i= 0; i< auxsize; i++)
         {
+            // each aux dest is a length-prefixed, serialized CTransferDestination
             temp = readCompactInt(memory);
-            let auxType = temp.retval;
+            let auxLength = temp.retval;
 
-            temp = readtype(memory,"uint", 160)
-            auxdests.push(util.hexAddressToBase58(auxType, temp.retval))
+            let auxMemory = { stream: memory.stream.slice(0, auxLength), output: {} };
+            memory.stream = memory.stream.slice(auxLength);
+
+            auxdests.push(readTranferdestination(auxMemory).retVal.address)
         }
         retVal.auxdests = auxdests;
     }

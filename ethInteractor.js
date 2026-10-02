@@ -131,6 +131,7 @@ let d = new Date();
 let globalsubmitimports = { "transactionHash": "" };
 const inFlightImports = new Set();
 const inFlightNotarizations = new Set();
+const inFlightVotes = new Set();
 let globaltimedelta = constants.globaltimedelta; //60s for getnewblocks
 let globaltimedeltaNota = 300000;
 let globallastinfo = d.valueOf() - globaltimedelta;
@@ -181,24 +182,34 @@ function isArrayBoundsError(error) {
     }
 
     const details = `${errorMessage(error, '')} ${error?.reason || ''} ${data}`.toLowerCase();
+    // Panic(uint256) selector 0x4e487b71 followed by the uint256 code 0x32 (array out-of-bounds).
     return details.includes('panic code 0x32') ||
         details.includes('array accessed at an out-of-bounds') ||
-        (details.includes('4e487b71') && /32\b/.test(details));
+        /4e487b710{62}32(?![0-9a-f])/.test(details);
+}
+
+// Some providers (e.g. Ganache) don't surface a panic code for out-of-bounds reads and just
+// return a bare "execution reverted" with no reason/data.
+function isBareRevertError(error) {
+    const hasRevertReason = Boolean(error?.reason) || (typeof error?.data === 'string' && error.data !== '0x');
+    return !hasRevertReason && errorMessage(error, '').toLowerCase().includes('execution reverted');
 }
 
 function isBestForksEndError(error, forkIndex) {
     if (isArrayBoundsError(error)) {
         return true;
     }
-    // Some providers (e.g. Ganache) don't surface a panic code for out-of-bounds reads and
-    // just return a bare "execution reverted" with no reason/data - treat that as end-of-array
-    // too, but only when there's no revert reason, to avoid masking real require() failures.
-    const hasRevertReason = Boolean(error?.reason) || (typeof error?.data === 'string' && error.data !== '0x');
-    return forkIndex >= 0 && !hasRevertReason && errorMessage(error, '').toLowerCase().includes('execution reverted');
+    // Treat a bare revert as end-of-array too, but only when there's no revert reason, to avoid
+    // masking real require() failures.
+    return forkIndex >= 0 && isBareRevertError(error);
 }
 
-// Get gas price based on latest block gas utilization
-async function getMedianGasPrice() {
+const PRIORITY_FEE_FLOOR_WEI = BigInt(1000000000); // 1 gwei tip so transactions are always includable
+const MUTATOR_HASH_DEADLINE_MS = 60000;            // max wait for a broadcast tx hash before giving up
+const MUTATOR_RECEIPT_TRACK_MS = 15 * 60 * 1000;   // max time an in-flight guard is held waiting on a receipt
+
+// Get EIP-1559 fee fields based on latest block gas utilization
+async function getGasFees() {
     const latestBlock = await web3.eth.getBlock('latest');
 
     if (!latestBlock || latestBlock.baseFeePerGas == null) {
@@ -220,18 +231,111 @@ async function getMedianGasPrice() {
     const utilizationPercent = Number(gasUsed * BigInt(10000) / gasLimit) / 100;
     const isHighUtilization = utilizationPercent > 50;
 
-    const selectedGasPrice = isHighUtilization
-        ? (latestBaseFee * BigInt(115)) / BigInt(100)
-        : latestBaseFee;
-
-    const latestBaseFeeGwei = web3.utils.fromWei(latestBaseFee.toString(), 'gwei');
-    const selectedGasPriceGwei = web3.utils.fromWei(selectedGasPrice.toString(), 'gwei');
+    // Under high utilization pay a larger tip to compete for inclusion.
+    const maxPriorityFeePerGas = isHighUtilization
+        ? PRIORITY_FEE_FLOOR_WEI * BigInt(2)
+        : PRIORITY_FEE_FLOOR_WEI;
+    // 1.15x headroom on the base fee so a rising base fee does not strand the tx.
+    const maxFeePerGas = (latestBaseFee * BigInt(115)) / BigInt(100) + maxPriorityFeePerGas;
 
     console.log(
-        `[GasPrice] Block: ${latestBlock.number}, GasUsed: ${gasUsed.toString()}, GasLimit: ${gasLimit.toString()}, Utilization: ${utilizationPercent}%, BaseFee: ${latestBaseFeeGwei} Gwei, SelectedGasPrice: ${selectedGasPriceGwei} Gwei`
+        `[GasPrice] Block: ${latestBlock.number}, GasUsed: ${gasUsed.toString()}, GasLimit: ${gasLimit.toString()}, Utilization: ${utilizationPercent}%, ` +
+        `BaseFee: ${web3.utils.fromWei(latestBaseFee.toString(), 'gwei')} Gwei, ` +
+        `MaxFee: ${web3.utils.fromWei(maxFeePerGas.toString(), 'gwei')} Gwei, ` +
+        `PriorityFee: ${web3.utils.fromWei(maxPriorityFeePerGas.toString(), 'gwei')} Gwei`
     );
 
-    return selectedGasPrice.toString();
+    return {
+        maxFeePerGas: maxFeePerGas.toString(),
+        maxPriorityFeePerGas: maxPriorityFeePerGas.toString()
+    };
+}
+
+/**
+ * Signs and broadcasts a contract method call, resolving with the transaction hash as soon as it
+ * is known rather than waiting for the receipt. The receipt is tracked in the background.
+ * Uses EIP-1559 fees and an explicit nonce from the 'pending' tag so a stuck transaction is
+ * never silently replaced by a different one.
+ * @param {object} method web3 contract method object
+ * @param {number} gas gas limit
+ * @param {string} label log label
+ * @param {{ onReceipt?: Function, onSettled?: Function }} hooks onSettled runs exactly once,
+ *        when the receipt or error arrives, the hash deadline expires, or the tracking cap expires
+ * @returns {Promise<string>} transaction hash
+ */
+async function sendTransaction(method, gas, label, { onReceipt, onSettled } = {}) {
+    let settled = false;
+    let trackTimer = null;
+    const settle = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(trackTimer);
+        if (onSettled) {
+            try { onSettled(); } catch (e) { log(label + ": settle hook failed: " + errorMessage(e)); }
+        }
+    };
+
+    let fees;
+    let nonce;
+    try {
+        fees = await getGasFees();
+        nonce = await web3.eth.getTransactionCount(account.address, 'pending');
+    } catch (error) {
+        settle();
+        throw error;
+    }
+
+    return new Promise((resolve, reject) => {
+        let hashSeen = false;
+        const hashDeadline = setTimeout(() => {
+            if (!hashSeen) {
+                settle();
+                reject(new Error(label + ": timed out waiting for transaction hash"));
+            }
+        }, MUTATOR_HASH_DEADLINE_MS);
+
+        let promiEvent;
+        try {
+            promiEvent = method.send({
+                from: account.address,
+                gas,
+                nonce,
+                maxFeePerGas: fees.maxFeePerGas,
+                maxPriorityFeePerGas: fees.maxPriorityFeePerGas
+            });
+        } catch (error) {
+            clearTimeout(hashDeadline);
+            settle();
+            reject(error);
+            return;
+        }
+
+        promiEvent.once('transactionHash', (hash) => {
+            hashSeen = true;
+            clearTimeout(hashDeadline);
+            log(label + ": broadcast tx " + hash + " nonce " + nonce);
+            // Do not hold the in-flight guard forever if the provider stops delivering headers.
+            trackTimer = setTimeout(() => {
+                log(label + ": receipt not received for " + hash + " within tracking window");
+                settle();
+            }, MUTATOR_RECEIPT_TRACK_MS);
+            resolve(hash);
+        });
+
+        promiEvent.then(async (receipt) => {
+            log(label + ": mined tx " + receipt.transactionHash + " status " + receipt.status);
+            if (onReceipt) {
+                try { await onReceipt(receipt); } catch (e) { log(label + ": receipt hook failed: " + errorMessage(e)); }
+            }
+        }).catch((error) => {
+            if (!hashSeen) {
+                clearTimeout(hashDeadline);
+                reject(error);
+            } else {
+                console.log(label + ": transaction failed after broadcast: " + (error?.reason || errorMessage(error)));
+            }
+        }).finally(settle);
+    });
 }
 
 Object.assign(String.prototype, {
@@ -515,6 +619,29 @@ async function getNotaryList() {
     return notaries;
 }
 
+// NOTARY_COUNT must equal the contract's notaries.length: notaries(N-1) must exist and
+// notaries(N) must revert out-of-bounds. Refuse to start otherwise.
+async function validateNotaryCount() {
+    const notaryCount = constants.NOTARY_COUNT[InteractorConfig.ticker];
+
+    try {
+        await delegatorContract.methods.notaries(notaryCount - 1).call();
+    } catch (error) {
+        throw new Error(`NOTARY_COUNT (${notaryCount}) exceeds on-chain notaries: notaries(${notaryCount - 1}) failed: ${errorMessage(error)}`);
+    }
+
+    let extra;
+    try {
+        extra = await delegatorContract.methods.notaries(notaryCount).call();
+    } catch (error) {
+        if (isArrayBoundsError(error) || isBareRevertError(error)) {
+            return;
+        }
+        throw new Error(`NOTARY_COUNT check failed: notaries(${notaryCount}) unexpected error: ${errorMessage(error)}`);
+    }
+    throw new Error(`NOTARY_COUNT (${notaryCount}) is less than on-chain notaries: notaries(${notaryCount}) returned ${extra}`);
+}
+
 async function getNotaryIAddresses() {
     const notaryCount = constants.NOTARY_COUNT[InteractorConfig.ticker];
     const iAddresses = [];
@@ -609,6 +736,7 @@ exports.init = async (config = {}) => {
     lastblockhash = null;
     inFlightImports.clear();
     inFlightNotarizations.clear();
+    inFlightVotes.clear();
 
     try {
         InteractorConfig.init(
@@ -628,6 +756,7 @@ exports.init = async (config = {}) => {
         if (!providerReady) {
             throw new Error('Ethereum provider is not ready');
         }
+        await validateNotaryCount();
         await resolveAndCacheNotaryContext();
 
         initApiCache();
@@ -650,6 +779,7 @@ async function clearInitializationState() {
     cachedNotaryIAddress = null;
     inFlightImports.clear();
     inFlightNotarizations.clear();
+    inFlightVotes.clear();
 
     try {
         await disconnectProviderSocket();
@@ -1451,7 +1581,15 @@ exports.getBestProofRoot = async(input) => {
                     log("height: " + proofroots[i].height + ", is greater than contract start height");
                     continue;
                 }  
-                if (await checkProofRoot(proofroots[i])) {
+                let isValid = false;
+                try {
+                    isValid = await checkProofRoot(proofroots[i]);
+                } catch (error) {
+                    // e.g. a height beyond our node's head: omit this index rather than fail the call
+                    log("getBestProofRoot: skipping proofroot index " + i + " (height " + proofroots[i].height + "): " + errorMessage(error));
+                    continue;
+                }
+                if (isValid) {
                     validindexes.push(i);
                     if (bestindex == -1)
                         bestindex = i;
@@ -1550,19 +1688,33 @@ function normalizeProofRootPower(power) {
     return value.padStart(64, '0');
 }
 
+// Newer clients (e.g. geth) omit totalDifficulty from block responses. Post-merge the total
+// difficulty is frozen, so emit the known final value so every notary proposes the same power
+// regardless of client.
+function getBlockProofRootPower(block) {
+    if (block?.totalDifficulty != null && String(block.totalDifficulty) !== '') {
+        return BigInt(block.totalDifficulty).toString(16);
+    }
+    return BigInt('0x' + POST_MERGE_PROOF_ROOT_POWER[InteractorConfig.ticker]).toString(16);
+}
+
 function isValidProofRootPower(power, localPower) {
     const normalizedPower = normalizeProofRootPower(power);
     if (!normalizedPower) {
         return false;
     }
 
+    const postMergePower = POST_MERGE_PROOF_ROOT_POWER[InteractorConfig.ticker];
     const normalizedLocalPower = normalizeProofRootPower(localPower);
-    if (normalizedLocalPower && normalizedLocalPower !== ZERO_PROOF_ROOT_POWER) {
+    if (normalizedLocalPower && normalizedLocalPower !== ZERO_PROOF_ROOT_POWER &&
+        normalizedLocalPower !== postMergePower) {
         return normalizedPower === normalizedLocalPower;
     }
 
+    // Post-merge (or TD unavailable): accept the final TD, and zero from older bridgekeepers
+    // that emitted 0 when their client omitted totalDifficulty.
     return normalizedPower === ZERO_PROOF_ROOT_POWER ||
-        normalizedPower === POST_MERGE_PROOF_ROOT_POWER[InteractorConfig.ticker];
+        normalizedPower === postMergePower;
 }
 
 function cachedProofRootMatchesBlock(cachedProofRoot, block) {
@@ -1638,7 +1790,7 @@ async function getProofRoot(height = "latest") {
         latestproofroot.systemid = InteractorConfig.ethSystemId;
         latestproofroot.stateroot = util.removeHexLeader(block.stateRoot).reversebytes();
         latestproofroot.blockhash = util.removeHexLeader(block.hash).reversebytes();
-        latestproofroot.power = BigInt(block?.totalDifficulty || '0').toString(16);
+        latestproofroot.power = getBlockProofRootPower(block);
 
         await setCachedBlock( latestproofroot, `${height}` )
 
@@ -1710,7 +1862,7 @@ async function checkProofRoot({height, stateroot, blockhash, power, gasprice, ve
                 throw new Error(`Block ${height} not found`);
             }
         } catch (error) {
-            throw new Error("checkProofRoot error:", (error.message?error.message:error), height);
+            throw new Error("checkProofRoot error: " + errorMessage(error) + ", height: " + height);
         }
 
         try {
@@ -1724,7 +1876,7 @@ async function checkProofRoot({height, stateroot, blockhash, power, gasprice, ve
         latestproofroot.systemid = InteractorConfig.ethSystemId;
         latestproofroot.stateroot = util.removeHexLeader(block.stateRoot).reversebytes();
         latestproofroot.blockhash = util.removeHexLeader(block.hash).reversebytes();
-        latestproofroot.power = BigInt(block.totalDifficulty || '0').toString(16);
+        latestproofroot.power = getBlockProofRootPower(block);
 
         if (check1)
         {
@@ -1794,6 +1946,13 @@ async function checkProofRoot({height, stateroot, blockhash, power, gasprice, ve
     return true;
 }
 
+// Each bestForks entry is a whole number of FORKLEN-sized (hash, txid, n) records.
+function assertForkLayout(forkHex, forkIndex) {
+    if (forkHex.length % constants.LIF.FORKLEN !== 0) {
+        throw new Error(`bestForks(${forkIndex}) has unexpected length ${forkHex.length}`);
+    }
+}
+
 //return the data required for a notarisation to be made
 exports.getNotarizationData = async() => {
 
@@ -1816,9 +1975,9 @@ exports.getNotarizationData = async() => {
         let forks = [];
         let j = 0
         let notarizations = {};
-        let largestIndex = 0;
 
         let calcIndex = 0;
+        let skipCache = false;
         const MAX_FORKS_ITERATIONS = 100; // Safety limit to prevent infinite loop
 
         while (j < MAX_FORKS_ITERATIONS) {
@@ -1829,16 +1988,19 @@ exports.getNotarizationData = async() => {
                 notarization = await delegatorContract.methods.bestForks(j).call();
             } catch (error) {
                 if (isBestForksEndError(error, j)) {
+                    // A bare revert at index 0 is ambiguous; don't cache "no notarizations" on it.
+                    if (j == 0 && !isArrayBoundsError(error)) {
+                        skipCache = true;
+                    }
                     break;
                 }
                 throw error;
             }
 
             notarization = util.removeHexLeader(notarization);
-            //if mod is 0 then the length is the new type of notarization.
-            const lengthMod = notarization.length % constants.LIF.FORKLEN;
-            const voutPosition = lengthMod == 0 ? constants.LIF.NPOS : constants.LIF.NPOS_VRSCTEST;
-            const forkLength = lengthMod == 0 ? constants.LIF.FORKLEN : constants.LIF.FORKLEN_VRSCTEST;
+            assertForkLayout(notarization, j);
+            const voutPosition = constants.LIF.NPOS;
+            const forkLength = constants.LIF.FORKLEN;
                 
             if (notarization && notarization.length >= forkLength) {
                 let length = notarization.length / forkLength;
@@ -1848,12 +2010,6 @@ exports.getNotarizationData = async() => {
                         let hashPos = constants.LIF.HASHPOS + (i * forkLength);
                         let txidPos = constants.LIF.TXIDPOS + (i * forkLength);
                         let nPos = voutPosition + (i * forkLength);
-                        if (largestIndex < calcIndex)
-                        {
-                            largestIndex = calcIndex;
-                            Notarization.bestchain = j;
-                        }
-
                         if ((j == 0  && i == 0) || i > 0)
                         {
                             notarizations[calcIndex] = {
@@ -1883,6 +2039,9 @@ exports.getNotarizationData = async() => {
             Notarization.bestchain = -1;
         } else {
             Notarization.forks = forks;
+            // best chain is the longest fork (earliest wins a tie)
+            Notarization.bestchain = forks.reduce((best, fork, index) =>
+                fork.length > forks[best].length ? index : best, 0);
             Notarization.lastconfirmed = forks.length == 1 && forks[0].length == 1 ? -1 : 0;
             Notarization.notarizations = [];
 
@@ -1899,10 +2058,12 @@ exports.getNotarizationData = async() => {
             console.log("NOTARIZATION CONTRACT INFO \n" + JSON.stringify(Notarization, null, 2))
         }
 
-        await Promise.all([
-            setCachedApi({ "result": Notarization }, 'lastgetNotarizationData'),
-            setCachedApi(timenow, 'lastgetNotarizationDatatime')
-        ]);
+        if (!skipCache) {
+            await Promise.all([
+                setCachedApi({ "result": Notarization }, 'lastgetNotarizationData'),
+                setCachedApi(timenow, 'lastgetNotarizationDatatime')
+            ]);
+        }
 
         return { "result": Notarization };
 
@@ -2083,6 +2244,8 @@ exports.submitImports = async(CTransferArray) => {
         }
 
         inFlightImports.add(importIdentity);
+        // The guard is released by sendTransaction once the receipt arrives; otherwise here.
+        let releaseGuardHere = true;
         try {
             const submission = delegatorContract.methods.submitImports(submitArray[0]);
             const expectedInput = submission.encodeABI();
@@ -2109,23 +2272,27 @@ exports.submitImports = async(CTransferArray) => {
                 };
             } else if (submitArray.length > 0 && (parseInt(gascalc) < parseInt(submitImportMaxGas))) {
                 // Get median gas price from the last block's transactions
-                log("Calculating Median Gas Price for submitImports...");
-                const gasPrice = await getMedianGasPrice();
-                log("Using gas price: " + gasPrice);
-                globalsubmitimports = await submission.send({
-                    from: account.address,
-                    gas: submitImportMaxGas,
-                    gasPrice: gasPrice
+                releaseGuardHere = false;
+                const transactionHash = await sendTransaction(submission, submitImportMaxGas, "submitImports", {
+                    onReceipt: async (receipt) => {
+                        if (receipt.status) {
+                            globalsubmitimports = receipt;
+                            // if the submit import spend succeeds then we can cache the last submit import.
+                            await setCachedApi(CTransferArray, 'lastsubmitImports');
+                        }
+                    },
+                    onSettled: () => inFlightImports.delete(importIdentity)
                 });
-                log("submitImports: success");
-                // if the submit import spend  succeeds then we can cache the last submit import.
-                await setCachedApi(CTransferArray, 'lastsubmitImports');
+                log("submitImports: broadcast");
+                return { result: transactionHash };
             } else {
                 log("GAS LIMIT EXCEEDED: " + gascalc + " > " + submitImportMaxGas);
                 return { result: {error: true} };
             }
         } finally {
-            inFlightImports.delete(importIdentity);
+            if (releaseGuardHere) {
+                inFlightImports.delete(importIdentity);
+            }
         }
     } catch (error) {
 
@@ -2139,8 +2306,6 @@ exports.submitImports = async(CTransferArray) => {
         }
         return { result: { result: error.message, error: true } };
     }
-
-    return { result: globalsubmitimports.transactionHash };
 }
 
 function parseImportApprovalDecision(value) {
@@ -2175,25 +2340,37 @@ exports.approveOrRejectAcceptedImport = async(params) => {
         if (approve === undefined) {
             return { result: { error: true, message: "Invalid approval decision" } };
         }
+        const voteIdentity = importTxid.toLowerCase();
+        if (inFlightVotes.has(voteIdentity)) {
+            return { result: { error: true, retryable: true, message: "Import vote already in progress" } };
+        }
+
         const votePayload = abi.encodeParameters(['bytes32', 'bool'], [importTxid, approve]);
         const vote = delegatorContract.methods.setVerusData(votePayload, 'approveOrRejectAcceptedImport');
 
-        await vote.call({ from: account.address });
+        inFlightVotes.add(voteIdentity);
+        // The guard is released by sendTransaction once the receipt arrives; otherwise here.
+        let releaseGuardHere = true;
+        try {
+            await vote.call({ from: account.address });
 
-        const gascalc = await vote.estimateGas({ from: account.address });
-        if (parseInt(gascalc) >= parseInt(submitImportMaxGas)) {
-            log("GAS LIMIT EXCEEDED: " + gascalc + " >= " + submitImportMaxGas);
-            return { result: { error: true } };
+            const gascalc = await vote.estimateGas({ from: account.address });
+            if (parseInt(gascalc) >= parseInt(submitImportMaxGas)) {
+                log("GAS LIMIT EXCEEDED: " + gascalc + " >= " + submitImportMaxGas);
+                return { result: { error: true } };
+            }
+
+            releaseGuardHere = false;
+            const transactionHash = await sendTransaction(vote, submitImportMaxGas, "approveOrRejectAcceptedImport", {
+                onSettled: () => inFlightVotes.delete(voteIdentity)
+            });
+
+            return { result: transactionHash };
+        } finally {
+            if (releaseGuardHere) {
+                inFlightVotes.delete(voteIdentity);
+            }
         }
-
-        const gasPrice = await getMedianGasPrice();
-        const txhash = await vote.send({
-            from: account.address,
-            gas: submitImportMaxGas,
-            gasPrice: gasPrice
-        });
-
-        return { result: txhash.transactionHash };
     } catch (error) {
         if (error.reason)
             console.log("approveOrRejectAcceptedImport:" + error.reason);
@@ -2377,6 +2554,8 @@ exports.submitAcceptedNotarization = async(params) => {
     }
 
     inFlightNotarizations.add(notarizationIdentity);
+    // The guard is released by sendTransaction once the receipt arrives; otherwise here.
+    let releaseGuardHere = true;
     try {
         if (InteractorConfig.debugnotarization) {
             console.log(JSON.stringify({serializednotarization, txid, voutnum: txidObj.voutnum, abiencodedSigData}, null, 2));
@@ -2402,16 +2581,18 @@ exports.submitAcceptedNotarization = async(params) => {
         // Call contract to test for reversion.
         await submission.call();
 
-        const gasPrice = await getMedianGasPrice();
-        const txhash = await submission.send({
-            from: account.address,
-            gas: notarizationMaxGas,
-            gasPrice: gasPrice
+        releaseGuardHere = false;
+        const transactionHash = await sendTransaction(submission, notarizationMaxGas, "submitAcceptedNotarization", {
+            onReceipt: async (receipt) => {
+                if (receipt.status) {
+                    await setCachedApi(txidObj.txid, 'lastNotarizationTxid');
+                }
+            },
+            onSettled: () => inFlightNotarizations.delete(notarizationIdentity)
         });
-        log("notarization tx: success");
+        log("notarization tx: broadcast");
 
-        await setCachedApi(txidObj.txid, 'lastNotarizationTxid');
-        return { "result": txhash };
+        return { "result": util.removeHexLeader(transactionHash) };
 
     } catch (error) {
 
@@ -2432,7 +2613,9 @@ exports.submitAcceptedNotarization = async(params) => {
         }
         return { "result": { "error" : true } };
     } finally {
-        inFlightNotarizations.delete(notarizationIdentity);
+        if (releaseGuardHere) {
+            inFlightNotarizations.delete(notarizationIdentity);
+        }
     }
 }
 
@@ -2483,10 +2666,10 @@ exports.getLastImportFrom = async() => {
             forksData = await delegatorContract.methods.bestForks(0).call();
             forksData = util.removeHexLeader(forksData);
 
-            const lengthMod = forksData.length % constants.LIF.FORKLEN;
+            assertForkLayout(forksData, 0);
 
             let txidPos = constants.LIF.TXIDPOS;
-            let nPos = lengthMod === 0 ? constants.LIF.NPOS : constants.LIF.NPOS_VRSCTEST;
+            let nPos = constants.LIF.NPOS;
             let txid = "0x" + forksData.substring(txidPos, txidPos + constants.LIF.BYTES32SIZE).reversebytes();
             let n = parseInt(forksData.substring(nPos, nPos + 8), constants.LIF.HEX);
 
