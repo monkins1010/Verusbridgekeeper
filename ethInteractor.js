@@ -612,6 +612,7 @@ async function getNotaryList() {
         notaries.push({
             index: i,
             iaddress: util.uint160ToVAddress(iAddress, constants.IADDRESS),
+            ethaddress: mapping.main || mapping[0],
             state: Number(mapping.state || mapping[2] || 0)
         });
     }
