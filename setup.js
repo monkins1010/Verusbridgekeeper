@@ -78,7 +78,5 @@ exports.INIKeys = {
     privatekey: '',
     ethnode: '',
     rpcallowip: '',
-    nowitnesssubmissions: '',
-    notaryindex: '',
-    notaryiaddress: ''
+    nowitnesssubmissions: ''
 };

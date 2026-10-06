@@ -123,7 +123,6 @@ class PendingImportRecord {
 
 // Global settings
 let settings = undefined;
-let persistSettings = true;
 let noaccount = false;
 let web3 = undefined;
 let provider = undefined;
@@ -477,19 +476,6 @@ async function resolveAndCacheNotaryContext() {
 
     cachedNotaryIndex = foundIndex;
     cachedNotaryIAddress = foundIAddress;
-
-    try {
-        settings.notaryindex = foundIndex == null ? '' : String(foundIndex);
-        settings.notaryiaddress = foundIAddress || '';
-        if (persistSettings) {
-            confFile.set_conf_values(InteractorConfig.ticker, {
-                notaryindex: settings.notaryindex,
-                notaryiaddress: settings.notaryiaddress
-            });
-        }
-    } catch (e) {
-        log("Failed to persist notary context: " + (e.message || e));
-    }
 }
 
 function buildPendingImportOutputs(pendingImport) {
@@ -729,7 +715,6 @@ async function buildPendingImportState(importTxid, notaries, nowTs) {
  */
 exports.init = async (config = {}) => {
     settings = config.runtimeSettings ? { ...config.runtimeSettings } : undefined;
-    persistSettings = !config.runtimeSettings;
     cachedNotaryIndex = null;
     cachedNotaryIAddress = null;
     lastblocknumber = null;
