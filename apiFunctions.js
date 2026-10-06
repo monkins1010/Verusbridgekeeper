@@ -17,6 +17,8 @@ exports.APIs = (api) => {
         'getclaimablefees'              : "getclaimablefees",
         'revokeidentity'                : "revokeidentity",
         'stop'                          : "stop",
+        'approveorrejectacceptedimport'       : "approveOrRejectAcceptedImport",
+        'submitacceptednotarization'          : "submitAcceptedNotarization",
     }
 
     for ( var property in validCalls ) {
