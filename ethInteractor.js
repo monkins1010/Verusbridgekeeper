@@ -131,6 +131,10 @@ let globalsubmitimports = { "transactionHash": "" };
 const inFlightImports = new Set();
 const inFlightNotarizations = new Set();
 const inFlightVotes = new Set();
+let inFlightRevoke = false;
+// Nonce bookkeeping: a node may not list a just-broadcast tx as pending yet, so never go below lastUsedNonce + 1.
+let lastUsedNonce = null;
+let nonceAllocation = Promise.resolve();
 let globaltimedelta = constants.globaltimedelta; //60s for getnewblocks
 let globaltimedeltaNota = 300000;
 let globallastinfo = d.valueOf() - globaltimedelta;
@@ -250,6 +254,18 @@ async function getGasFees() {
     };
 }
 
+// Hands out strictly increasing nonces, serialized so concurrent senders can never share one.
+function allocateNonce() {
+    const allocation = nonceAllocation.then(async () => {
+        const pending = await web3.eth.getTransactionCount(account.address, 'pending');
+        const nonce = lastUsedNonce === null ? pending : Math.max(pending, lastUsedNonce + 1);
+        lastUsedNonce = nonce;
+        return nonce;
+    });
+    nonceAllocation = allocation.catch(() => {});
+    return allocation;
+}
+
 /**
  * Signs and broadcasts a contract method call, resolving with the transaction hash as soon as it
  * is known rather than waiting for the receipt. The receipt is tracked in the background.
@@ -265,20 +281,23 @@ async function getGasFees() {
 async function sendTransaction(method, gas, label, { onReceipt, onSettled } = {}) {
     let settled = false;
     let trackTimer = null;
+    let nonce;
     const settle = () => {
         if (settled) return;
         settled = true;
         clearTimeout(trackTimer);
+        // Once settled (never broadcast, mined or abandoned) the node's pending count is authoritative again,
+        // so a dropped transaction cannot leave a nonce gap behind.
+        if (nonce !== undefined && lastUsedNonce === nonce) lastUsedNonce = null;
         if (onSettled) {
             try { onSettled(); } catch (e) { log(label + ": settle hook failed: " + errorMessage(e)); }
         }
     };
 
     let fees;
-    let nonce;
     try {
         fees = await getGasFees();
-        nonce = await web3.eth.getTransactionCount(account.address, 'pending');
+        nonce = await allocateNonce();
     } catch (error) {
         settle();
         throw error;
@@ -723,6 +742,8 @@ exports.init = async (config = {}) => {
     inFlightImports.clear();
     inFlightNotarizations.clear();
     inFlightVotes.clear();
+    inFlightRevoke = false;
+    lastUsedNonce = null;
 
     try {
         InteractorConfig.init(
@@ -766,6 +787,8 @@ async function clearInitializationState() {
     inFlightImports.clear();
     inFlightNotarizations.clear();
     inFlightVotes.clear();
+    inFlightRevoke = false;
+    lastUsedNonce = null;
 
     try {
         await disconnectProviderSocket();
@@ -2697,16 +2720,30 @@ exports.getclaimablefees = async(params) => {
 exports.revokeidentity = async() => {
 
     const TYPE_AUTO_REVOKE = "0x04";
-    let txhash
+    if (inFlightRevoke) {
+        return { "result": { "error": true, "retryable": true, "message": "Revoke already in progress" } };
+    }
+    inFlightRevoke = true;
+    // The guard is released by sendTransaction once the receipt arrives; otherwise here.
+    let releaseGuardHere = true;
     try {
-        await delegatorContract.methods.revokeWithMainAddress(TYPE_AUTO_REVOKE).call();
-        txhash = await delegatorContract.methods.revokeWithMainAddress(TYPE_AUTO_REVOKE).send({ from: account.address, gas: notarizationMaxGas });
+        const revoke = delegatorContract.methods.revokeWithMainAddress(TYPE_AUTO_REVOKE);
+        await revoke.call({ from: account.address });
 
-        return { "result": txhash };
+        releaseGuardHere = false;
+        const transactionHash = await sendTransaction(revoke, notarizationMaxGas, "revokeWithMainAddress", {
+            onSettled: () => { inFlightRevoke = false; }
+        });
+
+        return { "result": transactionHash };
 
     } catch (error) {
-
+        log("revokeidentity: " + (error?.reason || errorMessage(error)));
         return { "result": { "error": true } };
+    } finally {
+        if (releaseGuardHere) {
+            inFlightRevoke = false;
+        }
     }
 }
 
