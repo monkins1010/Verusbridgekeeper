@@ -3,8 +3,6 @@ exports.APIs = (api) => {
     
     let validCalls = {
         'submitimports'                 : "submitImports",
-        'releasependingimport'          : "releasePendingImport",
-        'submitacceptedimportvote'      : "submitAcceptedImportVote",
         "getinfo"                       : "getInfo",
         'getexports'                    : "getExports",
         'getcurrency'                   : "getCurrency",
@@ -17,8 +15,7 @@ exports.APIs = (api) => {
         'getclaimablefees'              : "getclaimablefees",
         'revokeidentity'                : "revokeidentity",
         'stop'                          : "stop",
-        'approveorrejectacceptedimport'       : "approveOrRejectAcceptedImport",
-        'submitacceptednotarization'          : "submitAcceptedNotarization",
+        'approveorrejectacceptedimport' : "approveOrRejectAcceptedImport",
     }
 
     for ( var property in validCalls ) {

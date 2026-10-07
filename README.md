@@ -223,3 +223,17 @@ flags:
 -pk  (optional)     : 234...ab8ad8e99f   must be 64 characters and no 0x prefix
 -testnet (optional) : set this to use Sepolia testnet sends
 ```
+
+## Tests
+
+```shell
+npm test            # unit tests (node:test, no network): RPC routing, HTTP server, utils, deserializer
+npm run test:e2e    # every RPC endpoint against a fresh Ganache with the real contracts deployed
+```
+
+The e2e run needs the sibling `Verus-Ethereum-contracts` checkout (override with `E2E_CONTRACTS_DIR`) with `npm install` done and
+`truffle` on the PATH. It starts `ganache-cli -d` on port 8545 and deploys the contracts. It drives the keeper over HTTP
+as the Verus daemon does, sends ETH, DAI and MKR to the Delegator and checks `getexports`, and runs the pending-import
+voting, reject/halt and `revokeidentity` flows. To run against your own deployment set `E2E_DELEGATOR`, `E2E_ETHNODE` and
+`E2E_CONTRACTS_DIR` and run `node --test test/e2e/*.e2e.test.js` (the chain must be a fresh `ganache-cli -d`).
+`submitimports` and `submitacceptednotarization` need daemon-produced proofs and signatures, so only their refusal paths are covered.

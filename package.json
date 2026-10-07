@@ -6,8 +6,9 @@
     "scripts": {
         "start": "node start.js -consolelog",
         "start:ganache": "node start-ganache.js -consolelog -debugsubmit -checkhash",
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "getcontracthash": "node utilities/upgrade.js -getcontracthash"
+        "test": "node --test \"test/unit/*.test.js\"",
+        "getcontracthash": "node utilities/upgrade.js -getcontracthash",
+        "test:e2e": "bash test/e2e/run.sh"
     },
     "author": "",
     "license": "ISC",

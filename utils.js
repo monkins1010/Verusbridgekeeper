@@ -347,7 +347,7 @@ const writeCompactSize = (newNumber) => {
     } else {
         outBuffer.writeUInt8(255);
         let secondBuffer = Buffer.alloc(8);
-        secondBuffer.writeUInt32LE(newNumber);
+        secondBuffer.writeBigUInt64LE(BigInt(newNumber));
         outBuffer = Buffer.concat([outBuffer, secondBuffer]);
     }
     return outBuffer;

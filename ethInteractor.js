@@ -192,10 +192,16 @@ function isArrayBoundsError(error) {
 }
 
 // Some providers (e.g. Ganache) don't surface a panic code for out-of-bounds reads and just
-// return a bare "execution reverted" with no reason/data.
+// return a bare "execution reverted" (Ganache v7: "VM Exception while processing transaction: revert")
+// with no reason/data.
 function isBareRevertError(error) {
     const hasRevertReason = Boolean(error?.reason) || (typeof error?.data === 'string' && error.data !== '0x');
-    return !hasRevertReason && errorMessage(error, '').toLowerCase().includes('execution reverted');
+    if (hasRevertReason) {
+        return false;
+    }
+    const message = errorMessage(error, '').toLowerCase().trim();
+    return message.includes('execution reverted') ||
+        message.endsWith('vm exception while processing transaction: revert');
 }
 
 function isBestForksEndError(error, forkIndex) {
