@@ -79,17 +79,45 @@ const readTranferdestination = function (memory) {
 
     temp = readtype(memory,"array", vecSize)
 
-    retVal.address = util.hexAddressToBase58(retVal.type, temp.retval)
+    const typeNoFlags = retVal.type & ~(FLAG_DEST_AUX | FLAG_DEST_GATEWAY | constants.FLAG_RESERVED1 | constants.FLAG_RESERVED2);
+
+    switch (typeNoFlags)
+    {
+        case constants.DEST_PK:
+        case constants.DEST_RAW:
+        case constants.DEST_NESTEDTRANSFER:
+            retVal.address = temp.retval;
+            break;
+
+        case constants.DEST_FULLID:
+        case constants.DEST_REGISTERCURRENCY:
+            retVal.serializeddata = util.removeHexLeader(temp.retval);
+            break;
+
+        case constants.DEST_ETHNFT:
+            retVal.contract = "0x" + util.removeHexLeader(temp.retval).slice(0, 40);
+            retVal.tokenid = "0x" + util.removeHexLeader(temp.retval).slice(40);
+            break;
+
+        default:
+            retVal.address = util.hexAddressToBase58(typeNoFlags, temp.retval);
+    }
 
     if ((retVal.type & FLAG_DEST_GATEWAY) == FLAG_DEST_GATEWAY)
     {
         temp = readtype(memory,"uint", 160)
 
         retVal.gateway = util.hexAddressToBase58(constants.I_ADDRESS_TYPE, temp.retval)
-        temp = readtype(memory,"uint", 160) // TODO: gateway code not uniobjected
+        temp = readtype(memory,"uint", 160)
+
+        // the gateway code is only reported when set, matching the daemon JSON
+        if (BigInt(temp.retval) !== 0n)
+        {
+            retVal.gatewaycode = util.hexAddressToBase58(constants.I_ADDRESS_TYPE, temp.retval);
+        }
 
         temp = readtype(memory,"uint", 64)
-        retVal.fees = temp.retval;
+        retVal.fees = util.uint64ToVerusFloat(temp.retval);
     }
 
     if ((retVal.type & FLAG_DEST_AUX) == FLAG_DEST_AUX)
@@ -109,7 +137,7 @@ const readTranferdestination = function (memory) {
             let auxMemory = { stream: memory.stream.slice(0, auxLength), output: {} };
             memory.stream = memory.stream.slice(auxLength);
 
-            auxdests.push(readTranferdestination(auxMemory).retVal.address)
+            auxdests.push(readTranferdestination(auxMemory).retVal)
         }
         retVal.auxdests = auxdests;
     }

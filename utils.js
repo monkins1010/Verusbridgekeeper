@@ -77,61 +77,127 @@ const convertVerusAddressToEthAddress = (verusAddress) => {
     return "0x" + bitGoUTXO.address.fromBase58Check(verusAddress).hash.toString('hex');
 }
 
-const serializeCTransferDestination = (ctd) => {
+const DESTINATION_FLAG_MASK = constants.FLAG_DEST_AUX |
+    constants.FLAG_DEST_GATEWAY |
+    constants.FLAG_RESERVED1 |
+    constants.FLAG_RESERVED2;
 
-    let encodedOutput = Buffer.alloc(1);
-    encodedOutput.writeUInt8(ctd.type);
+const HASH160_HEX = /^(0x)?[0-9a-fA-F]{40}$/;
 
-    if (ctd.type == 0)
-        return encodedOutput;
+const decodeHexBytes = (value, fieldName, expectedLength) => {
+    if (typeof value !== 'string' || !/^(0x)?([0-9a-fA-F]{2})*$/.test(value)) {
+        throw new Error(`${fieldName} must be a hex string`);
+    }
+    const bytes = Buffer.from(removeHexLeader(value), 'hex');
+    if (expectedLength !== undefined && bytes.length !== expectedLength) {
+        throw new Error(`${fieldName} must be ${expectedLength} bytes`);
+    }
+    return bytes;
+};
 
-    let destination; 
+// Accepts a base58 R/I address, or the same 20 byte hash as hex (as returned by the ETH contracts).
+const decodeUint160 = (value, fieldName) => {
+    if (typeof value !== 'string' || !value.length) {
+        throw new Error(`${fieldName} must be an address string`);
+    }
+    if (HASH160_HEX.test(value)) {
+        return Buffer.from(removeHexLeader(value), 'hex');
+    }
+    return Buffer.from(bitGoUTXO.address.fromBase58Check(value).hash);
+};
 
-    if (parseInt(ctd.type & constants.R_ADDRESS_TYPE) == constants.R_ADDRESS_TYPE) {
-        destination = Buffer.from(bitGoUTXO.address.fromBase58Check(removeHexLeader(ctd.address), 160).hash , 'hex');
-    } else if (parseInt(ctd.type & constants.I_ADDRESS_TYPE) == constants.I_ADDRESS_TYPE) {
-        destination = Buffer.from(bitGoUTXO.address.fromBase58Check(removeHexLeader(ctd.address), 160).hash , 'hex');
-    } else if (parseInt(ctd.type & constants.ETH_ADDRESS_TYPE) == constants.ETH_ADDRESS_TYPE) { 
-        destination = Buffer.from(removeHexLeader(ctd.address),'hex');
+// Serializes exactly as the C++ CTransferDestination: type, destination vector, optional gateway
+// leg (gatewayID, gatewayCode, fees) and optional vector of serialized auxiliary destinations.
+const serializeDestination = (ctd, isAuxDest) => {
+
+    const type = ctd.type;
+    const address = ctd.address;
+
+    if (!Number.isInteger(type) || type < 0 || type > 255) {
+        throw new Error("Invalid destination type");
     }
 
-    encodedOutput = Buffer.concat([encodedOutput, writeCompactSize(destination.length), destination])
+    const typeByte = Buffer.from([type]);
 
-    if (parseInt(ctd.type & constants.FLAG_DEST_AUX) == constants.FLAG_DEST_AUX)
-    {
-        let mainVecLength = ctd.auxdests.length;
-  
-        let subLength = writeCompactSize(mainVecLength);
-  
-        let subvector = Buffer.from("");
-  
-        for (let i = 0; i < mainVecLength; i++)
-        {
-            let subType = Buffer.alloc(1);
-            subType.writeUInt8(ctd.auxdests[i].type);
-            let subDestination;
+    // DEST_INVALID: type byte and an empty destination vector
+    if (type === constants.DEST_INVALID) {
+        return Buffer.concat([typeByte, writeCompactSize(0)]);
+    }
 
-            if (parseInt(ctd.auxdests[i].type & constants.R_ADDRESS_TYPE) == constants.R_ADDRESS_TYPE) {
-                subDestination = Buffer.from(bitGoUTXO.address.fromBase58Check(removeHexLeader(ctd.auxdests[i].address), 160).hash , 'hex');
-            } else if (parseInt(ctd.auxdests[i].type & constants.I_ADDRESS_TYPE) == constants.I_ADDRESS_TYPE) {
-                subDestination = Buffer.from(bitGoUTXO.address.fromBase58Check(removeHexLeader(ctd.auxdests[i].address), 160).hash , 'hex');
-            } else if (parseInt(ctd.auxdests[i].type & constants.ETH_ADDRESS_TYPE) == constants.ETH_ADDRESS_TYPE) { 
-                subDestination = Buffer.from(removeHexLeader(ctd.auxdests[i].address),'hex');
-            }
-  
-            let arrayItem = Buffer.concat([subType, writeCompactSize(Buffer.byteLength(subDestination)), subDestination])
-            subvector = Buffer.concat([subvector, writeCompactSize(Buffer.byteLength(arrayItem)), arrayItem])
-  
+    const typeWithoutFlags = type & ~DESTINATION_FLAG_MASK;
+    let destination;
+
+    switch (typeWithoutFlags) {
+
+        case constants.DEST_PKH:
+        case constants.DEST_SH:
+        case constants.DEST_ID:
+        case constants.DEST_QUANTUM:
+            destination = decodeUint160(address, "Destination address");
+            break;
+
+        case constants.DEST_ETH:
+            destination = decodeHexBytes(address, "ETH destination address", 20);
+            break;
+
+        case constants.DEST_PK:
+            destination = decodeHexBytes(address, "Public key destination", 33);
+            break;
+
+        case constants.DEST_ETHNFT:
+            destination = Buffer.concat([
+                decodeHexBytes(ctd.contract, "NFT contract", 20),
+                decodeHexBytes(ctd.tokenid, "NFT token id", 32)
+            ]);
+            break;
+
+        case constants.DEST_FULLID:
+        case constants.DEST_REGISTERCURRENCY:
+            destination = decodeHexBytes(ctd.serializeddata !== undefined ? ctd.serializeddata : address, "Serialized destination data");
+            break;
+
+        case constants.DEST_RAW:
+            destination = decodeHexBytes(address, "Raw destination");
+            break;
+
+        case constants.DEST_NESTEDTRANSFER:
+            throw new Error("Nested transfers are not supported");
+        default:
+            throw new Error("Unsupported destination type");
+    }
+
+    let encodedOutput = Buffer.concat([typeByte, writeCompactSize(destination.length), destination]);
+
+    if ((type & constants.FLAG_DEST_GATEWAY) === constants.FLAG_DEST_GATEWAY) {
+
+        const gateway = ctd.gateway !== undefined ? ctd.gateway : ctd.gatewayid;
+        const gatewayID = decodeUint160(gateway, "Gateway");
+        const gatewayCode = ctd.gatewaycode ? decodeUint160(ctd.gatewaycode, "Gateway code") : Buffer.alloc(20);
+        const fees = writeUInt(convertToInt64(ctd.fees === undefined ? 0 : ctd.fees), 64);
+
+        encodedOutput = Buffer.concat([encodedOutput, gatewayID, gatewayCode, fees]);
+    }
+
+    if ((type & constants.FLAG_DEST_AUX) === constants.FLAG_DEST_AUX) {
+
+        if (isAuxDest) {
+            throw new Error("Nested auxiliary destinations are not supported");
         }
-  
-        encodedOutput = Buffer.concat([encodedOutput, subLength, subvector]);
-  
+
+        const auxDests = ctd.auxdests || [];
+        const entries = auxDests.map((auxDest) => {
+            const serializedAux = serializeDestination(auxDest, true);
+            return Buffer.concat([writeCompactSize(serializedAux.length), serializedAux]);
+        });
+        encodedOutput = Buffer.concat([encodedOutput, writeCompactSize(auxDests.length), ...entries]);
     }
-  
+
     return encodedOutput;
+};
 
-
-
+// NOTE: This function does not support nested transfers.
+function serializeCTransferDestination(ctd) {
+    return serializeDestination(ctd, false);
 }
 
 const serializeCCurrencyValueMapArray = (ccvm) => {

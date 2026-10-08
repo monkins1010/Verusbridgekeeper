@@ -69,9 +69,10 @@ test('readTranferdestination reads gateway fields and aux destinations', () => {
     const type = (2 | 128 | 64).toString(16).padStart(2, '0');
     const hex = type + '14' + dest + gateway + code + fees + '01' + (inner.length / 2).toString(16).padStart(2, '0') + inner + 'ee';
     const { retVal, memory } = d.readTranferdestination(mem(hex));
-    assert.equal(retVal.fees, 1n);
+    assert.equal(retVal.fees, '0.00000001');
     assert.equal(retVal.gateway, util.uint160ToVAddress('0x' + gateway, constants.IADDRESS));
-    assert.deepEqual(retVal.auxdests, [util.uint160ToVAddress('0x' + '55'.repeat(20), constants.RADDRESS)]);
+    assert.equal(retVal.gatewaycode, undefined);
+    assert.deepEqual(retVal.auxdests, [{ type: 2, address: util.uint160ToVAddress('0x' + '55'.repeat(20), constants.RADDRESS) }]);
     assert.equal(memory.stream.toString('hex'), 'ee');
 });
 

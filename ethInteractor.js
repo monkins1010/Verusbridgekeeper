@@ -901,54 +901,6 @@ function serializeCCurrencyValueMapVarInt(ccvm) {
     return encodedOutput
 }
 
-const FLAG_DEST_AUX = 64;
-
-function serializeCTransferDestination(ctd) {
-
-    let encodedOutput = Buffer.alloc(1);
-    encodedOutput.writeUInt8(ctd.destinationtype);
-
-    let lengthOfDestination = {};
-    let destination = Buffer.from(util.removeHexLeader(ctd.destinationaddress), 'hex');
-
-    if (ctd.destinationtype == constants.DEST_REGISTERCURRENCY ||
-        ctd.destinationtype == constants.DEST_REGISTERCURRENCY + constants.FLAG_DEST_AUX) {
-
-        lengthOfDestination = Buffer.byteLength(destination);
-    } else {
-
-        lengthOfDestination = constants.UINT160_LENGTH;
-
-    }
-
-    encodedOutput = Buffer.concat([encodedOutput, util.writeCompactSize(lengthOfDestination), destination]);
-
-    if (parseInt(ctd.destinationtype & FLAG_DEST_AUX) == FLAG_DEST_AUX && destination.length != 92)
-    {
-        let mainVecLength = ctd.auxdests.length;
-
-        let subLength = util.writeCompactSize(mainVecLength);
-
-        let subvector = Buffer.from("");
-
-        for (let i = 0; i < mainVecLength; i++)
-        {
-            let subType = Buffer.alloc(1);
-            subType.writeUInt8(ctd.auxdests[i].type);
-            let subDestination = Buffer.from(bitGoUTXO.address.fromBase58Check(ctd.auxdests[i].address, 160).hash);
-
-            let arrayItem = Buffer.concat([subType, util.writeCompactSize(Buffer.byteLength(subDestination)), subDestination])
-            subvector = Buffer.concat([subvector, util.writeCompactSize(Buffer.byteLength(arrayItem)), arrayItem])
-
-        }
-
-        encodedOutput = Buffer.concat([encodedOutput, subLength, subvector]);
-
-    }
-
-    return encodedOutput;
-}
-
 
 
 function serializeCrossChainExport(cce) {
@@ -994,7 +946,7 @@ function serializeCReserveTransfers(crts) {
         encodedOutput = Buffer.concat([encodedOutput, util.writeVarInt(crts[i].flags)]);
         encodedOutput = Buffer.concat([encodedOutput, Buffer.from(util.removeHexLeader(crts[i].feecurrencyid), 'hex')]);
         encodedOutput = Buffer.concat([encodedOutput, util.writeVarInt(crts[i].fees)]);
-        encodedOutput = Buffer.concat([encodedOutput, serializeCTransferDestination(crts[i].destination)]);
+        encodedOutput = Buffer.concat([encodedOutput, util.serializeCTransferDestination(crts[i].destination)]);
         if (crts[i].destcurrencyid)
             encodedOutput = Buffer.concat([encodedOutput, Buffer.from(util.removeHexLeader(crts[i].destcurrencyid), 'hex')]);
         else
@@ -1152,29 +1104,8 @@ function createOutboundTransfers(transfers) {
             outTransfer.destinationcurrencyid = util.ethAddressToVAddress(transfer.destcurrencyid, IAddressBaseConst);
         }
 
-        let address = {};
-
-        address = util.hexAddressToBase58(transfer.destination.destinationtype, transfer.destination.destinationaddress.slice(0, 42));
-
-        if (transfer.destination.destinationaddress.length > 42)
-            outTransfer.destination = {
-            "type": transfer.destination.destinationtype,
-            "address": address,
-            "gateway": util.ethAddressToVAddress(transfer.destination.destinationaddress.slice(42, 82), IAddressBaseConst),
-            "fees": util.uint64ToVerusFloat(BigInt(`0x${transfer.destination.destinationaddress.slice(122, 138).reversebytes()}`))
-        }
-        else{
-            outTransfer.destination = {
-                "type": transfer.destination.destinationtype,
-                "address": address
-            }
-        }
-        if ((parseInt(transfer.destination.destinationtype & constants.FLAG_DEST_AUX)) == constants.FLAG_DEST_AUX) 
-        {
-            const auxType = parseInt(transfer.destination.destinationaddress.slice(142,144), 16);
-            const auxAddress = util.hexAddressToBase58(auxType, transfer.destination.destinationaddress.slice(146))
-            outTransfer.destination.auxdests = [{type: auxType, address: auxAddress}]
-        } 
+        // The destination field is directly assigned from the transfer object as it is already converted
+        outTransfer.destination = transfer.destination;
 
         outTransfers.push(outTransfer);
     }
@@ -1472,6 +1403,36 @@ exports.getCurrency = async(input) => {
     }
 }
 
+const fixEthTransferDestinations = (transfers) => {
+
+    // ETH transfers concatenate the gateway and auxdest on to the end of the destinationaddress as serialized data
+    // This utility converts is back into ta normal ReserveTransferDestination format
+
+    const fixedTransfers = [];
+
+    for (const transfer of transfers) {
+
+        const destinationType = transfer.destination.destinationtype;
+        const serializedData = Buffer.from(util.removeHexLeader(transfer.destination.destinationaddress), 'hex');
+
+        const stream = Buffer.concat([
+            Buffer.from([destinationType]),
+            util.writeCompactSize(constants.UINT160_LENGTH),
+            serializedData
+        ]);
+        const destination = deserializer.readTranferdestination({ stream, output: {} }).retVal;
+
+        fixedTransfers.push({
+            ...transfer,
+            destination
+        });
+
+    }
+    return fixedTransfers;
+};
+
+exports.fixEthTransferDestinations = fixEthTransferDestinations;
+
 exports.getExports = async(input) => {
     let output = [];
     let chainname = input[0];
@@ -1524,16 +1485,19 @@ exports.getExports = async(input) => {
                                    
             outputSet.height = exportSet.endHeight;
             outputSet.txid = util.removeHexLeader(exportSet.exportHash).reversebytes(); //export hash used for txid
-            outputSet.txoutnum = 0; //exportSet.position;
-            outputSet.exportinfo = createCrossChainExport(exportSet.transfers, exportSet.startHeight, exportSet.endHeight, true, bridgeConverterActive);
+            outputSet.txoutnum = 0;
+
+            // Fix the returned TransferDestinations from ETH as all data is packed into the destinationaddress bytes array instead of into other objects
+            const fixedExportSet = fixEthTransferDestinations(exportSet.transfers);
+
+            outputSet.exportinfo = createCrossChainExport(fixedExportSet, exportSet.startHeight, exportSet.endHeight, true, bridgeConverterActive);
             outputSet.partialtransactionproof = await getProof(exportSet.startHeight, heightend);
 
-            //serialize the prooflet index
-            let components = createComponents(exportSet.transfers, exportSet.startHeight, exportSet.endHeight, exportSet.prevExportHash, bridgeConverterActive);
+            let components = createComponents(fixedExportSet, exportSet.startHeight, exportSet.endHeight, exportSet.prevExportHash, bridgeConverterActive);
             outputSet.partialtransactionproof = serializeEthFullProof(outputSet.partialtransactionproof).toString('hex') + components;
 
             //build transfer list
-            outputSet.transfers = createOutboundTransfers(exportSet.transfers);
+            outputSet.transfers = createOutboundTransfers(fixedExportSet);
             if (InteractorConfig.debugnotarization)
                 console.log("First Ethereum Send to Verus: ", outputSet.transfers[0].currencyvalues, " to ", outputSet.transfers[0].destination);
             //loop through the
@@ -2108,19 +2072,6 @@ function conditionSubmitImports(CTransferArray) {
                         util.convertToInt64(CTransferArray[i].exports[j].transfers[k].currencyvalues[vals]);
                     delete CTransferArray[i].exports[j].transfers[k].currencyvalues[vals];
                 }
-                if (CTransferArray[i].exports[j].transfers[k].destination.type == 4 ||
-                    CTransferArray[i].exports[j].transfers[k].destination.type == 2) //type PKH or ID
-                {
-                    CTransferArray[i].exports[j].transfers[k].destination.address =
-                        util.convertVerusAddressToEthAddress(CTransferArray[i].exports[j].transfers[k].destination.address);
-                }
-                if (CTransferArray[i].exports[j].transfers[k].destination.type == constants.DEST_REGISTERCURRENCY ||
-                    CTransferArray[i].exports[j].transfers[k].destination.type == constants.DEST_REGISTERCURRENCY + constants.FLAG_DEST_AUX ||
-                    CTransferArray[i].exports[j].transfers[k].destination.type == constants.DEST_FULLID) {
-
-                    CTransferArray[i].exports[j].transfers[k].destination.address = "0x" + CTransferArray[i].exports[j].transfers[k].destination.serializeddata;
-                }
-
                 CTransferArray[i].exports[j].transfers[k].destinationcurrencyid =
                     util.convertVerusAddressToEthAddress(CTransferArray[i].exports[j].transfers[k].destinationcurrencyid);
                 CTransferArray[i].exports[j].transfers[k].exportto =
@@ -2153,11 +2104,6 @@ function fixETHObjects(inputArray) {
         }
         delete inputArray[i].currencyvalues;
 
-        inputArray[i].destination.destinationaddress = inputArray[i].destination.address
-        inputArray[i].destination.destinationtype = inputArray[i].destination.type
-
-        delete inputArray[i].destination.address;
-        delete inputArray[i].destination.type;
         if ((parseInt(inputArray[i].flags) & 1024) == 1024) { // RESERVETORESERVE FLAG
             inputArray[i].destcurrencyid = inputArray[i].via;
             inputArray[i].secondreserveid = inputArray[i].destinationcurrencyid;
