@@ -146,8 +146,8 @@ const serializeDestination = (ctd, isAuxDest) => {
 
         case constants.DEST_ETHNFT:
             destination = Buffer.concat([
-                decodeHexBytes(ctd.contract, "NFT contract", 20),
-                decodeHexBytes(ctd.tokenid, "NFT token id", 32)
+                decodeHexBytes(ctd.address.contract, "NFT contract", 20),
+                decodeHexBytes(ctd.address.tokenid, "NFT token id", 32)
             ]);
             break;
 

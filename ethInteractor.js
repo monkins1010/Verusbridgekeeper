@@ -214,7 +214,8 @@ function isBestForksEndError(error, forkIndex) {
 }
 
 const PRIORITY_FEE_FLOOR_WEI = BigInt(1000000000); // 1 gwei tip so transactions are always includable
-const MUTATOR_HASH_DEADLINE_MS = 60000;            // max wait for a broadcast tx hash before giving up
+const BASE_FEE_HEADROOM_PERCENT = 200;
+const MUTATOR_HASH_DEADLINE_MS = 40000;            // max wait for a broadcast tx hash before giving up
 const MUTATOR_RECEIPT_TRACK_MS = 15 * 60 * 1000;   // max time an in-flight guard is held waiting on a receipt
 
 // Get EIP-1559 fee fields based on latest block gas utilization
@@ -244,8 +245,8 @@ async function getGasFees() {
     const maxPriorityFeePerGas = isHighUtilization
         ? PRIORITY_FEE_FLOOR_WEI * BigInt(2)
         : PRIORITY_FEE_FLOOR_WEI;
-    // 1.15x headroom on the base fee so a rising base fee does not strand the tx.
-    const maxFeePerGas = (latestBaseFee * BigInt(115)) / BigInt(100) + maxPriorityFeePerGas;
+    // 2x headroom on the base fee (survives ~6 full blocks of maximal rise); the sender pays base + tip, never the cap.
+    const maxFeePerGas = (latestBaseFee * BigInt(BASE_FEE_HEADROOM_PERCENT)) / BigInt(100) + maxPriorityFeePerGas;
 
     console.log(
         `[GasPrice] Block: ${latestBlock.number}, GasUsed: ${gasUsed.toString()}, GasLimit: ${gasLimit.toString()}, Utilization: ${utilizationPercent}%, ` +
@@ -337,6 +338,7 @@ async function sendTransaction(method, gas, label, { onReceipt, onSettled } = {}
         promiEvent.once('transactionHash', (hash) => {
             hashSeen = true;
             clearTimeout(hashDeadline);
+            if (settled) return;
             log(label + ": broadcast tx " + hash + " nonce " + nonce);
             // Do not hold the in-flight guard forever if the provider stops delivering headers.
             trackTimer = setTimeout(() => {
@@ -1406,7 +1408,7 @@ exports.getCurrency = async(input) => {
 const fixEthTransferDestinations = (transfers) => {
 
     // ETH transfers concatenate the gateway and auxdest on to the end of the destinationaddress as serialized data
-    // This utility converts is back into ta normal ReserveTransferDestination format
+    // This utility converts it back into a normal ReserveTransferDestination format
 
     const fixedTransfers = [];
 
@@ -1417,7 +1419,9 @@ const fixEthTransferDestinations = (transfers) => {
 
         const stream = Buffer.concat([
             Buffer.from([destinationType]),
-            util.writeCompactSize(constants.UINT160_LENGTH),
+            // NOTE: this is always 20 bytes from the smart contract transfers as the length of the serializedData is not just the address vector 
+            // it has additional data concatenated on the end . (address_vec + gatewaydata + auxdests )
+            util.writeCompactSize(constants.UINT160_LENGTH), 
             serializedData
         ]);
         const destination = deserializer.readTranferdestination({ stream, output: {} }).retVal;

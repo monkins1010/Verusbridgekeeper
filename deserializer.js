@@ -95,8 +95,10 @@ const readTranferdestination = function (memory) {
             break;
 
         case constants.DEST_ETHNFT:
-            retVal.contract = "0x" + util.removeHexLeader(temp.retval).slice(0, 40);
-            retVal.tokenid = "0x" + util.removeHexLeader(temp.retval).slice(40);
+            retVal.address = {
+                contract: "0x" + util.removeHexLeader(temp.retval).slice(0, 40),
+                tokenid: "0x" + util.removeHexLeader(temp.retval).slice(40)
+            };
             break;
 
         default:

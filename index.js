@@ -41,10 +41,10 @@ function processPost(request, response, callback) {
 }
 
 let rollingBuffer = [];
-const RPC_TIMEOUT_MS = 20000;
+const RPC_TIMEOUT_MS = 15000;
 // Mutators return as soon as the tx hash is known; this hard cap only stops a dead provider
-// from wedging the queue. The daemon's own RPC timeout is far longer (900 s).
-const MUTATING_RPC_TIMEOUT_MS = 90000;
+// from wedging the queue. The daemon allows mutators 60 s (15 s for everything else), so stay within that.
+const MUTATING_RPC_TIMEOUT_MS = 60000;
 const MUTATING_RPC_METHODS = new Set([
     'submitimports',
     'approveorrejectacceptedimport',

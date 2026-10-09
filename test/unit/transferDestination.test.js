@@ -37,7 +37,7 @@ test('serializes ETH and PK destinations from hex', () => {
 test('serializes DEST_RAW, ETHNFT, FULLID and REGISTERCURRENCY payloads', () => {
     assert.equal(serialize({ type: constants.DEST_RAW, address: '0xaabbcc' }).toString('hex'), '0b' + '03' + 'aabbcc');
     assert.equal(
-        serialize({ type: constants.DEST_ETHNFT, contract: hex(bytes(5)), tokenid: hex(bytes(6, 32)) }).toString('hex'),
+        serialize({ type: constants.DEST_ETHNFT, address: { contract: hex(bytes(5)), tokenid: hex(bytes(6, 32)) } }).toString('hex'),
         '0a' + '34' + '05'.repeat(20) + '06'.repeat(32));
     assert.equal(serialize({ type: constants.DEST_FULLID, serializeddata: 'aabbccdd' }).toString('hex'), '05' + '04' + 'aabbccdd');
     assert.equal(serialize({ type: constants.DEST_REGISTERCURRENCY, serializeddata: 'aabb' }).toString('hex'), '06' + '02' + 'aabb');
