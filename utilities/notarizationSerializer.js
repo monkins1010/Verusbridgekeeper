@@ -16,7 +16,7 @@ const serializeNotarization = (notarization) => {
 
     serializedBytes = Buffer.concat([serializedBytes, new Uint8Array(util.writeVarInt(notarizationFlags(notarization)))]); 
 
-    serializedBytes = Buffer.concat([serializedBytes, util.serializeCTransferDestination(notarization.proposer)]); 
+    serializedBytes = Buffer.concat([serializedBytes, util.serializeCTransferDestination(notarization.proposer || { type: 0 })]); 
 
     serializedBytes = Buffer.concat([serializedBytes, bitGoUTXO.address.fromBase58Check((notarization.currencyid), 160).hash]); 
 

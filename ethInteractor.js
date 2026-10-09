@@ -2478,6 +2478,28 @@ function isMatchingPendingNotarization(transaction, txid, voutnum) {
     }
 }
 
+const DEST_TYPE_MASK = 0x0f; // low nibble is the type, the upper bits are flags
+const ALLOWED_PROPOSER_DEST_TYPES = new Set([constants.DEST_PK, constants.DEST_PKH, constants.DEST_ID, constants.DEST_ETH, constants.DEST_SH]);
+const ALLOWED_AUX_DEST_TYPES = new Set([constants.DEST_ETH, constants.DEST_ID, constants.DEST_PKH]);
+
+// Soft block: returns a reason string if the proposer or its aux destinations use a disallowed type.
+function getNotarizationDestinationError(proposer) {
+    // An empty proposer (missing, or type 0) serializes as 00 00 and is valid.
+    if (!proposer || Number(proposer.type) === constants.DEST_INVALID) {
+        return null;
+    }
+    if (!ALLOWED_PROPOSER_DEST_TYPES.has(Number(proposer.type) & DEST_TYPE_MASK)) {
+        return "proposer destination type " + proposer.type + " not allowed";
+    }
+    const auxDests = Array.isArray(proposer.auxdests) ? proposer.auxdests : [];
+    for (const aux of auxDests) {
+        if (!aux || !ALLOWED_AUX_DEST_TYPES.has(Number(aux.type) & DEST_TYPE_MASK)) {
+            return "aux destination type " + (aux && aux.type) + " not allowed";
+        }
+    }
+    return null;
+}
+
 exports.submitAcceptedNotarization = async(params) => {
 
     if (noaccount || InteractorConfig.spendDisabled) {
@@ -2488,6 +2510,12 @@ exports.submitAcceptedNotarization = async(params) => {
     if (InteractorConfig.debugnotarization) {
         console.log(JSON.stringify(params[0], null, 2));
         console.log(JSON.stringify(params[1], null, 2));
+    }
+
+    const destinationError = getNotarizationDestinationError(params[0]?.proposer);
+    if (destinationError) {
+        log("submitAcceptedNotarization: skipping notarization, " + destinationError);
+        return { "result": { "txid": null, "error": true } };
     }
 
     const serializednotarization = notarization.serializeNotarization(params[0]);
