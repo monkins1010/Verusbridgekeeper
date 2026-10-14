@@ -5,6 +5,7 @@ const constants = require('./constants');
 const ethersUtils = require('ethers').utils
 const { addHexPrefix } = require('./utils');
 const util = require('./utils.js');
+const { applyPendingImportOverride, forceFor } = require('./forceInput.js');
 const abi = new Web3().eth.abi
 const deserializer = require('./deserializer.js');
 const { 
@@ -600,7 +601,7 @@ async function getPendingImportsForDaemon() {
             continue;
         }
 
-        pendingimports.push(new PendingImportRecord({
+        const recordFields = {
             status,
             exportTxid: util.removeHexLeader(pendingImport.importTxid).reversebytes(),
             exportN: Number(pendingImport.nout.toString()),
@@ -608,7 +609,11 @@ async function getPendingImportsForDaemon() {
             notarizationN: Number(pendingImport.confirmedNotarizationN.toString()),
             submittedat: submittedAt,
             outputs: buildPendingImportOutputs(pendingImport)
-        }));
+        };
+
+        pendingimports.push(new PendingImportRecord(
+            applyPendingImportOverride(recordFields, forceFor(pendingimports.length))
+        ));
     }
 
     return pendingimports;

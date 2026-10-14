@@ -1,0 +1,28 @@
+// Copy to forceinput.json and run:  yarn start -testnet -forcependingimport [optional/path/to/file.json]
+// Testnet only. Comments are allowed. Any value left commented out keeps the real value.
+// pendingimports[i] overrides the i-th pending import returned by the API (0-based).
+// The file is re-read on every request, so edit it live.
+{
+  "pendingimports": [
+    {
+      // 1 = in cooldown, 2 = needs my vote, 3 = complete confirmed, 4 = complete rejected
+      // "status": 2,
+      // "exportTxid": "0000000000000000000000000000000000000000000000000000000000000000",
+      // "exportN": 0,
+      // "notarizationTxid": "0000000000000000000000000000000000000000000000000000000000000000",
+      // "notarizationN": 0,
+      // "submittedat": 1700000000,
+
+      // outputs[j] is merged into the real j-th output (extra entries are appended).
+      "outputs": [
+        {
+          // "currencyoutput": { "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq": 1.5 },
+          // "address": "0x0000000000000000000000000000000000000001"
+        }
+        // {},
+        // { "currencyoutput": { "iJhCezBExJHvtyH3fGhNnt2NhU4Ztkf2yq": 2 }, "address": "0x...", "type": "tokenspend" }
+      ]
+    }
+    // {}  // second pending import, untouched
+  ]
+}
