@@ -5,7 +5,7 @@ const constants = require('./constants');
 const ethersUtils = require('ethers').utils
 const { addHexPrefix } = require('./utils');
 const util = require('./utils.js');
-const { applyPendingImportOverride, forceFor } = require('./forceInput.js');
+const { applyPendingImportOverride, forceFor, voteSpendBlocked } = require('./forceInput.js');
 const abi = new Web3().eth.abi
 const deserializer = require('./deserializer.js');
 const { 
@@ -2296,6 +2296,11 @@ exports.approveOrRejectAcceptedImport = async(params) => {
         return { result: { error: true } };
     }
 
+    if (voteSpendBlocked()) {
+        log("************** approveOrRejectAcceptedImport: -forcependingimport set without -forceapproveorreject, not spending ********************");
+        return { result: { error: true, message: "Vote blocked: -forcependingimport without -forceapproveorreject" } };
+    }
+ 
     try {
         const normalized = normalizeBytes32(params && params[0]);
         if (!normalized) {

@@ -96,4 +96,9 @@ function forceFor(index) {
     return Array.isArray(input.pendingimports) ? input.pendingimports[index] : undefined;
 }
 
-module.exports = { applyPendingImportOverride, forceFor, stripJsonComments };
+// With -forcependingimport the vote spend is blocked unless -forceapproveorreject is also set.
+function voteSpendBlocked() {
+    return process.argv.indexOf(FLAG) > -1 && process.argv.indexOf('-forceapproveorreject') === -1;
+}
+
+module.exports = { voteSpendBlocked, applyPendingImportOverride, forceFor, stripJsonComments };
