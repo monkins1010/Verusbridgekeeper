@@ -80,9 +80,10 @@ const ContractType = {
     SubmitImports: 8,
     NotarizationSerializer: 9,
     UpgradeManager: 10,
-    PendingImports: 11
+    PendingImports: 11,
+    Imports: 12
 }
-const SUPPORTED_CONTRACT_COUNT = 11;
+const SUPPORTED_CONTRACT_COUNT = 13;
 
 const verusDelegatorAbi = require('../abi/VerusDelegator.json');
 
