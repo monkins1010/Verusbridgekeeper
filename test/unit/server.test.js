@@ -29,6 +29,7 @@ const METHODS = {
 const calls = [];
 const behaviours = {};
 let port;
+let providerOnline = true;
 
 const { freePort, post: rawPost } = require('../helpers/rpc.js');
 const post = (body, options) => rawPost(port, `${USER}:${PASS}`, body, options);
@@ -57,6 +58,7 @@ test.before(async () => {
     ethInteractor.invalid = async () => { calls.push({ fn: 'invalid' }); return { result: { error: true, message: 'Unrecognized API call' } }; };
     ethInteractor.stop = async () => { calls.push({ fn: 'stop' }); return { result: 'Bridgekeeper server stopping' }; };
     ethInteractor.web3status = async () => true;
+    ethInteractor.checkProvider = async () => providerOnline;
     ethInteractor.end = async () => {};
     ethInteractor.init = async () => port;
     Object.assign(ethInteractor.InteractorConfig, {
@@ -130,6 +132,25 @@ test('an unknown method reaches the interactor as "invalid" and is a 402', async
         assert.equal(reply.body.result.message, 'Unrecognized API call');
         assert.deepEqual(calls.map(c => c.fn), ['invalid']);
     }
+});
+
+test('a method sent as an array is not dispatched', async () => {
+    const reply = await post({ method: ['submitimports'], params: [] });
+    assert.equal(reply.status, 402);
+    assert.deepEqual(calls.map(c => c.fn), ['invalid']);
+});
+
+test('a command is refused without dispatch while the provider is down, and served once it recovers', async () => {
+    providerOnline = false;
+    try {
+        const reply = await post({ method: 'getinfo', params: [] });
+        assert.equal(reply.status, 402);
+        assert.equal(reply.body.result.message, 'web3 provider is not connected');
+        assert.deepEqual(calls, []);
+    } finally {
+        providerOnline = true;
+    }
+    assert.equal((await post({ method: 'getinfo', params: [] })).status, 200);
 });
 
 test('a request without a method is answered with an error, not a crash', async () => {

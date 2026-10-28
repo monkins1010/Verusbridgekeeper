@@ -18,13 +18,11 @@ exports.APIs = (api) => {
         'approveorrejectacceptedimport' : "approveOrRejectAcceptedImport",
     }
 
-    for ( var property in validCalls ) {
-
-        if(api == property) {
-            return validCalls[property];
-        }
+    // only an exact string match dispatches; ["submitimports"] would otherwise match through ==
+    if (typeof api !== 'string' || !Object.prototype.hasOwnProperty.call(validCalls, api)) {
+        return "invalid";
     }
 
-    return "invalid"
+    return validCalls[api];
 }
 

@@ -7,7 +7,9 @@ const { exit } = require('process');
 const web3 = new Web3(new Web3.providers.WebsocketProvider(settings.ethnode));
 
 const DSR_POT_CONTRACT = "0x197e90f9fad81970ba7976f33cbd77088e5d7cf7";
-const ADDRESS_TO_CHECK = "0x71518580f36FeCEFfE0721F06bA4703218cD7F63";
+// the address whose DSR balance is checked: -address 0x..., else the configured delegator contract
+const addressArg = process.argv.indexOf('-address');
+const ADDRESS_TO_CHECK = addressArg > -1 ? process.argv[addressArg + 1] : settings.delegatorcontractaddress;
 const VDXF_SYSTEM_DAI_HOLDINGS = "0x000000000000000000000000334711b41Cf095C9D44d1a209f34bf3559eA7640";
 const VDXFID_DAI_DSR_SUPPLY = "0x00000000000000000000000084206E821f7bB4c6F390299c1367600F608c28C8";
 
@@ -124,7 +126,8 @@ async function canExitDAI(wadToExit) {
   console.log("Actual pie in Pot for delegator:", web3.utils.fromWei(actualPieInPot, "ether"));
   console.log("Actual DAI value in DSR:", web3.utils.fromWei(actualDaiInDSR, "ether"), "DAI");
   if (hasPieDiscrepancy) {
-    const discrepancySign = pieDiscrepancy.isNeg() ? "UNDER-REPORTED" : "OVER-REPORTED";
+    // pieDiscrepancy = actual - internal, so a negative value means the internal accounting reports more than the pot holds
+    const discrepancySign = pieDiscrepancy.isNeg() ? "OVER-REPORTED" : "UNDER-REPORTED";
     console.log("⚠️  DISCREPANCY DETECTED:", discrepancySign);
     console.log("    Difference (pie):", web3.utils.fromWei(pieDiscrepancy, "ether"));
     console.log("    Difference (DAI):", web3.utils.fromWei(rmul(chi, pieDiscrepancyAbs), "ether"), "DAI");

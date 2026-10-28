@@ -131,7 +131,14 @@ const processData = async (task) => {
                 pushLog(event.toLocaleString() + " Command: " + command);
             }
 
-            const interactorCall = ethInteractor[checkAPI.APIs(command)](postData.params);
+            const interactorName = checkAPI.APIs(command);
+            // Recover a dead or wedged socket before every command, not only in the handlers that check it themselves.
+            if (interactorName !== "invalid" && interactorName !== "stop" && !(await ethInteractor.checkProvider())) {
+                sendResponse(task, 402, 'Error', { result: { error: true, message: "web3 provider is not connected" } });
+                return;
+            }
+
+            const interactorCall = ethInteractor[interactorName](postData.params);
             const returnData = await Promise.race([interactorCall, task.timeout]);
 
             if (!task.responseSent) {

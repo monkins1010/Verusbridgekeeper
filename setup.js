@@ -78,5 +78,6 @@ exports.INIKeys = {
     privatekey: '',
     ethnode: '',
     rpcallowip: '',
-    nowitnesssubmissions: ''
+    nowitnesssubmissions: '',
+    submitimportmaxgas: ''
 };

@@ -46,6 +46,11 @@ To set the wallet not to spend (but still enable revoke) please edit the above *
 ```ini
 nowitnesssubmissions=true
 ```
+To change the gas limit for import submissions and import votes (default 16000000), add the line below. The limit used is
+never above 16777216 (the per-transaction cap) or the latest block's gas limit less 1000000.
+```ini
+submitimportmaxgas=16000000
+```
 
 
 ### Running the bridgekeeper on the console:

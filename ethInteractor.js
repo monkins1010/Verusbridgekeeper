@@ -81,7 +81,13 @@ exports.InteractorConfig = InteractorConfig;
 //Main coin ID's
 const IAddressBaseConst = constants.IAddressBaseConst;
 const notarizationMaxGas = constants.notarizationMaxGas;
-const submitImportMaxGas = constants.submitImportMaxGas;
+let submitImportMaxGasSetting = constants.submitImportMaxGas;
+
+// The gas limit for import submissions and votes: the setting, bounded by the per-transaction cap (EIP-7825) and the block gas limit.
+async function getImportGasLimit() {
+    const latest = await web3.eth.getBlock('latest');
+    return Math.min(parseInt(submitImportMaxGasSetting), constants.txGasCap, parseInt(latest.gasLimit) - constants.blockGasHeadroom);
+}
 const verusDelegatorAbi = require('./abi/VerusDelegator.json');
 const abiCoder = ethersUtils.defaultAbiCoder;
 
@@ -92,6 +98,8 @@ const PENDING_IMPORT_QUEUE_KEY = Web3.utils.keccak256("pending.import.queue");
 const RELEASE_VOTE_BITMAP_PREFIX = Web3.utils.keccak256("pending.import.release.vote.bitmap");
 const REJECT_VOTE_BITMAP_PREFIX = Web3.utils.keccak256("pending.import.reject.vote.bitmap");
 
+const IMPORT_STATE_PENDING = 1;
+const IMPORT_STATE_RELEASED = 2;
 const IMPORT_STATE_REJECTED = 3;
 const MAPPING_ERC1155_NFT_DEFINITION = 16;
 const MAPPING_ERC721_NFT_DEFINITION = 128;
@@ -128,7 +136,6 @@ let noaccount = false;
 let web3 = undefined;
 let provider = undefined;
 let d = new Date();
-let globalsubmitimports = { "transactionHash": "" };
 const inFlightImports = new Set();
 const inFlightNotarizations = new Set();
 const inFlightVotes = new Set();
@@ -315,8 +322,13 @@ async function sendTransaction(method, gas, label, { onReceipt, onSettled } = {}
         let hashSeen = false;
         const hashDeadline = setTimeout(() => {
             if (!hashSeen) {
-                settle();
-                reject(new Error(label + ": timed out waiting for transaction hash"));
+                // The signed transaction may still reach the node and mine, so keep the nonce and the in-flight guard
+                // until it mines, fails or the tracking window ends; a retry meanwhile is refused instead of signing a second one.
+                trackTimer = setTimeout(() => {
+                    log(label + ": no hash or receipt within tracking window, releasing nonce " + nonce);
+                    settle();
+                }, MUTATOR_RECEIPT_TRACK_MS);
+                reject(new Error(label + ": transaction hash not received yet, broadcast still in progress (nonce " + nonce + ")"));
             }
         }, MUTATOR_HASH_DEADLINE_MS);
 
@@ -342,6 +354,7 @@ async function sendTransaction(method, gas, label, { onReceipt, onSettled } = {}
             if (settled) return;
             log(label + ": broadcast tx " + hash + " nonce " + nonce);
             // Do not hold the in-flight guard forever if the provider stops delivering headers.
+            clearTimeout(trackTimer);
             trackTimer = setTimeout(() => {
                 log(label + ": receipt not received for " + hash + " within tracking window");
                 settle();
@@ -385,6 +398,7 @@ async function setupConf() {
     // Default ip to 127.0.0.1 if not set
     InteractorConfig._rpcallowip = settings.rpcallowip || "127.0.0.1";
     InteractorConfig._nowitnesssubmit = settings.nowitnesssubmissions == "true";
+    submitImportMaxGasSetting = parseInt(settings.submitimportmaxgas) > 0 ? parseInt(settings.submitimportmaxgas) : constants.submitImportMaxGas;
 
     if (web3) {
       await disconnectProviderSocket();
@@ -506,6 +520,15 @@ async function resolveAndCacheNotaryContext() {
     cachedNotaryIAddress = foundIAddress;
 }
 
+// The record is abi.encode(PendingImport): an offset word, then the tuple head, where state is the 14th field (exporters
+// takes three words). Reading the word directly works even when the record's strings don't decode.
+const PENDING_IMPORT_STATE_WORD = 14;
+function readPendingImportState(pendingBytes) {
+    const hex = util.removeHexLeader(pendingBytes);
+    const word = hex.slice(PENDING_IMPORT_STATE_WORD * 64, (PENDING_IMPORT_STATE_WORD + 1) * 64);
+    return word.length === 64 ? Number(BigInt('0x' + word)) : null;
+}
+
 function buildPendingImportOutputs(pendingImport) {
     const outputs = [];
 
@@ -571,13 +594,25 @@ async function getPendingImportsForDaemon() {
             continue;
         }
 
-        const [pendingImport] = abiCoder.decode([PENDING_IMPORT_TUPLE], pendingBytes);
+        // Decode each import on its own, so one undecodable record (e.g. a name that isn't valid UTF-8)
+        // doesn't stop every later import from being reported.
+        let pendingImport;
+        try {
+            [pendingImport] = abiCoder.decode([PENDING_IMPORT_TUPLE], pendingBytes);
+        } catch (error) {
+            log("getPendingImportsForDaemon: skipping undecodable pending import " + importTxid + ": " + errorMessage(error));
+            continue;
+        }
         const submittedAt = Number(pendingImport.submittedAt.toString());
         const cooldownEndsAt = submittedAt + IMPORT_RELEASE_COOLDOWN_SECONDS;
+        const importState = Number(pendingImport.state.toString());
 
         let status;
 
-        if (Number(pendingImport.state.toString()) === IMPORT_STATE_REJECTED) {
+        // a released import can't be voted on any more; a vote would only revert
+        if (importState === IMPORT_STATE_RELEASED) {
+            continue;
+        } else if (importState === IMPORT_STATE_REJECTED) {
             status = PendingImportRecord.COMPLETE_REJECTED;
         } else if (nowTs < cooldownEndsAt) {
             status = PendingImportRecord.IN_COOLDOWN;
@@ -688,7 +723,16 @@ async function buildPendingImportState(importTxid, notaries, nowTs) {
         return null;
     }
 
-    const [pendingImport] = abiCoder.decode([PENDING_IMPORT_TUPLE], pendingBytes);
+    let pendingImport;
+    try {
+        [pendingImport] = abiCoder.decode([PENDING_IMPORT_TUPLE], pendingBytes);
+    } catch (error) {
+        return {
+            exporttxid: util.removeHexLeader(importTxid).reversebytes(),
+            status: "undecodable",
+            error: errorMessage(error)
+        };
+    }
     const state = Number(pendingImport.state.toString());
     const submittedAt = Number(pendingImport.submittedAt.toString());
     const cooldownEndsAt = submittedAt + IMPORT_RELEASE_COOLDOWN_SECONDS;
@@ -831,6 +875,9 @@ async function disconnectProviderSocket() {
 
 exports.end = disconnectProviderSocket;
 
+// for unit tests
+exports._internal = { guardSubscription, isValidBlockHeader, readPendingImportState };
+
 exports.web3status = async () => {
     let websocketOk = false;
     try {
@@ -841,6 +888,38 @@ exports.web3status = async () => {
         websocketOk = false;
     }
     return websocketOk;
+}
+
+// web3 formats a notification before any callback runs, and a throw there (a null header, a decimal quantity, a short
+// miner) is uncaught and exits the process. Wrap this subscription's formatter and handler so a bad one is dropped.
+function guardSubscription(subscription, label) {
+    const definition = subscription.options.subscription || {};
+    const formatter = definition.outputFormatter;
+    const handler = definition.subscriptionHandler;
+    subscription.options.subscription = Object.assign({}, definition, {
+        outputFormatter: formatter ? (result) => {
+            try {
+                return formatter(result);
+            } catch (error) {
+                log(label + ": dropped malformed notification: " + errorMessage(error));
+                return null;
+            }
+        } : undefined,
+        subscriptionHandler: handler ? function (output) {
+            if (output == null) return;
+            try {
+                return handler.call(this, output);
+            } catch (error) {
+                log(label + ": notification handler failed: " + errorMessage(error));
+            }
+        } : undefined
+    });
+    return subscription;
+}
+
+function isValidBlockHeader(blockHeader) {
+    return blockHeader != null && Number.isSafeInteger(blockHeader.number) && blockHeader.number >= 0 &&
+        typeof blockHeader.hash === 'string' && /^0x[0-9a-fA-F]{64}$/.test(blockHeader.hash) && blockHeader.timestamp != null;
 }
 
 async function eventListener(notarizerAddress) {
@@ -867,14 +946,18 @@ async function eventListener(notarizerAddress) {
           clearCachedApis();
           clearCachedBlocks();
       });
+      guardSubscription(notarizationEvent, "notarizationEvent");
     }
 
     if (blockEvent === undefined) {
       blockEvent = web3.eth.subscribe('newBlockHeaders', (error, blockHeader) => {
         if (error) {
           console.error("blockEvent error:", error);
+        } else if (!isValidBlockHeader(blockHeader)) {
+          log("blockEvent: ignored malformed block header");
         } else {
-                    if (lastblockhash && blockHeader.parentHash && blockHeader.number === lastblocknumber + 1 &&
+          try {
+                    if (lastblockhash && typeof blockHeader.parentHash === 'string' && blockHeader.number === lastblocknumber + 1 &&
                             blockHeader.parentHash.toLowerCase() !== lastblockhash.toLowerCase()) {
                         clearCachedBlocks();
                         clearCachedApis();
@@ -883,8 +966,12 @@ async function eventListener(notarizerAddress) {
           lasttimestamp = blockHeader.timestamp;
                     lastblockhash = blockHeader.hash;
           log("New block received", blockHeader.number);
+          } catch (callbackError) {
+            log("blockEvent: header handling failed: " + errorMessage(callbackError));
+          }
         }
       });
+      guardSubscription(blockEvent, "blockEvent");
     }
 }
 
@@ -1312,6 +1399,8 @@ async function isProviderSocketOnline() {
   return online === true;
 }
 
+exports.checkProvider = isProviderSocketOnline;
+
 exports.getInfo = async() => {
     //getinfo is just tested to see that its not null therefore we can just return the version
     //check that we can connect to Ethereum if not return null to kill the connection
@@ -1442,6 +1531,28 @@ const fixEthTransferDestinations = (transfers) => {
 
 exports.fixEthTransferDestinations = fixEthTransferDestinations;
 
+const EXPORT_SETS_PER_CALL = 20;
+const EXPORT_RANGE_WINDOW_BLOCKS = 100;
+
+// Returns the first ready export sets after startHeight, at most EXPORT_SETS_PER_CALL of them. The contract view walks
+// and copies every set in its range, so a large backlog in one call can pass the node's eth_call gas cap and fail on
+// every retry. verusd imports the sets in order, so a prefix always makes progress. The window grows until it finds a
+// set or covers the whole range, in which case the last call is the same as one call over the whole range.
+async function getReadyExportsPrefix(startHeight, endHeight) {
+    const start = Number(startHeight);
+    const end = Number(endHeight);
+    let window = EXPORT_RANGE_WINDOW_BLOCKS;
+
+    while (true) {
+        const rangeEnd = Math.min(end, start + window);
+        const sets = await delegatorContract.methods.getReadyExportsByRange(startHeight, rangeEnd).call();
+        if (sets.length > 0 || rangeEnd >= end) {
+            return sets.slice(0, EXPORT_SETS_PER_CALL);
+        }
+        window *= 2;
+    }
+}
+
 exports.getExports = async(input) => {
     let output = [];
     let chainname = input[0];
@@ -1476,9 +1587,8 @@ exports.getExports = async(input) => {
 
         if (chainname != constants.VERUSSYSTEMID[InteractorConfig.ticker]) throw `i-Address not ${InteractorConfig.ticker}`;
 
-        let exportSets = [];
         const previousStartHeight = await delegatorContract.methods.exportHeights(heightstart).call();
-        exportSets = await delegatorContract.methods.getReadyExportsByRange(previousStartHeight, heightend).call();
+        const exportSets = await getReadyExportsPrefix(previousStartHeight, heightend);
 
         log("Height end: ", heightend, "heightStart:", heightstart, {previousStartHeight});
 
@@ -1979,6 +2089,13 @@ exports.getNotarizationData = async() => {
                     // A bare revert at index 0 is ambiguous; don't cache "no notarizations" on it.
                     if (j == 0 && !isArrayBoundsError(error)) {
                         skipCache = true;
+                        // The bestForks getter can only revert out of bounds, so if another view on the same contract
+                        // answers, the array is empty. If that fails too, report the error instead of an empty state.
+                        try {
+                            await delegatorContract.methods.notaries(0).call();
+                        } catch (_contractError) {
+                            throw error;
+                        }
                     }
                     break;
                 }
@@ -2202,11 +2319,12 @@ exports.submitImports = async(CTransferArray) => {
                 submitArray.push(CTempArray[0])
             } else {
                 log("SubmitImports: Import already processed, skipping...");
-                return { result: globalsubmitimports.transactionHash };
+                // not the hash of the last import this process sent, which belongs to a different import
+                return { result: "import already processed" };
             }
         } else {
             log("SubmitImports: No imports to submit.");
-            return { result: globalsubmitimports.transactionHash };
+            return { result: "no imports to submit" };
         }
         const importIdentity = getImportIdentity(submitArray[0].txid);
         if (inFlightImports.has(importIdentity)) {
@@ -2222,7 +2340,8 @@ exports.submitImports = async(CTransferArray) => {
             // catch any errors and return
             await submission.call(); //test call
             // prevent revert if gas limit is exceeded
-            const gascalc = await submission.estimateGas({ from: account.address });
+            const submitImportMaxGas = await getImportGasLimit();
+            const gascalc = await submission.estimateGas({ from: account.address, gas: submitImportMaxGas });
 
             log("Submitting transfers to ETH, total: " + CTempArray[0].transfers.length);
 
@@ -2246,7 +2365,6 @@ exports.submitImports = async(CTransferArray) => {
                 const transactionHash = await sendTransaction(submission, submitImportMaxGas, "submitImports", {
                     onReceipt: async (receipt) => {
                         if (receipt.status) {
-                            globalsubmitimports = receipt;
                             // if the submit import spend succeeds then we can cache the last submit import.
                             await setCachedApi(CTransferArray, 'lastsubmitImports');
                         }
@@ -2256,7 +2374,8 @@ exports.submitImports = async(CTransferArray) => {
                 log("submitImports: broadcast");
                 return { result: transactionHash };
             } else {
-                log("GAS LIMIT EXCEEDED: " + gascalc + " > " + submitImportMaxGas);
+                log("GAS LIMIT EXCEEDED: submitImports export " + submitArray[0]?.txid + " with " + CTempArray[0].transfers.length +
+                    " transfers needs " + gascalc + ", limit " + submitImportMaxGas + " (submitimportmaxgas, capped at " + constants.txGasCap + " per tx)");
                 return { result: {error: true} };
             }
         } finally {
@@ -2320,6 +2439,17 @@ exports.approveOrRejectAcceptedImport = async(params) => {
             return { result: { error: true, retryable: true, message: "Import vote already in progress" } };
         }
 
+        // Once an import is released or rejected the contract refuses every vote, so don't send one.
+        const pendingBytes = await delegatorContract.methods.storageGlobal(computePendingImportKey(importTxid)).call();
+        if (!pendingBytes || pendingBytes === '0x') {
+            return { result: { error: true, message: "No pending import found for txid" } };
+        }
+        const importState = readPendingImportState(pendingBytes);
+        if (importState !== IMPORT_STATE_PENDING) {
+            log("approveOrRejectAcceptedImport: import " + importTxid + " is no longer pending (state " + importState + "), not voting");
+            return { result: { error: true, message: "Import is no longer pending (state " + importState + ")" } };
+        }
+
         const votePayload = abi.encodeParameters(['bytes32', 'bool'], [importTxid, approve]);
         const vote = delegatorContract.methods.setVerusData(votePayload, 'approveOrRejectAcceptedImport');
 
@@ -2329,9 +2459,11 @@ exports.approveOrRejectAcceptedImport = async(params) => {
         try {
             await vote.call({ from: account.address });
 
-            const gascalc = await vote.estimateGas({ from: account.address });
+            const submitImportMaxGas = await getImportGasLimit();
+            const gascalc = await vote.estimateGas({ from: account.address, gas: submitImportMaxGas });
             if (parseInt(gascalc) >= parseInt(submitImportMaxGas)) {
-                log("GAS LIMIT EXCEEDED: " + gascalc + " >= " + submitImportMaxGas);
+                log("GAS LIMIT EXCEEDED: approveOrRejectAcceptedImport " + importTxid + " needs " + gascalc + ", limit " + submitImportMaxGas +
+                    " (submitimportmaxgas, capped at " + constants.txGasCap + " per tx)");
                 return { result: { error: true } };
             }
 

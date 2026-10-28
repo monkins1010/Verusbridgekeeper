@@ -1,12 +1,13 @@
 const server = require('./index');
-const start = (config) => 
+const start = async (config) =>
 {
     try{
-        server.start(config);
+        await server.start(config);
     } catch (e)
     {
-        console.log(e);
+        console.log("Bridgekeeper failed to start: " + (e && e.message ? e.message : e));
+        process.exit(1);
     }
-} 
+}
 
 start();

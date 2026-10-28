@@ -94,7 +94,9 @@ module.exports = Object.freeze({
     IAddressBaseConst: 102,
     RAddressBaseConst: 60,
     notarizationMaxGas: 1500000,
-    submitImportMaxGas: 10000000,
+    submitImportMaxGas: 16000000,
+    txGasCap: 16777216,          // EIP-7825 per-transaction gas cap
+    blockGasHeadroom: 1000000,
     globaltimedelta: 60000,
     TRANSFER_TYPE_ETH: 3,
     RESERVETORESERVE: 1024,
