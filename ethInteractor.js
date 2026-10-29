@@ -1534,19 +1534,22 @@ exports.fixEthTransferDestinations = fixEthTransferDestinations;
 const EXPORT_SETS_PER_CALL = 20;
 const EXPORT_RANGE_WINDOW_BLOCKS = 100;
 
-// Returns the first ready export sets after startHeight, at most EXPORT_SETS_PER_CALL of them. The contract view walks
+// Returns the first ready export sets from startHeight, at most EXPORT_SETS_PER_CALL of them. The contract view walks
 // and copies every set in its range, so a large backlog in one call can pass the node's eth_call gas cap and fail on
-// every retry. verusd imports the sets in order, so a prefix always makes progress. The window grows until it finds a
-// set or covers the whole range, in which case the last call is the same as one call over the whole range.
-async function getReadyExportsPrefix(startHeight, endHeight) {
+// every retry. verusd imports the sets in order, so a prefix always makes progress. startHeight is the start of the set
+// verusd has already imported (ending at importedEndHeight), which is always in the window and gets dropped by verusd,
+// so the window grows until it finds a set ending after importedEndHeight or covers the whole range, in which case the
+// last call is the same as one call over the whole range.
+async function getReadyExportsPrefix(startHeight, endHeight, importedEndHeight) {
     const start = Number(startHeight);
     const end = Number(endHeight);
+    const importedEnd = Number(importedEndHeight);
     let window = EXPORT_RANGE_WINDOW_BLOCKS;
 
     while (true) {
         const rangeEnd = Math.min(end, start + window);
         const sets = await delegatorContract.methods.getReadyExportsByRange(startHeight, rangeEnd).call();
-        if (sets.length > 0 || rangeEnd >= end) {
+        if (sets.some(set => Number(set.endHeight) > importedEnd) || rangeEnd >= end) {
             return sets.slice(0, EXPORT_SETS_PER_CALL);
         }
         window *= 2;
@@ -1588,7 +1591,7 @@ exports.getExports = async(input) => {
         if (chainname != constants.VERUSSYSTEMID[InteractorConfig.ticker]) throw `i-Address not ${InteractorConfig.ticker}`;
 
         const previousStartHeight = await delegatorContract.methods.exportHeights(heightstart).call();
-        const exportSets = await getReadyExportsPrefix(previousStartHeight, heightend);
+        const exportSets = await getReadyExportsPrefix(previousStartHeight, heightend, heightstart);
 
         log("Height end: ", heightend, "heightStart:", heightstart, {previousStartHeight});
 
