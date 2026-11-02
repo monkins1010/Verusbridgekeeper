@@ -1,3 +1,4 @@
+const fs = require('fs');
 const Web3 = require('web3');
 const bitGoUTXO = require('bitgo-utxo-lib');
 const confFile = require('./confFile.js')
@@ -38,6 +39,22 @@ const enableLog = function() {
     }
     log = console.log;
 };
+
+// Dedicated GAS-cost log, kept separate from the regular witness log so it can
+// be tailed in its own tmux pane: one line per submitAcceptedNotarization,
+// submitImports or approveOrRejectAcceptedImport transaction that actually mines.
+const GAS_LOG_FILE = process.env.GAS_LOG_FILE || "/logs/gas-usage.log";
+
+function logGasUsage(message) {
+    const line = "[" + new Date().toISOString() + "] " + message;
+    console.log("[GAS] " + line);
+    try {
+        fs.appendFileSync(GAS_LOG_FILE, line + "\n");
+    } catch (error) {
+        // never let a logging failure take down a spend; the console line above still has it
+        console.log("logGasUsage: could not write " + GAS_LOG_FILE + ": " + errorMessage(error));
+    }
+}
 
 class EthInteractorConfig {
     constructor() {}
@@ -2367,6 +2384,9 @@ exports.submitImports = async(CTransferArray) => {
                 releaseGuardHere = false;
                 const transactionHash = await sendTransaction(submission, submitImportMaxGas, "submitImports", {
                     onReceipt: async (receipt) => {
+                        logGasUsage("submitimports txid " + submitArray[0].txid + ", " + CTempArray[0].transfers.length +
+                            " reservetransfers, GAS cost: " + receipt.gasUsed + ", tx " + receipt.transactionHash +
+                            ", status " + (receipt.status ? "success" : "failed"));
                         if (receipt.status) {
                             // if the submit import spend succeeds then we can cache the last submit import.
                             await setCachedApi(CTransferArray, 'lastsubmitImports');
@@ -2472,6 +2492,11 @@ exports.approveOrRejectAcceptedImport = async(params) => {
 
             releaseGuardHere = false;
             const transactionHash = await sendTransaction(vote, submitImportMaxGas, "approveOrRejectAcceptedImport", {
+                onReceipt: (receipt) => {
+                    logGasUsage("approveorrejectacceptedimport txid " + importTxid + ", decision " +
+                        (approve ? "approve" : "reject") + ", GAS cost: " + receipt.gasUsed + ", tx " + receipt.transactionHash +
+                        ", status " + (receipt.status ? "success" : "failed"));
+                },
                 onSettled: () => inFlightVotes.delete(voteIdentity)
             });
 
@@ -2722,6 +2747,9 @@ exports.submitAcceptedNotarization = async(params) => {
         releaseGuardHere = false;
         const transactionHash = await sendTransaction(submission, notarizationMaxGas, "submitAcceptedNotarization", {
             onReceipt: async (receipt) => {
+                logGasUsage("submitacceptednotarization block " + params[0].notarizationheight + ", " +
+                    Object.keys(signatures).length + " notary signatures, GAS cost: " + receipt.gasUsed +
+                    ", tx " + receipt.transactionHash + ", status " + (receipt.status ? "success" : "failed"));
                 if (receipt.status) {
                     await setCachedApi(txidObj.txid, 'lastNotarizationTxid');
                 }
