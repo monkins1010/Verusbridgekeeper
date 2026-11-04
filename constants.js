@@ -119,6 +119,16 @@ module.exports = Object.freeze({
     // fork 3 heights
     TESTNET_ETH_GAS_REDUCTION_HEIGHT3: 10180885,
     ETH_GAS_REDUCTION_HEIGHT3: 24371856,
+    // fork 4: Bridge 2 relaunch. From this height the proof root gas price reported to the daemon is
+    // the gas read from the block * (NUMERATOR / DENOMINATOR), floored at BRIDGE2_RELAUNCH_MIN_GAS_SATS.
+    // Only affects the gasprice in proof roots (getProofRoot / checkProofRoot), not transaction fees.
+    // TODO: set real future heights and factor before release. Every notary must use the same values.
+    TESTNET_ETH_BRIDGE2_RELAUNCH_HEIGHT: 999999999,
+    ETH_BRIDGE2_RELAUNCH_HEIGHT: 999999999,
+    // x2.6 keeps the old contracts' fee/cost margin (15 notaries -> 8-vote approval quorum); see gas_usage.md
+    BRIDGE2_RELAUNCH_GAS_MULTIPLIER_NUMERATOR: 260,
+    BRIDGE2_RELAUNCH_GAS_MULTIPLIER_DENOMINATOR: 100,
+    BRIDGE2_RELAUNCH_MIN_GAS_SATS: 220000000, // 2.20000000 (old 1 gwei floor scaled by 2.6/1.2)
     ETH_NOTARIZATION_DEFAULT_VERSION: 1,
     ETH_NOTARIZATION_DEFAULT_TYPE: 2,
     TESTNET_ETH_CONTRACT_START_HEIGHT: 0,

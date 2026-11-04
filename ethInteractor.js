@@ -1787,6 +1787,18 @@ async function getProofRootGasPriceInSats(block) {
     return BigInt(transaction.gasPrice) / BigInt(10);
 }
 
+function getBridge2RelaunchHeight() {
+    return InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_BRIDGE2_RELAUNCH_HEIGHT : constants.ETH_BRIDGE2_RELAUNCH_HEIGHT;
+}
+
+// Bridge 2 relaunch fork: scale the gas read from the block by the multiplication factor, floored at the minimum.
+function applyBridge2RelaunchGasFactor(gasPriceInSATS) {
+    const adjustedGas = gasPriceInSATS * BigInt(constants.BRIDGE2_RELAUNCH_GAS_MULTIPLIER_NUMERATOR) /
+        BigInt(constants.BRIDGE2_RELAUNCH_GAS_MULTIPLIER_DENOMINATOR);
+    const minGas = BigInt(constants.BRIDGE2_RELAUNCH_MIN_GAS_SATS);
+    return adjustedGas < minGas ? minGas : adjustedGas;
+}
+
 const ZERO_PROOF_ROOT_POWER = '0'.repeat(64);
 const POST_MERGE_PROOF_ROOT_POWER = {
     VRSCTEST: '000000000000000000000000000000000000000000000000003c656d23029ab0',
@@ -1888,6 +1900,10 @@ async function getProofRoot(height = "latest") {
         {
             latestproofroot.gasprice = gasPriceInSATS < BigInt(1000000000) ? "10.00000000" : util.uint64ToVerusFloat(gasPriceInSATS);
         }
+        else if (latestproofroot.height >= getBridge2RelaunchHeight())
+        {
+            latestproofroot.gasprice = util.uint64ToVerusFloat(applyBridge2RelaunchGasFactor(gasPriceInSATS));
+        }
         else if (latestproofroot.height >= (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT3 : constants.ETH_GAS_REDUCTION_HEIGHT3))
         {
             const adjustedGas = gasPriceInSATS * BigInt(12) / BigInt(10);
@@ -1954,12 +1970,15 @@ async function checkProofRoot({height, stateroot, blockhash, power, gasprice, ve
         return false;
     }
 
+    let check4 = false;
     let check3 = false;
     let check2 = false;
     let check1 = height < (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT : constants.ETH_GAS_REDUCTION_HEIGHT);
     if (!check1)
     {
-        check3 = height >= (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT3 : constants.ETH_GAS_REDUCTION_HEIGHT3);
+        // Bridge 2 relaunch fork takes precedence over fork 3 once reached
+        check4 = height >= getBridge2RelaunchHeight();
+        check3 = !check4 && height >= (InteractorConfig.ticker === "VRSCTEST" ? constants.TESTNET_ETH_GAS_REDUCTION_HEIGHT3 : constants.ETH_GAS_REDUCTION_HEIGHT3);
     }
     else if (!check3)
     {
@@ -2000,6 +2019,11 @@ async function checkProofRoot({height, stateroot, blockhash, power, gasprice, ve
         {
             latestproofroot.gasprice = gasPriceInSATS < BigInt(1000000000) ? "10.00000000" : util.uint64ToVerusFloat(gasPriceInSATS);
         }
+        else if (check4)
+        {
+            gasPriceInSATS = applyBridge2RelaunchGasFactor(gasPriceInSATS);
+            latestproofroot.gasprice = util.uint64ToVerusFloat(gasPriceInSATS);
+        }
         else if (check3)
         {
             gasPriceInSATS = gasPriceInSATS * BigInt(12) / BigInt(10);
@@ -2025,7 +2049,7 @@ async function checkProofRoot({height, stateroot, blockhash, power, gasprice, ve
     {
         checkPassed = true;
     }
-    else if (check3)
+    else if (check4 || check3)
     {
         checkPassed = (util.uint64ToVerusFloat(gasToCheckInSats) == latestproofroot.gasprice);
     }
