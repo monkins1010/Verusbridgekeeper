@@ -128,7 +128,7 @@ module.exports = Object.freeze({
     // x2.6 keeps the old contracts' fee/cost margin (15 notaries -> 8-vote approval quorum); see gas_usage.md
     BRIDGE2_RELAUNCH_GAS_MULTIPLIER_NUMERATOR: 260,
     BRIDGE2_RELAUNCH_GAS_MULTIPLIER_DENOMINATOR: 100,
-    BRIDGE2_RELAUNCH_MIN_GAS_SATS: 220000000, // 2.20000000 (old 1 gwei floor scaled by 2.6/1.2)
+    BRIDGE2_RELAUNCH_MIN_GAS_SATS: 100000000, // 1.00000000 gwei floor, same as fork 3 (see gas_usage.md)
     ETH_NOTARIZATION_DEFAULT_VERSION: 1,
     ETH_NOTARIZATION_DEFAULT_TYPE: 2,
     TESTNET_ETH_CONTRACT_START_HEIGHT: 0,
