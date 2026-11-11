@@ -941,8 +941,10 @@ function isValidBlockHeader(blockHeader) {
 
 async function eventListener(notarizerAddress) {
 
+    // Log filter only: eth_subscribe/eth_getLogs accept just fromBlock, toBlock, address,
+    // topics, blockHash. Strict clients (anvil, reth) reject unknown keys, which would
+    // silently kill the subscription. Reconnect behaviour lives on the provider (web3Options).
     let options = {
-        reconnect: reconnectOptions,
         address: notarizerAddress,
         topics: [
             '0x680ce19d19cb7479bae869cebd27efcca33f6f22a43fd4d52d6c62a64890b7fd'
