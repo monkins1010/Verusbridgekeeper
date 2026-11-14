@@ -124,7 +124,7 @@ module.exports = Object.freeze({
     // Only affects the gasprice in proof roots (getProofRoot / checkProofRoot), not transaction fees.
     // TODO: set real future heights and factor before release. Every notary must use the same values.
     TESTNET_ETH_BRIDGE2_RELAUNCH_HEIGHT: 999999999,
-    ETH_BRIDGE2_RELAUNCH_HEIGHT: 999999999,
+    ETH_BRIDGE2_RELAUNCH_HEIGHT: 26415096,
     // x2.6 keeps the old contracts' fee/cost margin (15 notaries -> 8-vote approval quorum); see gas_usage.md
     BRIDGE2_RELAUNCH_GAS_MULTIPLIER_NUMERATOR: 260,
     BRIDGE2_RELAUNCH_GAS_MULTIPLIER_DENOMINATOR: 100,

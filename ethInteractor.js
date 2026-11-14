@@ -2728,8 +2728,25 @@ exports.submitAcceptedNotarization = async(params) => {
         }
     }
 
-    if (Object.keys(signatures).length < 1) {
-        log("submitAcceptedNotarization: Not enough signatures.");
+    // The contract reverts the whole setLatestData if any signer is not NOTARY_VALID on Ethereum, so one
+    // Ethereum-side revoke would block every notarization that signer signs. Drop those signers, and only submit
+    // if what remains still meets the contract quorum (half of all notaries + 1).
+    try {
+        const notaries = await getNotaryList();
+        const validNotaries = new Set(notaries.filter(notary => notary.state === 1).map(notary => notary.iaddress));
+        for (const sigKey of Object.keys(signatures)) {
+            if (!validNotaries.has(sigKey)) {
+                log("submitAcceptedNotarization: dropping signature from notary not valid on Ethereum: " + sigKey);
+                delete signatures[sigKey];
+            }
+        }
+        const quorum = Math.floor(notaries.length / 2) + 1;
+        if (Object.keys(signatures).length < quorum) {
+            log("submitAcceptedNotarization: Not enough Ethereum-valid signatures (" + Object.keys(signatures).length + " of " + quorum + " required).");
+            return { "result": { "txid": null, "error": true } };
+        }
+    } catch (error) {
+        log("submitAcceptedNotarization: could not read the notary set: " + errorMessage(error));
         return { "result": { "txid": null, "error": true } };
     }
 
